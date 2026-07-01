@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Funeraria · Páginas Conmemorativas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --hueso:#FAF6F0;
+    --hueso-osc:#F1E9DD;
+    --terracota:#7A4A3A;
+    --terracota-osc:#5E3A2D;
+    --dorado:#C9A24B;
+    --carbon:#2B2723;
+    --carbon-suave:#56504A;
+    --sauce:#5C6B57;
+    --sauce-osc:#43503F;
+    --borde:#E3D9C8;
+    --blanco:#FFFFFF;
+    --rojo:#A8453A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--hueso);
+    color:var(--carbon);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+  }
+
+  /* ===== LOGIN ===== */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .login-card{
+    background:var(--blanco);
+    border:1px solid var(--borde);
+    border-radius:14px;
+    padding:36px 28px;
+    max-width:380px;
+    width:100%;
+    box-shadow:0 12px 32px rgba(43,39,35,0.08);
+  }
+  .login-card h1{
+    font-size:20px;
+    margin-bottom:6px;
+    color:var(--terracota-osc);
+  }
+  .login-card p{
+    font-size:13.5px;
+    color:var(--carbon-suave);
+    margin-bottom:22px;
+  }
+
+  /* ===== LAYOUT GENERAL ===== */
+  .topbar{
+    background:var(--blanco);
+    border-bottom:1px solid var(--borde);
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .topbar-titulo{
+    font-size:15px;
+    font-weight:700;
+    color:var(--terracota-osc);
+  }
+  .btn-salir{
+    font-size:12.5px;
+    color:var(--carbon-suave);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  .contenedor{
+    max-width:720px;
+    margin:0 auto;
+    padding:20px 16px 80px;
+  }
+
+  .vista{ display:none; }
+  .vista.activa{ display:block; }
+
+  /* ===== BOTONES ===== */
+  .btn{
+    padding:12px 18px;
+    border:none;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity 0.2s;
+  }
+  .btn:hover{ opacity:0.9; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-primario{ background:var(--terracota); color:var(--blanco); }
+  .btn-secundario{ background:var(--blanco); color:var(--terracota); border:1px solid var(--terracota); }
+  .btn-sauce{ background:var(--sauce); color:var(--blanco); }
+  .btn-full{ width:100%; }
+  .btn-pequeno{ padding:8px 14px; font-size:12.5px; }
+  .btn-aprobar{ background:var(--sauce); color:var(--blanco); }
+  .btn-rechazar{ background:var(--blanco); color:var(--rojo); border:1px solid var(--rojo); }
+
+  /* ===== CAMPOS ===== */
+  .campo{ margin-bottom:16px; }
+  .campo label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--carbon-suave);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .campo input, .campo textarea{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--borde);
+    border-radius:7px;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    color:var(--carbon);
+    background:var(--hueso);
+  }
+  .campo input:focus, .campo textarea:focus{
+    outline:2px solid var(--terracota);
+    outline-offset:1px;
+  }
+  .campo-grupo{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .seccion-titulo{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--sauce-osc);
+    margin:28px 0 14px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--borde);
+  }
+  .seccion-titulo:first-child{ margin-top:0; }
+
+  /* ===== TARJETAS DE SERVICIO ===== */
+  .servicio-card{
+    background:var(--blanco);
+    border:1px solid var(--borde);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:12px;
+    cursor:pointer;
+    transition:box-shadow 0.2s;
+  }
+  .servicio-card:hover{ box-shadow:0 4px 14px rgba(43,39,35,0.08); }
+
+  .servicio-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:6px;
+  }
+
+  .servicio-nombre{
+    font-size:16px;
+    font-weight:600;
+    color:var(--carbon);
+  }
+
+  .estado-pill{
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:20px;
+    letter-spacing:0.03em;
+  }
+  .estado-en_curso{ background:#FDF1DD; color:#8A6111; }
+  .estado-transferido{ background:#EEF3EC; color:var(--sauce-osc); }
+
+  .servicio-meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--carbon-suave);
+  }
+
+  /* ===== MODERACIÓN ===== */
+  .moderar-item{
+    background:var(--blanco);
+    border:1px solid var(--borde);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:10px;
+  }
+  .moderar-nombre{ font-weight:600; font-size:14.5px; margin-bottom:4px; }
+  .moderar-texto{ font-size:14px; color:var(--carbon-suave); margin-bottom:12px; }
+  .moderar-foto{ max-width:100%; max-height:200px; border-radius:8px; margin-bottom:12px; display:block; }
+  .moderar-acciones{ display:flex; gap:8px; }
+
+  .vacio{
+    text-align:center;
+    padding:30px 16px;
+    color:var(--carbon-suave);
+    font-size:13.5px;
+  }
+
+  .tabs-mod{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .tab-mod-btn{
+    flex:1;
+    padding:10px;
+    background:var(--blanco);
+    border:1px solid var(--borde);
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--carbon-suave);
+    cursor:pointer;
+  }
+  .tab-mod-btn.activo{
+    background:var(--terracota);
+    color:var(--blanco);
+    border-color:var(--terracota);
+  }
+
+  .link-copiar{
+    background:var(--hueso-osc);
+    border:1px solid var(--borde);
+    border-radius:8px;
+    padding:12px 14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    word-break:break-all;
+    margin-bottom:10px;
+    color:var(--carbon-suave);
+  }
+
+  .aviso-estado{
+    margin-top:10px;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:7px;
+    display:none;
+  }
+  .aviso-estado.exito{ display:block; background:#EEF3EC; color:var(--sauce-osc); }
+  .aviso-estado.error{ display:block; background:#F7E9E6; color:var(--terracota-osc); }
+
+  .btn-volver{
+    background:none;
+    border:none;
+    color:var(--carbon-suave);
+    font-size:13px;
+    cursor:pointer;
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+
+  .fab{
+    position:fixed;
+    bottom:24px;
+    right:20px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--terracota);
+    color:var(--blanco);
+    border:none;
+    font-size:26px;
+    box-shadow:0 6px 18px rgba(43,39,35,0.25);
+    cursor:pointer;
+    z-index:30;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="vista activa" id="vistaLogin">
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>Panel de Funeraria</h1>
+      <p>Ingresa tu código de acceso para administrar tus páginas conmemorativas.</p>
+      <div class="campo">
+        <label for="inputCodigo">Código de acceso</label>
+        <input type="text" id="inputCodigo" placeholder="Ej. A7K2X9" style="text-transform:uppercase;">
+      </div>
+      <button class="btn btn-primario btn-full" id="btnLogin">Ingresar</button>
+      <div class="aviso-estado" id="avisoLogin"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LISTA DE SERVICIOS -->
+<div class="vista" id="vistaLista">
+  <div class="topbar">
+    <span class="topbar-titulo" id="nombreFunerariaTop">Mi funeraria</span>
+    <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
+  </div>
+  <div class="contenedor">
+    <div id="listaServicios"></div>
+  </div>
+  <button class="fab" id="btnNuevoServicio" title="Nueva página">+</button>
+</div>
+
+<!-- CREAR / EDITAR SERVICIO -->
+<div class="vista" id="vistaFormulario">
+  <div class="topbar">
+    <span class="topbar-titulo">Página conmemorativa</span>
+    <button class="btn-salir" id="btnSalir2">Cerrar sesión</button>
+  </div>
+  <div class="contenedor">
+    <button class="btn-volver" id="btnVolverLista">← Volver a mis páginas</button>
+
+    <div id="bannerTransferido" style="display:none; background:#EEF3EC; color:var(--sauce-osc); padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px;">
+      Esta página ya fue transferida a la familia y no puede editarse.
+    </div>
+
+    <div class="seccion-titulo">Datos del finado</div>
+    <div class="campo">
+      <label for="fNombre">Nombre completo</label>
+      <input type="text" id="fNombre" placeholder="Nombre del finado">
+    </div>
+    <div class="campo-grupo">
+      <div class="campo">
+        <label for="fNacimiento">Fecha de nacimiento</label>
+        <input type="date" id="fNacimiento">
+      </div>
+      <div class="campo">
+        <label for="fDefuncion">Fecha de defunción</label>
+        <input type="date" id="fDefuncion">
+      </div>
+    </div>
+    <div class="campo">
+      <label for="fFotoUrl">URL de foto (opcional)</label>
+      <input type="text" id="fFotoUrl" placeholder="Link directo a una foto">
+    </div>
+    <div class="campo">
+      <label for="fBio">Biografía breve (opcional)</label>
+      <textarea id="fBio" rows="3" placeholder="Una breve semblanza..."></textarea>
+    </div>
+
+    <div class="seccion-titulo">Cepelio</div>
+    <div class="campo-grupo">
+      <div class="campo"><label for="fFechaCepelio">Fecha</label><input type="date" id="fFechaCepelio"></div>
+      <div class="campo"><label for="fHoraCepelio">Hora</label><input type="time" id="fHoraCepelio"></div>
+    </div>
+    <div class="campo"><label for="fUbicCepelio">Ubicación</label><input type="text" id="fUbicCepelio" placeholder="Panteón / dirección"></div>
+
+    <div class="seccion-titulo">Misa</div>
+    <div class="campo-grupo">
+      <div class="campo"><label for="fFechaMisa">Fecha</label><input type="date" id="fFechaMisa"></div>
+      <div class="campo"><label for="fHoraMisa">Hora</label><input type="time" id="fHoraMisa"></div>
+    </div>
+    <div class="campo"><label for="fUbicMisa">Ubicación</label><input type="text" id="fUbicMisa" placeholder="Iglesia / dirección"></div>
+
+    <div class="seccion-titulo">Salida (domicilio o sala de velación)</div>
+    <div class="campo-grupo">
+      <div class="campo"><label for="fFechaSalida">Fecha</label><input type="date" id="fFechaSalida"></div>
+      <div class="campo"><label for="fHoraSalida">Hora</label><input type="time" id="fHoraSalida"></div>
+    </div>
+    <div class="campo"><label for="fUbicSalida">Ubicación</label><input type="text" id="fUbicSalida" placeholder="Dirección de salida"></div>
+
+    <div class="seccion-titulo">Reglas de publicación</div>
+    <div class="campo">
+      <label for="fReglas">Mensaje para visitantes (se muestra en la pestaña Información)</label>
+      <textarea id="fReglas" rows="3" placeholder="Ej. Por respeto a la familia, evitar fotos de la ceremonia. Mensajes de condolencia serán revisados antes de publicarse."></textarea>
+    </div>
+
+    <button class="btn btn-primario btn-full" id="btnGuardarServicio" style="margin-top:8px;">Guardar página</button>
+    <div class="aviso-estado" id="avisoGuardar"></div>
+
+    <div id="seccionPostCreacion" style="display:none;">
+      <div class="seccion-titulo">Compartir página</div>
+      <p style="font-size:13px; color:var(--carbon-suave); margin-bottom:10px;">Comparte este link o genera un código QR para imprimir en el velorio.</p>
+      <div class="link-copiar" id="linkPublico"></div>
+      <button class="btn btn-secundario btn-full" id="btnCopiarLink">Copiar link</button>
+
+      <div class="seccion-titulo">Moderar contenido</div>
+      <div class="tabs-mod">
+        <button class="tab-mod-btn activo" data-mod="condolencias">Condolencias</button>
+        <button class="tab-mod-btn" data-mod="fotos">Fotos</button>
+      </div>
+      <div id="zonaModeracion"></div>
+
+      <div class="seccion-titulo">Videollamada</div>
+      <div class="campo"><label for="vlTitulo">Título</label><input type="text" id="vlTitulo" placeholder="Ej. Despedida por videollamada"></div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="vlFecha">Fecha</label><input type="date" id="vlFecha"></div>
+        <div class="campo"><label for="vlHora">Hora</label><input type="time" id="vlHora"></div>
+      </div>
+      <div class="campo"><label for="vlEnlace">Link de Google Meet / Zoom</label><input type="text" id="vlEnlace" placeholder="https://meet.google.com/..."></div>
+      <button class="btn btn-sauce btn-full" id="btnProgramarLlamada">Programar videollamada</button>
+      <div class="aviso-estado" id="avisoLlamada"></div>
+      <div id="listaLlamadasAdmin" style="margin-top:14px;"></div>
+
+      <div class="seccion-titulo">Transferir página a la familia</div>
+      <p style="font-size:13px; color:var(--carbon-suave); margin-bottom:12px;">
+        Cuando el servicio haya terminado, genera el cobro para que la familia pague en línea y reciba acceso propio y permanente a todo lo compartido.
+      </p>
+      <div class="campo"><label for="emailFamilia">Correo de la familia</label><input type="email" id="emailFamilia" placeholder="familia@correo.com"></div>
+      <button class="btn btn-primario btn-full" id="btnGenerarCobro">Generar cobro de transferencia</button>
+      <div class="aviso-estado" id="avisoCobro"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURACIÓN
+  // ============================================================
+  const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+  const URL_PAGINA_PUBLICA = "PEGA_AQUI_LA_URL_DE_TU_PAGINA_PUBLICA"; // ej: https://tuusuario.github.io/repo/publica/pagina.html
+
+  let sesion = JSON.parse(localStorage.getItem('sesionFuneraria') || 'null');
+  let servicioActualId = null;
+  let tabModeracionActiva = 'condolencias';
+
+  async function llamarAPI(accion, datos, metodo) {
+    if (metodo === 'GET') {
+      const qs = new URLSearchParams({ accion, ...datos }).toString();
+      const resp = await fetch(`${API_URL}?${qs}`);
+      return resp.json();
+    } else {
+      const resp = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ accion, ...datos }) });
+      return resp.json();
+    }
+  }
+
+  function mostrarVista(id) {
+    document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+    document.getElementById(id).classList.add('activa');
+  }
+
+  // ===== LOGIN =====
+  if (sesion) {
+    document.getElementById('nombreFunerariaTop').textContent = sesion.nombre;
+    mostrarVista('vistaLista');
+    cargarListaServicios();
+  }
+
+  document.getElementById('btnLogin').addEventListener('click', async () => {
+    const codigo = document.getElementById('inputCodigo').value.trim().toUpperCase();
+    const aviso = document.getElementById('avisoLogin');
+    if (!codigo) return;
+
+    const resp = await llamarAPI('loginFuneraria', { codigoAcceso: codigo }, 'POST');
+    if (resp.ok) {
+      sesion = { funerariaId: resp.funerariaId, codigoAcceso: codigo, nombre: resp.nombre };
+      localStorage.setItem('sesionFuneraria', JSON.stringify(sesion));
+      document.getElementById('nombreFunerariaTop').textContent = sesion.nombre;
+      mostrarVista('vistaLista');
+      cargarListaServicios();
+    } else {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'Código inválido.';
+    }
+  });
+
+  function cerrarSesion() {
+    localStorage.removeItem('sesionFuneraria');
+    sesion = null;
+    mostrarVista('vistaLogin');
+  }
+  document.getElementById('btnSalir').addEventListener('click', cerrarSesion);
+  document.getElementById('btnSalir2').addEventListener('click', cerrarSesion);
+
+  // ===== LISTA DE SERVICIOS =====
+  async function cargarListaServicios() {
+    const resp = await llamarAPI('listarServiciosFuneraria', {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+
+    const lista = document.getElementById('listaServicios');
+    if (!resp.ok || resp.servicios.length === 0) {
+      lista.innerHTML = '<div class="vacio">Aún no has creado ninguna página. Toca el botón + para crear la primera.</div>';
+      return;
+    }
+
+    lista.innerHTML = resp.servicios.map(s => `
+      <div class="servicio-card" onclick="abrirServicio('${s.id}')">
+        <div class="servicio-card-top">
+          <span class="servicio-nombre">${s.nombreFinado}</span>
+          <span class="estado-pill estado-${s.estado}">${s.estado === 'transferido' ? 'Transferida' : 'En curso'}</span>
+        </div>
+        <div class="servicio-meta">Creada el ${new Date(s.creadoEn).toLocaleDateString('es-MX')}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('btnNuevoServicio').addEventListener('click', () => {
+    limpiarFormulario();
+    servicioActualId = null;
+    document.getElementById('seccionPostCreacion').style.display = 'none';
+    document.getElementById('bannerTransferido').style.display = 'none';
+    mostrarVista('vistaFormulario');
+  });
+
+  document.getElementById('btnVolverLista').addEventListener('click', () => {
+    mostrarVista('vistaLista');
+    cargarListaServicios();
+  });
+
+  function limpiarFormulario() {
+    ['fNombre','fNacimiento','fDefuncion','fFotoUrl','fBio',
+     'fFechaCepelio','fHoraCepelio','fUbicCepelio',
+     'fFechaMisa','fHoraMisa','fUbicMisa',
+     'fFechaSalida','fHoraSalida','fUbicSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  // ===== ABRIR SERVICIO EXISTENTE =====
+  window.abrirServicio = async function(id) {
+    servicioActualId = id;
+    const resp = await llamarAPI('listarServiciosFuneraria', {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+    const s = resp.servicios.find(x => x.id === id);
+    if (!s) return;
+
+    document.getElementById('fNombre').value = s.nombreFinado || '';
+    document.getElementById('fNacimiento').value = s.fechaNacimiento || '';
+    document.getElementById('fDefuncion').value = s.fechaDefuncion || '';
+    document.getElementById('fFotoUrl').value = s.fotoUrl || '';
+    document.getElementById('fBio').value = s.biografia || '';
+    document.getElementById('fFechaCepelio').value = s.fechaCepelio || '';
+    document.getElementById('fHoraCepelio').value = s.horaCepelio || '';
+    document.getElementById('fUbicCepelio').value = s.ubicacionCepelio || '';
+    document.getElementById('fFechaMisa').value = s.fechaMisa || '';
+    document.getElementById('fHoraMisa').value = s.horaMisa || '';
+    document.getElementById('fUbicMisa').value = s.ubicacionMisa || '';
+    document.getElementById('fFechaSalida').value = s.fechaSalida || '';
+    document.getElementById('fHoraSalida').value = s.horaSalida || '';
+    document.getElementById('fUbicSalida').value = s.ubicacionSalida || '';
+    document.getElementById('fReglas').value = s.reglasPublicacion || '';
+
+    const transferido = s.estado === 'transferido';
+    document.getElementById('bannerTransferido').style.display = transferido ? 'block' : 'none';
+    document.querySelectorAll('#vistaFormulario input, #vistaFormulario textarea').forEach(el => el.disabled = transferido);
+    document.getElementById('btnGuardarServicio').style.display = transferido ? 'none' : 'block';
+
+    document.getElementById('seccionPostCreacion').style.display = 'block';
+    document.getElementById('linkPublico').textContent = `${URL_PAGINA_PUBLICA}?p=${s.slug}`;
+
+    cargarModeracion();
+    cargarLlamadasAdmin();
+
+    mostrarVista('vistaFormulario');
+  };
+
+  // ===== GUARDAR SERVICIO =====
+  document.getElementById('btnGuardarServicio').addEventListener('click', async () => {
+    const aviso = document.getElementById('avisoGuardar');
+    const datos = {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso,
+      nombreFinado: document.getElementById('fNombre').value.trim(),
+      fechaNacimiento: document.getElementById('fNacimiento').value,
+      fechaDefuncion: document.getElementById('fDefuncion').value,
+      fotoUrl: document.getElementById('fFotoUrl').value.trim(),
+      biografia: document.getElementById('fBio').value.trim(),
+      fechaCepelio: document.getElementById('fFechaCepelio').value,
+      horaCepelio: document.getElementById('fHoraCepelio').value,
+      ubicacionCepelio: document.getElementById('fUbicCepelio').value.trim(),
+      fechaMisa: document.getElementById('fFechaMisa').value,
+      horaMisa: document.getElementById('fHoraMisa').value,
+      ubicacionMisa: document.getElementById('fUbicMisa').value.trim(),
+      fechaSalida: document.getElementById('fFechaSalida').value,
+      horaSalida: document.getElementById('fHoraSalida').value,
+      ubicacionSalida: document.getElementById('fUbicSalida').value.trim(),
+      reglasPublicacion: document.getElementById('fReglas').value.trim()
+    };
+
+    if (!datos.nombreFinado) {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = 'El nombre del finado es obligatorio.';
+      return;
+    }
+
+    let resp;
+    if (servicioActualId) {
+      resp = await llamarAPI('actualizarServicio', { id: servicioActualId, ...datos }, 'POST');
+    } else {
+      resp = await llamarAPI('crearServicio', datos, 'POST');
+    }
+
+    if (resp.ok) {
+      aviso.className = 'aviso-estado exito';
+      aviso.textContent = 'Página guardada correctamente.';
+      if (!servicioActualId) {
+        servicioActualId = resp.id;
+        document.getElementById('seccionPostCreacion').style.display = 'block';
+        document.getElementById('linkPublico').textContent = `${URL_PAGINA_PUBLICA}?p=${resp.slug}`;
+        cargarModeracion();
+        cargarLlamadasAdmin();
+      }
+    } else {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'Ocurrió un error al guardar.';
+    }
+  });
+
+  document.getElementById('btnCopiarLink').addEventListener('click', () => {
+    const texto = document.getElementById('linkPublico').textContent;
+    navigator.clipboard.writeText(texto);
+    const btn = document.getElementById('btnCopiarLink');
+    const original = btn.textContent;
+    btn.textContent = '¡Copiado!';
+    setTimeout(() => btn.textContent = original, 1500);
+  });
+
+  // ===== MODERACIÓN =====
+  document.querySelectorAll('.tab-mod-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-mod-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      tabModeracionActiva = btn.dataset.mod;
+      cargarModeracion();
+    });
+  });
+
+  async function cargarModeracion() {
+    const zona = document.getElementById('zonaModeracion');
+    zona.innerHTML = '<div class="vacio">Cargando...</div>';
+
+    if (tabModeracionActiva === 'condolencias') {
+      const resp = await llamarAPI('obtenerCondolencias', { servicioId: servicioActualId, soloAprobadas: 'false' }, 'GET');
+      const pendientes = (resp.condolencias || []).filter(c => c.estadoModeracion === 'pendiente');
+      if (pendientes.length === 0) {
+        zona.innerHTML = '<div class="vacio">No hay condolencias pendientes de revisión.</div>';
+        return;
+      }
+      zona.innerHTML = pendientes.map(c => `
+        <div class="moderar-item">
+          <div class="moderar-nombre">${c.nombre}</div>
+          <div class="moderar-texto">${c.mensaje}</div>
+          <div class="moderar-acciones">
+            <button class="btn btn-aprobar btn-pequeno" onclick="moderarCondolencia('${c.id}', true)">Aprobar</button>
+            <button class="btn btn-rechazar btn-pequeno" onclick="moderarCondolencia('${c.id}', false)">Rechazar</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      const resp = await llamarAPI('obtenerFotos', { servicioId: servicioActualId, soloAprobadas: 'false' }, 'GET');
+      const pendientes = (resp.fotos || []).filter(f => f.estadoModeracion === 'pendiente');
+      if (pendientes.length === 0) {
+        zona.innerHTML = '<div class="vacio">No hay fotos pendientes de revisión.</div>';
+        return;
+      }
+      zona.innerHTML = pendientes.map(f => `
+        <div class="moderar-item">
+          <img class="moderar-foto" src="${f.urlPublica}" alt="">
+          <div class="moderar-nombre">${f.nombrePersona}</div>
+          <div class="moderar-acciones">
+            <button class="btn btn-aprobar btn-pequeno" onclick="moderarFoto('${f.id}', true)">Aprobar</button>
+            <button class="btn btn-rechazar btn-pequeno" onclick="moderarFoto('${f.id}', false)">Rechazar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  window.moderarCondolencia = async function(id, aprobada) {
+    await llamarAPI('moderarCondolencia', { id, aprobada, funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso }, 'POST');
+    cargarModeracion();
+  };
+  window.moderarFoto = async function(id, aprobada) {
+    await llamarAPI('moderarFoto', { id, aprobada, funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso }, 'POST');
+    cargarModeracion();
+  };
+
+  // ===== VIDEOLLAMADAS =====
+  document.getElementById('btnProgramarLlamada').addEventListener('click', async () => {
+    const aviso = document.getElementById('avisoLlamada');
+    const titulo = document.getElementById('vlTitulo').value.trim();
+    const fecha = document.getElementById('vlFecha').value;
+    const hora = document.getElementById('vlHora').value;
+    const enlace = document.getElementById('vlEnlace').value.trim();
+
+    if (!titulo || !fecha || !hora || !enlace) {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = 'Completa todos los campos de la videollamada.';
+      return;
+    }
+
+    const resp = await llamarAPI('programarVideoLlamada', {
+      servicioId: servicioActualId, titulo, fecha, hora, enlace,
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso
+    }, 'POST');
+
+    if (resp.ok) {
+      aviso.className = 'aviso-estado exito';
+      aviso.textContent = 'Videollamada programada.';
+      ['vlTitulo','vlFecha','vlHora','vlEnlace'].forEach(id => document.getElementById(id).value = '');
+      cargarLlamadasAdmin();
+    } else {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'Error al programar.';
+    }
+  });
+
+  async function cargarLlamadasAdmin() {
+    const resp = await llamarAPI('obtenerVideoLlamadas', { servicioId: servicioActualId }, 'GET');
+    const lista = document.getElementById('listaLlamadasAdmin');
+    if (!resp.ok || resp.videoLlamadas.length === 0) {
+      lista.innerHTML = '';
+      return;
+    }
+    lista.innerHTML = resp.videoLlamadas.map(v => `
+      <div class="moderar-item">
+        <div class="moderar-nombre">${v.titulo}</div>
+        <div class="servicio-meta">${v.fecha} · ${v.hora} hrs</div>
+      </div>
+    `).join('');
+  }
+
+  // ===== COBRO / TRANSFERENCIA =====
+  document.getElementById('btnGenerarCobro').addEventListener('click', async () => {
+    const aviso = document.getElementById('avisoCobro');
+    const emailFamilia = document.getElementById('emailFamilia').value.trim();
+
+    if (!emailFamilia) {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = 'Ingresa el correo de la familia.';
+      return;
+    }
+
+    const resp = await llamarAPI('crearSesionPago', {
+      servicioId: servicioActualId,
+      emailFamilia,
+      urlExito: window.location.href,
+      urlCancelado: window.location.href
+    }, 'POST');
+
+    if (resp.ok) {
+      aviso.className = 'aviso-estado exito';
+      aviso.innerHTML = `Cobro generado. Comparte este link de pago con la familia:<br><br><a href="${resp.urlPago}" target="_blank">${resp.urlPago}</a>`;
+    } else {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'No se pudo generar el cobro.';
+    }
+  });
+</script>
+
+</body>
+</html>
