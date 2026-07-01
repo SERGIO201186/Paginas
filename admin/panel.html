@@ -393,12 +393,10 @@
       <div class="link-copiar" id="linkPublico"></div>
       <button class="btn btn-secundario btn-full" id="btnCopiarLink">Copiar link</button>
 
-      <div class="seccion-titulo">Moderar contenido</div>
-      <div class="tabs-mod">
-        <button class="tab-mod-btn activo" data-mod="condolencias">Condolencias</button>
-        <button class="tab-mod-btn" data-mod="fotos">Fotos</button>
-      </div>
+      <div class="seccion-titulo">Moderar recuerdos</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:12px;">Aprueba o rechaza cada recuerdo antes de que se publique en la página.</p>
       <div id="zonaModeracion"></div>
+      <button class="btn btn-secundario btn-full" style="margin-top:8px;" onclick="cargarModeracion()">↻ Actualizar</button>
 
       <div class="seccion-titulo">Videollamada</div>
       <div class="campo"><label for="vlTitulo">Título</label><input type="text" id="vlTitulo" placeholder="Ej. Despedida por videollamada"></div>
@@ -426,8 +424,8 @@
   // ============================================================
   // CONFIGURACIÓN
   // ============================================================
-  const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
-  const URL_PAGINA_PUBLICA = "https://sergio201186.github.io/Paginas/publica/pagina.html"; // ej: https://tuusuario.github.io/repo/publica/pagina.html
+  const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+  const URL_PAGINA_PUBLICA = "PEGA_AQUI_LA_URL_DE_TU_PAGINA_PUBLICA"; // ej: https://tuusuario.github.io/repo/publica/pagina.html
 
   let sesion = JSON.parse(localStorage.getItem('sesionFuneraria') || 'null');
   let servicioActualId = null;
@@ -625,62 +623,31 @@
   });
 
   // ===== MODERACIÓN =====
-  document.querySelectorAll('.tab-mod-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-mod-btn').forEach(b => b.classList.remove('activo'));
-      btn.classList.add('activo');
-      tabModeracionActiva = btn.dataset.mod;
-      cargarModeracion();
-    });
-  });
-
   async function cargarModeracion() {
     const zona = document.getElementById('zonaModeracion');
     zona.innerHTML = '<div class="vacio">Cargando...</div>';
-
-    if (tabModeracionActiva === 'condolencias') {
-      const resp = await llamarAPI('obtenerCondolencias', { servicioId: servicioActualId, soloAprobadas: 'false' }, 'GET');
-      const pendientes = (resp.condolencias || []).filter(c => c.estadoModeracion === 'pendiente');
-      if (pendientes.length === 0) {
-        zona.innerHTML = '<div class="vacio">No hay condolencias pendientes de revisión.</div>';
-        return;
-      }
-      zona.innerHTML = pendientes.map(c => `
-        <div class="moderar-item">
-          <div class="moderar-nombre">${c.nombre}</div>
-          <div class="moderar-texto">${c.mensaje}</div>
-          <div class="moderar-acciones">
-            <button class="btn btn-aprobar btn-pequeno" onclick="moderarCondolencia('${c.id}', true)">Aprobar</button>
-            <button class="btn btn-rechazar btn-pequeno" onclick="moderarCondolencia('${c.id}', false)">Rechazar</button>
-          </div>
-        </div>
-      `).join('');
-    } else {
-      const resp = await llamarAPI('obtenerFotos', { servicioId: servicioActualId, soloAprobadas: 'false' }, 'GET');
-      const pendientes = (resp.fotos || []).filter(f => f.estadoModeracion === 'pendiente');
-      if (pendientes.length === 0) {
-        zona.innerHTML = '<div class="vacio">No hay fotos pendientes de revisión.</div>';
-        return;
-      }
-      zona.innerHTML = pendientes.map(f => `
-        <div class="moderar-item">
-          <img class="moderar-foto" src="${f.urlPublica}" alt="">
-          <div class="moderar-nombre">${f.nombrePersona}</div>
-          <div class="moderar-acciones">
-            <button class="btn btn-aprobar btn-pequeno" onclick="moderarFoto('${f.id}', true)">Aprobar</button>
-            <button class="btn btn-rechazar btn-pequeno" onclick="moderarFoto('${f.id}', false)">Rechazar</button>
-          </div>
-        </div>
-      `).join('');
+    const resp = await llamarAPI('obtenerRecuerdosPendientes', { servicioId: servicioActualId }, 'GET');
+    const pendientes = resp.recuerdos || [];
+    if (pendientes.length === 0) {
+      zona.innerHTML = '<div class="vacio">No hay recuerdos pendientes. ✓</div>';
+      return;
     }
+    zona.innerHTML = pendientes.map(r => `
+      <div class="moderar-item">
+        <div class="moderar-nombre">${r.nombre}</div>
+        ${r.urlFoto ? `<img class="moderar-foto" src="${r.urlFoto}" alt="">` : ''}
+        ${r.pieFoto ? `<div style="font-size:12px;color:var(--carbon-suave);font-style:italic;margin-bottom:6px;">${r.pieFoto}</div>` : ''}
+        ${r.mensaje ? `<div class="moderar-texto">${r.mensaje}</div>` : ''}
+        <div class="moderar-acciones">
+          <button class="btn btn-aprobar btn-pequeno" onclick="moderarRecuerdo('${r.id}', true)">Aprobar</button>
+          <button class="btn btn-rechazar btn-pequeno" onclick="moderarRecuerdo('${r.id}', false)">Rechazar</button>
+        </div>
+      </div>
+    `).join('');
   }
 
-  window.moderarCondolencia = async function(id, aprobada) {
-    await llamarAPI('moderarCondolencia', { id, aprobada, funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso }, 'POST');
-    cargarModeracion();
-  };
-  window.moderarFoto = async function(id, aprobada) {
-    await llamarAPI('moderarFoto', { id, aprobada, funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso }, 'POST');
+  window.moderarRecuerdo = async function(id, aprobada) {
+    await llamarAPI('moderarRecuerdo', { id, aprobada, funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso }, 'POST');
     cargarModeracion();
   };
 
