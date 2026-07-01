@@ -629,11 +629,36 @@
 
   // ===== UTILIDADES =====
   function formatearFecha(fechaStr) {
-    if (!fechaStr) return '—';
+    if (!fechaStr || fechaStr === '') return '—';
     try {
-      const f = new Date(fechaStr + 'T00:00:00');
-      return f.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-    } catch (e) { return fechaStr; }
+      const s = String(fechaStr);
+      if (s.includes('1899')) return '—';
+      if (s.includes('T')) {
+        const parte = s.split('T')[0];
+        if (parte.includes('1899')) return '—';
+        const [y, m, d] = parte.split('-');
+        return new Date(parseInt(y), parseInt(m)-1, parseInt(d)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split('-');
+        return new Date(parseInt(y), parseInt(m)-1, parseInt(d)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      return s;
+    } catch (e) { return '—'; }
+  }
+
+  function formatearHora(horaStr) {
+    if (!horaStr || horaStr === '') return '—';
+    try {
+      const s = String(horaStr);
+      if (s.includes('T')) {
+        const f = new Date(s);
+        const hh = String(f.getUTCHours()).padStart(2, '0');
+        const mm = String(f.getUTCMinutes()).padStart(2, '0');
+        return hh + ':' + mm;
+      }
+      return s;
+    } catch (e) { return horaStr; }
   }
 
   function escapeHtml(str) {
@@ -711,7 +736,7 @@
         return;
       }
       document.getElementById('fecha' + b.prefijo).textContent = formatearFecha(b.fecha);
-      document.getElementById('hora' + b.prefijo).textContent = b.hora || '—';
+      document.getElementById('hora' + b.prefijo).textContent = formatearHora(b.hora);
       document.getElementById('ubicacion' + b.prefijo).textContent = b.ubic || '';
     });
 
