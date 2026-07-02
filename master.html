@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Maestro · Páginas Conmemorativas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;--dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;--sauce-osc:#43503F;--borde:#E3D9C8;--blanco:#FFFFFF;--rojo:#A8453A;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+
+.topbar{background:var(--terracota-osc);color:var(--blanco);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;}
+.topbar-titulo{font-family:'Fraunces',serif;font-size:16px;}
+.btn-salir{font-size:12.5px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;text-decoration:underline;}
+
+.vista{display:none;} .vista.activa{display:block;}
+
+/* LOGIN MAESTRO */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.card{background:var(--blanco);border:1px solid var(--borde);border-radius:14px;padding:32px 26px;max-width:360px;width:100%;box-shadow:0 12px 32px rgba(43,39,35,0.08);}
+.card h1{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:6px;}
+.card p{font-size:13px;color:var(--carbon-suave);margin-bottom:22px;}
+
+/* TABS NAV */
+.tabs-nav{display:flex;background:var(--blanco);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
+.tabs-nav::-webkit-scrollbar{display:none;}
+.tab-btn{flex:1 0 auto;padding:14px 16px;background:none;border:none;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--carbon-suave);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.tab-btn.activo{color:var(--terracota-osc);border-bottom-color:var(--terracota);}
+.tab-panel{display:none;} .tab-panel.activo{display:block;}
+
+.contenedor{max-width:680px;margin:0 auto;padding:20px 16px 80px;}
+.seccion-titulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--sauce-osc);margin:22px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--borde);}
+.seccion-titulo:first-child{margin-top:0;}
+
+/* CAMPOS */
+.campo{margin-bottom:13px;}
+.campo label{display:block;font-size:11.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;}
+.campo input,.campo textarea,.campo select{width:100%;padding:10px 12px;border:1px solid var(--borde);border-radius:7px;font-family:'Inter',sans-serif;font-size:14px;color:var(--carbon);background:var(--hueso);}
+.campo input:focus,.campo textarea:focus{outline:2px solid var(--terracota);outline-offset:1px;}
+.campo-grupo{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* BOTONES */
+.btn{padding:11px 18px;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:opacity 0.2s;}
+.btn:hover{opacity:0.88;}
+.btn-primario{background:var(--terracota);color:var(--blanco);}
+.btn-sauce{background:var(--sauce);color:var(--blanco);}
+.btn-full{width:100%;}
+.btn-pequeno{padding:7px 13px;font-size:12px;}
+.btn-danger{background:var(--rojo);color:var(--blanco);}
+
+.aviso{margin-top:10px;font-size:13px;padding:9px 12px;border-radius:7px;display:none;}
+.aviso.exito{display:block;background:#EEF3EC;color:var(--sauce-osc);}
+.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
+
+/* TARJETAS */
+.card-item{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:10px;}
+.card-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-item-nombre{font-size:15px;font-weight:600;color:var(--carbon);}
+.card-item-meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--carbon-suave);margin-top:3px;}
+.badge-activo{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:#EEF3EC;color:var(--sauce-osc);}
+.badge-inactivo{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:#F7E9E6;color:var(--rojo);}
+
+/* ARTICULOS TIENDA */
+.art-card{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.art-emoji{font-size:28px;flex-shrink:0;}
+.art-info{flex:1;}
+.art-nombre{font-size:14px;font-weight:600;color:var(--carbon);}
+.art-precio{font-size:12.5px;color:var(--carbon-suave);}
+.art-acciones{display:flex;gap:6px;flex-shrink:0;}
+
+/* ESTADÍSTICAS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.stat{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;text-align:center;}
+.stat-num{font-family:'Fraunces',serif;font-size:32px;color:var(--terracota-osc);}
+.stat-txt{font-size:12px;color:var(--carbon-suave);margin-top:2px;}
+
+.vacio{text-align:center;padding:28px;color:var(--carbon-suave);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN MAESTRO -->
+<div class="vista activa" id="vistaLogin">
+  <div class="login-wrap">
+    <div class="card">
+      <h1>Panel Maestro</h1>
+      <p>Acceso exclusivo para el administrador del sistema.</p>
+      <div class="campo">
+        <label for="masterKey">Clave maestra</label>
+        <input type="password" id="masterKey" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primario btn-full" id="btnLoginMaster">Ingresar</button>
+      <div class="aviso" id="avisoLogin"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL MAESTRO -->
+<div class="vista" id="vistaMaster">
+  <div class="topbar">
+    <span class="topbar-titulo">⚙️ Panel Maestro</span>
+    <button class="btn-salir" id="btnSalir">Salir</button>
+  </div>
+
+  <nav class="tabs-nav">
+    <button class="tab-btn activo" data-tab="stats">Estadísticas</button>
+    <button class="tab-btn" data-tab="funerarias">Funerarias</button>
+    <button class="tab-btn" data-tab="tienda">Tienda</button>
+    <button class="tab-btn" data-tab="creditos">Créditos</button>
+    <button class="tab-btn" data-tab="config">Configuración</button>
+  </nav>
+
+  <!-- ESTADÍSTICAS -->
+  <div class="tab-panel activo" id="panel-stats">
+    <div class="contenedor">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-num" id="statFunerarias">—</div><div class="stat-txt">Funerarias</div></div>
+        <div class="stat"><div class="stat-num" id="statServicios">—</div><div class="stat-txt">Páginas activas</div></div>
+        <div class="stat"><div class="stat-num" id="statGestos">—</div><div class="stat-txt">Gestos enviados</div></div>
+        <div class="stat"><div class="stat-num" id="statIngresos">—</div><div class="stat-txt">Ingresos est. MXN</div></div>
+      </div>
+      <div class="seccion-titulo">Pedidos de flores físicas pendientes</div>
+      <div id="statPedidosFlores"><div class="vacio">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- FUNERARIAS -->
+  <div class="tab-panel" id="panel-funerarias">
+    <div class="contenedor">
+      <div class="seccion-titulo">Crear nueva funeraria</div>
+      <div class="campo"><label for="fNombre">Nombre</label><input type="text" id="fNombre" placeholder="Ej. Funeraria San Ángel"></div>
+      <div class="campo"><label for="fWhatsapp">WhatsApp (para alertas)</label><input type="text" id="fWhatsapp" placeholder="521234567890 (sin +)"></div>
+      <div class="campo"><label for="fEmail">Email (para alertas)</label><input type="email" id="fEmail" placeholder="funeraria@correo.com"></div>
+      <button class="btn btn-primario btn-full" id="btnCrearFuneraria">Crear funeraria</button>
+      <div class="aviso" id="avisoFuneraria"></div>
+
+      <div class="seccion-titulo">Funerarias registradas</div>
+      <div id="listaFunerarias"><div class="vacio">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- TIENDA -->
+  <div class="tab-panel" id="panel-tienda">
+    <div class="contenedor">
+      <div class="seccion-titulo">Artículos de la tienda</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:14px;">Configura los artículos que aparecen en la tienda de gestos de cada página conmemorativa.</p>
+      <div id="listaArticulos"><div class="vacio">Cargando...</div></div>
+
+      <div class="seccion-titulo">Agregar artículo</div>
+      <div class="campo"><label for="artEmoji">Emoji</label><input type="text" id="artEmoji" placeholder="🌹" maxlength="4"></div>
+      <div class="campo"><label for="artNombre">Nombre</label><input type="text" id="artNombre" placeholder="Rosas rojas"></div>
+      <div class="campo"><label for="artDesc">Descripción</label><input type="text" id="artDesc" placeholder="Un ramo en su memoria"></div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="artCreditos">Créditos</label><input type="number" id="artCreditos" placeholder="5" min="1"></div>
+        <div class="campo">
+          <label for="artTipo">Tipo</label>
+          <select id="artTipo">
+            <option value="virtual">Virtual</option>
+            <option value="fisico">Físico (requiere entrega)</option>
+            <option value="premium">Premium (animación especial)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-sauce btn-full" id="btnAgregarArticulo">Agregar artículo</button>
+      <div class="aviso" id="avisoArticulo"></div>
+    </div>
+  </div>
+
+  <!-- CRÉDITOS -->
+  <div class="tab-panel" id="panel-creditos">
+    <div class="contenedor">
+      <div class="seccion-titulo">Paquetes de créditos</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:14px;">Define los paquetes que las familias pueden comprar.</p>
+      <div id="listaPaquetes"><div class="vacio">Cargando...</div></div>
+
+      <div class="seccion-titulo">Agregar paquete</div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="pkgCreditos">Créditos</label><input type="number" id="pkgCreditos" placeholder="120"></div>
+        <div class="campo"><label for="pkgPrecio">Precio MXN</label><input type="number" id="pkgPrecio" placeholder="100"></div>
+      </div>
+      <div class="campo"><label for="pkgEtiqueta">Etiqueta (opcional)</label><input type="text" id="pkgEtiqueta" placeholder="Ej. Más popular"></div>
+      <button class="btn btn-sauce btn-full" id="btnAgregarPaquete">Agregar paquete</button>
+      <div class="aviso" id="avisoPaquete"></div>
+
+      <div class="seccion-titulo">Créditos gratis al entrar</div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="creditosGratis">Cantidad gratis</label><input type="number" id="creditosGratis" placeholder="10"></div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:13px;">
+          <button class="btn btn-primario btn-full" onclick="guardarCreditosGratis()">Guardar</button>
+        </div>
+      </div>
+      <div class="aviso" id="avisoCreditosGratis"></div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div class="tab-panel" id="panel-config">
+    <div class="contenedor">
+      <div class="seccion-titulo">WhatsApp para alertas del sistema</div>
+      <div class="campo"><label for="cfgWhatsapp">Tu número WhatsApp (sin +)</label><input type="text" id="cfgWhatsapp" placeholder="521234567890"></div>
+      <div class="campo"><label for="cfgEmail">Tu email para alertas</label><input type="email" id="cfgEmail" placeholder="tu@correo.com"></div>
+      <button class="btn btn-primario btn-full" onclick="guardarConfigAlerta()">Guardar configuración</button>
+      <div class="aviso" id="avisoConfig"></div>
+
+      <div class="seccion-titulo">Precio de transferencia de página</div>
+      <div class="campo"><label for="cfgPrecioTransf">Precio en MXN</label><input type="number" id="cfgPrecioTransf" placeholder="499"></div>
+      <button class="btn btn-primario btn-full" onclick="guardarPrecioTransf()">Guardar precio</button>
+      <div class="aviso" id="avisoTransf"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+let masterKey = '';
+
+async function api(accion, datos={}, metodo='GET') {
+  if (metodo==='GET') {
+    const r = await fetch(API_URL+'?'+new URLSearchParams({accion,...datos}));
+    return r.json();
+  }
+  const r = await fetch(API_URL,{method:'POST',body:JSON.stringify({accion,...datos})});
+  return r.json();
+}
+
+function mostrarVista(id) {
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+  document.getElementById(id).classList.add('activa');
+}
+
+// LOGIN MAESTRO
+document.getElementById('btnLoginMaster').addEventListener('click', async () => {
+  const key = document.getElementById('masterKey').value.trim();
+  const aviso = document.getElementById('avisoLogin');
+  const resp = await api('verificarMasterKey', {masterKey: key}, 'GET');
+  if (resp.ok) {
+    masterKey = key;
+    mostrarVista('vistaMaster');
+    cargarTodo();
+  } else {
+    aviso.className='aviso error';
+    aviso.textContent='Clave incorrecta.';
+  }
+});
+
+document.getElementById('btnSalir').addEventListener('click', () => {
+  masterKey = '';
+  mostrarVista('vistaLogin');
+});
+
+// TABS
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('activo'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('activo'));
+    btn.classList.add('activo');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('activo');
+  });
+});
+
+function cargarTodo() {
+  cargarStats();
+  cargarFunerarias();
+  cargarArticulos();
+  cargarPaquetes();
+  cargarConfig();
+}
+
+// ESTADÍSTICAS
+async function cargarStats() {
+  const resp = await api('obtenerStats', {masterKey});
+  if (!resp.ok) return;
+  document.getElementById('statFunerarias').textContent = resp.funerarias || 0;
+  document.getElementById('statServicios').textContent = resp.servicios || 0;
+  document.getElementById('statGestos').textContent = resp.gestos || 0;
+  document.getElementById('statIngresos').textContent = '$'+(resp.ingresos || 0);
+
+  const lista = document.getElementById('statPedidosFlores');
+  if (!resp.pedidosFloresPendientes || resp.pedidosFloresPendientes.length===0) {
+    lista.innerHTML='<div class="vacio">Sin pedidos pendientes ✓</div>'; return;
+  }
+  lista.innerHTML = resp.pedidosFloresPendientes.map(p=>`
+    <div class="card-item">
+      <div class="card-item-nombre">🌺 ${p.nombre}</div>
+      <div class="card-item-meta">${p.direccion} · ${p.email}</div>
+    </div>
+  `).join('');
+}
+
+// FUNERARIAS
+async function cargarFunerarias() {
+  const resp = await api('listarTodasFunerarias', {masterKey});
+  const lista = document.getElementById('listaFunerarias');
+  if (!resp.ok || !resp.funerarias.length) {
+    lista.innerHTML='<div class="vacio">No hay funerarias registradas.</div>'; return;
+  }
+  lista.innerHTML = resp.funerarias.map(f=>`
+    <div class="card-item">
+      <div class="card-item-top">
+        <div>
+          <div class="card-item-nombre">${f.nombre}</div>
+          <div class="card-item-meta">Código: <strong>${f.codigoAcceso}</strong></div>
+        </div>
+        <span class="${f.activo==='TRUE'||f.activo===true?'badge-activo':'badge-inactivo'}">${f.activo==='TRUE'||f.activo===true?'Activa':'Inactiva'}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="btn btn-pequeno ${f.activo==='TRUE'||f.activo===true?'btn-danger':'btn-sauce'}"
+          onclick="toggleFuneraria('${f.id}', ${f.activo==='TRUE'||f.activo===true})">
+          ${f.activo==='TRUE'||f.activo===true?'Desactivar':'Activar'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('btnCrearFuneraria').addEventListener('click', async () => {
+  const nombre = document.getElementById('fNombre').value.trim();
+  const whatsapp = document.getElementById('fWhatsapp').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const aviso = document.getElementById('avisoFuneraria');
+  if (!nombre) { aviso.className='aviso error'; aviso.textContent='El nombre es obligatorio.'; return; }
+  const resp = await api('crearFuneraria', {masterKey, nombre, whatsapp, email}, 'POST');
+  if (resp.ok) {
+    aviso.className='aviso exito';
+    aviso.textContent=`✓ Funeraria creada. Código de acceso: ${resp.codigoAcceso}`;
+    document.getElementById('fNombre').value='';
+    document.getElementById('fWhatsapp').value='';
+    document.getElementById('fEmail').value='';
+    cargarFunerarias();
+  } else {
+    aviso.className='aviso error'; aviso.textContent=resp.error||'Error al crear.';
+  }
+});
+
+window.toggleFuneraria = async function(id, activo) {
+  await api('toggleFuneraria', {masterKey, id, activo: !activo}, 'POST');
+  cargarFunerarias();
+};
+
+// ARTÍCULOS TIENDA
+async function cargarArticulos() {
+  const resp = await api('obtenerArticulosTienda', {masterKey});
+  const lista = document.getElementById('listaArticulos');
+  if (!resp.ok || !resp.articulos.length) {
+    lista.innerHTML='<div class="vacio">No hay artículos. Agrega el primero abajo.</div>'; return;
+  }
+  lista.innerHTML = resp.articulos.map(a=>`
+    <div class="art-card">
+      <div class="art-emoji">${a.emoji}</div>
+      <div class="art-info">
+        <div class="art-nombre">${a.nombre}</div>
+        <div class="art-precio">${a.creditos} créditos · ${a.tipo}</div>
+      </div>
+      <div class="art-acciones">
+        <button class="btn btn-danger btn-pequeno" onclick="eliminarArticulo('${a.id}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('btnAgregarArticulo').addEventListener('click', async () => {
+  const aviso = document.getElementById('avisoArticulo');
+  const datos = {
+    masterKey,
+    emoji: document.getElementById('artEmoji').value.trim(),
+    nombre: document.getElementById('artNombre').value.trim(),
+    descripcion: document.getElementById('artDesc').value.trim(),
+    creditos: +document.getElementById('artCreditos').value,
+    tipo: document.getElementById('artTipo').value
+  };
+  if (!datos.nombre || !datos.creditos) {
+    aviso.className='aviso error'; aviso.textContent='Nombre y créditos son obligatorios.'; return;
+  }
+  const resp = await api('agregarArticuloTienda', datos, 'POST');
+  if (resp.ok) {
+    aviso.className='aviso exito'; aviso.textContent='✓ Artículo agregado.';
+    ['artEmoji','artNombre','artDesc','artCreditos'].forEach(id=>document.getElementById(id).value='');
+    cargarArticulos();
+  } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error.'; }
+});
+
+window.eliminarArticulo = async function(id) {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  await api('eliminarArticuloTienda', {masterKey, id}, 'POST');
+  cargarArticulos();
+};
+
+// PAQUETES DE CRÉDITOS
+async function cargarPaquetes() {
+  const resp = await api('obtenerPaquetesCreditos', {masterKey});
+  const lista = document.getElementById('listaPaquetes');
+  if (!resp.ok || !resp.paquetes.length) {
+    lista.innerHTML='<div class="vacio">No hay paquetes. Agrega el primero abajo.</div>'; return;
+  }
+  lista.innerHTML = resp.paquetes.map(p=>`
+    <div class="card-item">
+      <div class="card-item-top">
+        <div>
+          <div class="card-item-nombre">${p.creditos} créditos · $${p.precio} MXN</div>
+          ${p.etiqueta?`<div class="card-item-meta">${p.etiqueta}</div>`:''}
+        </div>
+        <button class="btn btn-danger btn-pequeno" onclick="eliminarPaquete('${p.id}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('btnAgregarPaquete').addEventListener('click', async () => {
+  const aviso = document.getElementById('avisoPaquete');
+  const datos = {
+    masterKey,
+    creditos: +document.getElementById('pkgCreditos').value,
+    precio: +document.getElementById('pkgPrecio').value,
+    etiqueta: document.getElementById('pkgEtiqueta').value.trim()
+  };
+  if (!datos.creditos || !datos.precio) {
+    aviso.className='aviso error'; aviso.textContent='Créditos y precio son obligatorios.'; return;
+  }
+  const resp = await api('agregarPaqueteCreditos', datos, 'POST');
+  if (resp.ok) {
+    aviso.className='aviso exito'; aviso.textContent='✓ Paquete agregado.';
+    ['pkgCreditos','pkgPrecio','pkgEtiqueta'].forEach(id=>document.getElementById(id).value='');
+    cargarPaquetes();
+  } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error.'; }
+});
+
+window.eliminarPaquete = async function(id) {
+  if (!confirm('¿Eliminar este paquete?')) return;
+  await api('eliminarPaqueteCreditos', {masterKey, id}, 'POST');
+  cargarPaquetes();
+};
+
+async function guardarCreditosGratis() {
+  const aviso = document.getElementById('avisoCreditosGratis');
+  const cantidad = +document.getElementById('creditosGratis').value;
+  const resp = await api('guardarConfigMaestro', {masterKey, creditosGratis: cantidad}, 'POST');
+  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
+  aviso.textContent = resp.ok ? '✓ Guardado.' : (resp.error||'Error.');
+}
+
+// CONFIGURACIÓN ALERTAS
+async function cargarConfig() {
+  const resp = await api('obtenerConfigMaestro', {masterKey});
+  if (!resp.ok) return;
+  if (resp.whatsapp) document.getElementById('cfgWhatsapp').value = resp.whatsapp;
+  if (resp.email) document.getElementById('cfgEmail').value = resp.email;
+  if (resp.precioTransferencia) document.getElementById('cfgPrecioTransf').value = resp.precioTransferencia;
+  if (resp.creditosGratis) document.getElementById('creditosGratis').value = resp.creditosGratis;
+}
+
+async function guardarConfigAlerta() {
+  const aviso = document.getElementById('avisoConfig');
+  const resp = await api('guardarConfigMaestro', {
+    masterKey,
+    whatsapp: document.getElementById('cfgWhatsapp').value.trim(),
+    email: document.getElementById('cfgEmail').value.trim()
+  }, 'POST');
+  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
+  aviso.textContent = resp.ok ? '✓ Configuración guardada.' : (resp.error||'Error.');
+}
+
+async function guardarPrecioTransf() {
+  const aviso = document.getElementById('avisoTransf');
+  const resp = await api('guardarConfigMaestro', {
+    masterKey,
+    precioTransferencia: +document.getElementById('cfgPrecioTransf').value
+  }, 'POST');
+  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
+  aviso.textContent = resp.ok ? '✓ Precio guardado.' : (resp.error||'Error.');
+}
+</script>
+</body>
+</html>
