@@ -175,6 +175,11 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .lightbox.activo{display:flex;}
 .lightbox img{max-width:100%;max-height:90vh;border-radius:8px;}
 
+.reacciones{display:flex;gap:8px;margin-top:8px;}
+.btn-reaccion{display:flex;align-items:center;gap:4px;padding:5px 11px;border:1.5px solid var(--borde);border-radius:20px;background:var(--hueso);font-size:13px;cursor:pointer;transition:all 0.2s;}
+.btn-reaccion:hover{border-color:var(--dorado);}
+.btn-reaccion.like.activo{border-color:var(--sauce);background:#EEF3EC;color:var(--sauce-osc);}
+.btn-reaccion.dislike.activo{border-color:var(--rojo);background:#F7E9E6;color:var(--rojo);}
 footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
 </style>
 </head>
@@ -415,7 +420,7 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
 <footer>Página de homenaje · hecha con cariño para quienes no pudieron estar presentes</footer>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
+const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('p');
 let servicio = null;
@@ -638,11 +643,16 @@ async function cargarRecuerdos() {
   lista.innerHTML = resp.recuerdos.map(r=>{
     if(r.tipo==='gesto') return renderGesto(r);
     if(r.tipo==='vela_premium') return renderVelaPremium(r);
+    const yaReacciono = localStorage.getItem('reac_'+r.id);
     return `<div class="burbuja"><div class="burbuja-inner">
       <div class="burbuja-nombre">${esc(r.nombre)}</div>
       ${r.urlFoto?`<img class="burbuja-foto" src="${driveUrl(r.urlFoto)}" alt="" onclick="abrirLightbox('${driveUrl(r.urlFoto)}')" loading="lazy" onerror="this.style.display='none'">`:'' }
       ${r.pieFoto?`<div class="burbuja-pie">${esc(r.pieFoto)}</div>`:''}
       ${r.mensaje?`<div class="burbuja-txt">${esc(r.mensaje)}</div>`:''}
+      <div class="reacciones">
+        <button class="btn-reaccion like ${yaReacciono==='like'?'activo':''}" onclick="reaccionar('${r.id}','like',this)">👍 Me une</button>
+        <button class="btn-reaccion dislike ${yaReacciono==='dislike'?'activo':''}" onclick="reaccionar('${r.id}','dislike',this)">👎</button>
+      </div>
       <div class="burbuja-hora">${horaCorta(r.creadoEn)}</div>
     </div></div>`;
   }).join('');
@@ -677,7 +687,29 @@ async function identificarUsuario() {
   document.getElementById('seccionCompra').style.display='block';
   document.getElementById('seccionGestos').style.display='block';
   document.getElementById('saldoEmail').textContent = emailUsuario;
+  // Dar créditos gratis si es primera vez en esta página
+  if (!localStorage.getItem('creditosGratis_'+servicio.id+'_'+emailUsuario)) {
+    const resp = await api('darCreditosGratis',{email:emailUsuario, servicioId:servicio.id},'POST');
+    if (resp.ok && resp.cantidad > 0) {
+      localStorage.setItem('creditosGratis_'+servicio.id+'_'+emailUsuario,'1');
+      setTimeout(()=>alert('🎁 ¡Te regalamos '+resp.cantidad+' créditos Huerta para que envíes un gesto de cariño!'), 800);
+    }
+  }
   await actualizarSaldo();
+}
+
+async function reaccionar(recuerdoId, tipo, btn) {
+  const yaReacciono = localStorage.getItem('reac_'+recuerdoId);
+  if (yaReacciono) return;
+  const nombre = prompt('¿Tu nombre para reaccionar?');
+  if (!nombre || !nombre.trim()) return;
+  const resp = await api('reaccionarRecuerdo',{
+    recuerdoId, tipo, nombre:nombre.trim(), servicioId:servicio.id
+  },'POST');
+  if (resp.ok) {
+    localStorage.setItem('reac_'+recuerdoId, tipo);
+    btn.classList.add('activo');
+  }
 }
 
 async function actualizarSaldo() {
