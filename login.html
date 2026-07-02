@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso · Páginas Conmemorativas</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;--dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;--borde:#E3D9C8;--blanco:#FFFFFF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{min-height:100vh;background:var(--hueso);font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.logo{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:32px;display:flex;align-items:center;gap:8px;}
+.card{background:var(--blanco);border:1px solid var(--borde);border-radius:16px;padding:32px 26px;width:100%;max-width:380px;box-shadow:0 12px 32px rgba(43,39,35,0.08);}
+.card h1{font-family:'Fraunces',serif;font-size:22px;color:var(--terracota-osc);margin-bottom:6px;}
+.card p{font-size:13.5px;color:var(--carbon-suave);margin-bottom:24px;}
+.campo{margin-bottom:16px;}
+.campo label{display:block;font-size:11.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;}
+.campo input{width:100%;padding:12px 14px;border:1px solid var(--borde);border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;color:var(--carbon);background:var(--hueso);}
+.campo input:focus{outline:2px solid var(--terracota);outline-offset:1px;}
+.btn{width:100%;padding:13px;background:var(--terracota);color:var(--blanco);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s;}
+.btn:hover{background:var(--terracota-osc);}
+.aviso{margin-top:12px;font-size:13px;padding:10px 13px;border-radius:7px;display:none;}
+.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
+.volver{margin-top:20px;font-size:13px;color:var(--carbon-suave);text-align:center;}
+.volver a{color:var(--terracota);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<div class="logo">🕊 Páginas Conmemorativas</div>
+
+<div class="card">
+  <h1>Acceso funerarias</h1>
+  <p>Ingresa tu código de acceso para administrar tus páginas conmemorativas.</p>
+  <div class="campo">
+    <label for="codigo">Código de acceso</label>
+    <input type="text" id="codigo" placeholder="Ej. A7K2X9" autocomplete="off" style="text-transform:uppercase;" maxlength="10">
+  </div>
+  <button class="btn" id="btnLogin">Ingresar →</button>
+  <div class="aviso" id="aviso"></div>
+</div>
+
+<div class="volver"><a href="index.html">← Volver al inicio</a></div>
+
+<script>
+const API_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+
+document.getElementById('codigo').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnLogin').click();
+});
+
+document.getElementById('btnLogin').addEventListener('click', async () => {
+  const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+  const aviso = document.getElementById('aviso');
+  const btn = document.getElementById('btnLogin');
+  if (!codigo) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ accion: 'loginFuneraria', codigoAcceso: codigo })
+    });
+    const data = await resp.json();
+
+    if (data.ok) {
+      localStorage.setItem('sesionFuneraria', JSON.stringify({
+        funerariaId: data.funerariaId,
+        codigoAcceso: codigo,
+        nombre: data.nombre
+      }));
+      window.location.href = 'admin/panel.html';
+    } else {
+      aviso.className = 'aviso error';
+      aviso.textContent = 'Código inválido. Verifica e intenta de nuevo.';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar →';
+    }
+  } catch(e) {
+    aviso.className = 'aviso error';
+    aviso.textContent = 'Error de conexión. Intenta de nuevo.';
+    btn.disabled = false;
+    btn.textContent = 'Ingresar →';
+  }
+});
+</script>
+</body>
+</html>
