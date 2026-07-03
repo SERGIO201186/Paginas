@@ -571,6 +571,75 @@ async function enviarRecuerdo() {
   btn.disabled=false; btn.textContent='Publicar recuerdo';
 }
 
+function crearBurbuja(r) {
+  const div = document.createElement('div');
+  div.className = 'burbuja';
+  const inner = document.createElement('div');
+  inner.className = 'burbuja-inner';
+
+  // Nombre
+  const nombre = document.createElement('div');
+  nombre.className = 'burbuja-nombre';
+  nombre.textContent = r.nombre || '';
+  inner.appendChild(nombre);
+
+  // Foto
+  if (r.urlFoto) {
+    const url = driveUrl(r.urlFoto);
+    const img = document.createElement('img');
+    img.className = 'burbuja-foto';
+    img.src = url;
+    img.loading = 'lazy';
+    img.onerror = function(){ this.style.display='none'; };
+    img.onclick = function(){ abrirLightbox(url); };
+    inner.appendChild(img);
+  }
+
+  // Pie de foto
+  if (r.pieFoto) {
+    const pie = document.createElement('div');
+    pie.className = 'burbuja-pie';
+    pie.textContent = r.pieFoto;
+    inner.appendChild(pie);
+  }
+
+  // Mensaje
+  if (r.mensaje) {
+    const msg = document.createElement('div');
+    msg.className = 'burbuja-txt';
+    msg.textContent = r.mensaje;
+    inner.appendChild(msg);
+  }
+
+  // Reacciones
+  const reacs = document.createElement('div');
+  reacs.className = 'reacciones';
+  const yaReacciono = localStorage.getItem('reac_' + r.id);
+
+  const btnLike = document.createElement('button');
+  btnLike.className = 'btn-reaccion like' + (yaReacciono === 'like' ? ' activo' : '');
+  btnLike.innerHTML = '👍 Me une';
+  btnLike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'like', btnLike); }); };
+
+  const btnDislike = document.createElement('button');
+  btnDislike.className = 'btn-reaccion dislike' + (yaReacciono === 'dislike' ? ' activo' : '');
+  btnDislike.innerHTML = '👎';
+  btnDislike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'dislike', btnDislike); }); };
+
+  reacs.appendChild(btnLike);
+  reacs.appendChild(btnDislike);
+  inner.appendChild(reacs);
+
+  // Hora
+  const hora = document.createElement('div');
+  hora.className = 'burbuja-hora';
+  hora.textContent = horaCorta(r.creadoEn);
+  inner.appendChild(hora);
+
+  div.appendChild(inner);
+  return div.outerHTML;
+}
+
 async function cargarRecuerdos() {
   const resp = await api('obtenerRecuerdos',{servicioId:servicio.id});
   const lista = document.getElementById('listaRecuerdos');
@@ -591,18 +660,7 @@ async function cargarRecuerdos() {
         <div class="gesto-contenido">${esc(r.emoji||'💐')}</div>
         <div class="gesto-tipo">${esc(r.descripcion||'')}</div>
       </div>`;
-    const yaReacciono=localStorage.getItem('reac_'+r.id);
-    return `<div class="burbuja"><div class="burbuja-inner">
-      <div class="burbuja-nombre">${esc(r.nombre)}</div>
-      ${r.urlFoto?`<img class="burbuja-foto" src="${driveUrl(r.urlFoto)}" alt="" onclick="abrirLightbox('${driveUrl(r.urlFoto)}')" loading="lazy" onerror="this.style.display='none'">` :''}
-      ${r.pieFoto?`<div class="burbuja-pie">${esc(r.pieFoto)}</div>`:''}
-      ${r.mensaje?`<div class="burbuja-txt">${esc(r.mensaje)}</div>`:''}
-      <div class="reacciones">
-        <button class="btn-reaccion like ${yaReacciono==='like'?'activo':''}" onclick="accionRegistrada(()=>reaccionar('${r.id}','like',this))">👍 Me une</button>
-        <button class="btn-reaccion dislike ${yaReacciono==='dislike'?'activo':''}" onclick="accionRegistrada(()=>reaccionar('${r.id}','dislike',this))">👎</button>
-      </div>
-      <div class="burbuja-hora">${horaCorta(r.creadoEn)}</div>
-    </div></div>`;
+    return crearBurbuja(r);
   }).join('');
 }
 
