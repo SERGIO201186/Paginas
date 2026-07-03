@@ -616,15 +616,20 @@ function crearBurbuja(r) {
   reacs.className = 'reacciones';
   const yaReacciono = localStorage.getItem('reac_' + r.id);
 
+  const numLikes = r.likes || 0;
+  const numDislikes = r.dislikes || 0;
+
   const btnLike = document.createElement('button');
   btnLike.className = 'btn-reaccion like' + (yaReacciono === 'like' ? ' activo' : '');
-  btnLike.innerHTML = '👍 Me une';
-  btnLike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'like', btnLike); }); };
+  btnLike.innerHTML = '👍 Me une' + (numLikes > 0 ? ' · ' + numLikes : '');
+  if (yaReacciono) btnLike.disabled = true;
+  btnLike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'like', btnLike, btnDislike); }); };
 
   const btnDislike = document.createElement('button');
   btnDislike.className = 'btn-reaccion dislike' + (yaReacciono === 'dislike' ? ' activo' : '');
-  btnDislike.innerHTML = '👎';
-  btnDislike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'dislike', btnDislike); }); };
+  btnDislike.innerHTML = '👎' + (numDislikes > 0 ? ' · ' + numDislikes : '');
+  if (yaReacciono) btnDislike.disabled = true;
+  btnDislike.onclick = function() { accionRegistrada(function(){ reaccionar(r.id, 'dislike', btnDislike, btnLike); }); };
 
   reacs.appendChild(btnLike);
   reacs.appendChild(btnDislike);
@@ -664,11 +669,28 @@ async function cargarRecuerdos() {
   }).join('');
 }
 
-async function reaccionar(recuerdoId, tipo, btn) {
+async function reaccionar(recuerdoId, tipo, btn, btnOpuesto) {
   if(localStorage.getItem('reac_'+recuerdoId)) return;
-  await api('reaccionarRecuerdo',{recuerdoId,tipo,nombre:usuario.nombre,servicioId:servicio.id},'POST');
-  localStorage.setItem('reac_'+recuerdoId,tipo);
-  btn.classList.add('activo');
+  const textoOriginal = btn.innerHTML;
+  btn.disabled = true;
+  try {
+    const resp = await api('reaccionarRecuerdo',{recuerdoId,tipo,nombre:usuario.nombre,servicioId:servicio.id},'POST');
+    if (!resp.ok) {
+      alert(resp.error || 'No se pudo guardar tu reacción. Intenta de nuevo.');
+      btn.disabled = false;
+      return;
+    }
+    localStorage.setItem('reac_'+recuerdoId,tipo);
+    btn.classList.add('activo');
+    // Actualiza el contador visible sumando 1 al texto actual
+    const base = textoOriginal.split('·')[0].trim();
+    const contadorActual = parseInt((textoOriginal.split('·')[1]||'0').trim(), 10) || 0;
+    btn.innerHTML = base + ' · ' + (contadorActual + 1);
+    if (btnOpuesto) btnOpuesto.disabled = true;
+  } catch (e) {
+    alert('Sin conexión. Intenta de nuevo.');
+    btn.disabled = false;
+  }
 }
 
 // ===== TIENDA (carga dinámica del backend) =====
