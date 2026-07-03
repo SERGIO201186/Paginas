@@ -106,6 +106,7 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
   <nav class="tabs-nav">
     <button class="tab-btn activo" data-tab="stats">Estadísticas</button>
     <button class="tab-btn" data-tab="funerarias">Funerarias</button>
+    <button class="tab-btn" data-tab="servicios">Servicios</button>
     <button class="tab-btn" data-tab="tienda">Tienda</button>
     <button class="tab-btn" data-tab="creditos">Créditos</button>
     <button class="tab-btn" data-tab="config">Configuración</button>
@@ -137,6 +138,15 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 
       <div class="seccion-titulo">Funerarias registradas</div>
       <div id="listaFunerarias"><div class="vacio">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- SERVICIOS -->
+  <div class="tab-panel" id="panel-servicios">
+    <div class="contenedor">
+      <div class="seccion-titulo">Todos los servicios</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:14px;">Gestiona el estado de cada página conmemorativa.</p>
+      <div id="listaServicios"><div class="vacio">Cargando...</div></div>
     </div>
   </div>
 
@@ -270,10 +280,58 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 function cargarTodo() {
   cargarStats();
   cargarFunerarias();
+  cargarServicios();
   cargarArticulos();
   cargarPaquetes();
   cargarConfig();
 }
+
+// SERVICIOS
+async function cargarServicios() {
+  const resp = await api('obtenerTodosServicios', {masterKey});
+  const lista = document.getElementById('listaServicios');
+  if (!resp.ok || !resp.servicios || !resp.servicios.length) {
+    lista.innerHTML = '<div class="vacio">No hay servicios registrados aún.</div>';
+    return;
+  }
+  lista.innerHTML = resp.servicios.map(s => {
+    const estadoClass = 'estado-' + (s.estado || 'en_curso');
+    const estadoLabel = {
+      'en_curso': 'En curso',
+      'transferido': 'Transferido',
+      'inactivo': 'Inactivo',
+      'vendido': 'Vendido'
+    }[s.estado] || s.estado;
+    return `
+      <div class="card-item">
+        <div class="card-item-top">
+          <div>
+            <div class="card-item-nombre">${s.nombreFinado || '—'}</div>
+            <div class="card-item-meta">${s.funerariaId || ''} · ${s.creadoEn ? new Date(s.creadoEn).toLocaleDateString('es-MX') : ''}</div>
+          </div>
+          <span class="badge-activo ${estadoClass}" style="border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:700;">${estadoLabel}</span>
+        </div>
+        <div class="estado-btns">
+          ${s.estado !== 'inactivo' && s.estado !== 'vendido' ? `<button class="btn-estado btn-inactivar" onclick="cambiarEstadoServicio('${s.id}','inactivo')">Inactivar</button>` : ''}
+          ${s.estado !== 'vendido' ? `<button class="btn-estado btn-vendido" onclick="cambiarEstadoServicio('${s.id}','vendido')">Marcar vendida</button>` : ''}
+          ${s.estado === 'inactivo' || s.estado === 'vendido' ? `<button class="btn-estado btn-reactivar" onclick="cambiarEstadoServicio('${s.id}','en_curso')">Reactivar</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.cambiarEstadoServicio = async function(id, nuevoEstado) {
+  const labels = {inactivo:'inactivar', vendido:'marcar como vendida', en_curso:'reactivar'};
+  if (!confirm('¿Deseas ' + (labels[nuevoEstado]||nuevoEstado) + ' esta página?')) return;
+  const resp = await api('toggleEstadoServicio', {masterKey, id, nuevoEstado}, 'POST');
+  if (resp.ok) {
+    cargarServicios();
+    cargarStats();
+  } else {
+    alert(resp.error || 'Error al cambiar estado.');
+  }
+};
 
 // ESTADÍSTICAS
 async function cargarStats() {
