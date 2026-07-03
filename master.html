@@ -207,6 +207,14 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
       <div class="campo"><label for="cfgPrecioTransf">Precio en MXN</label><input type="number" id="cfgPrecioTransf" placeholder="499"></div>
       <button class="btn btn-primario btn-full" onclick="guardarPrecioTransf()">Guardar precio</button>
       <div class="aviso" id="avisoTransf"></div>
+
+      <div class="seccion-titulo">Precio de videollamada</div>
+      <div class="campo"><label for="cfgPrecioVL">Precio por persona en MXN</label><input type="number" id="cfgPrecioVL" placeholder="150"></div>
+      <button class="btn btn-primario btn-full" onclick="guardarPrecioVL()">Guardar precio</button>
+      <div class="aviso" id="avisoVL"></div>
+
+      <div class="seccion-titulo">Solicitudes de videollamada pendientes</div>
+      <div id="listaSolicitudesVL"><div class="vacio">Cargando...</div></div>
     </div>
   </div>
 </div>
@@ -447,6 +455,8 @@ async function cargarConfig() {
   if (resp.email) document.getElementById('cfgEmail').value = resp.email;
   if (resp.precioTransferencia) document.getElementById('cfgPrecioTransf').value = resp.precioTransferencia;
   if (resp.creditosGratis) document.getElementById('creditosGratis').value = resp.creditosGratis;
+  if (resp.precioVideollamada) document.getElementById('cfgPrecioVL').value = resp.precioVideollamada;
+  cargarSolicitudesVL();
 }
 
 async function guardarConfigAlerta() {
@@ -468,6 +478,24 @@ async function guardarPrecioTransf() {
   }, 'POST');
   aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
   aviso.textContent = resp.ok ? '✓ Precio guardado.' : (resp.error||'Error.');
+}
+
+async function guardarPrecioVL() {
+  const aviso = document.getElementById('avisoVL');
+  const resp = await api('guardarConfigMaestro', {
+    masterKey,
+    precioVideollamada: +document.getElementById('cfgPrecioVL').value
+  }, 'POST');
+  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
+  aviso.textContent = resp.ok ? '✓ Precio de videollamada guardado.' : (resp.error||'Error.');
+}
+
+async function cargarSolicitudesVL() {
+  const lista = document.getElementById('listaSolicitudesVL');
+  if (!lista) return;
+  // Por simplicidad mostramos las solicitudes del Sheet directamente
+  // En una versión futura se puede agregar endpoint específico
+  lista.innerHTML = '<div class="vacio">Las solicitudes llegan por email y WhatsApp. Crea el Meet y distribúyelo desde el panel de cada servicio.</div>';
 }
 </script>
 </body>
