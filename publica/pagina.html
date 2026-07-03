@@ -15,186 +15,202 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
 
+/* ===== MODAL REGISTRO ===== */
+.overlay{position:fixed;inset:0;background:rgba(43,39,35,0.82);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.overlay.oculto{display:none;}
+.modal-reg{background:var(--blanco);border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;animation:slideUp 0.35s ease;}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-reg-titulo{font-family:'Fraunces',serif;font-size:22px;color:var(--terracota-osc);margin-bottom:4px;}
+.modal-reg-sub{font-size:13.5px;color:var(--carbon-suave);margin-bottom:22px;line-height:1.5;}
+.campo{margin-bottom:14px;}
+.campo label{display:block;font-size:11.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;}
+.campo input,.campo textarea,.campo select{width:100%;padding:12px 14px;border:1px solid var(--borde);border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;color:var(--carbon);background:var(--hueso);}
+.campo input:focus{outline:2px solid var(--terracota);outline-offset:1px;}
+.btn-reg{width:100%;padding:14px;background:var(--terracota);color:var(--blanco);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-reg:hover{background:var(--terracota-osc);}
+.aviso{margin-top:10px;font-size:13px;padding:9px 12px;border-radius:7px;display:none;}
+.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
+.aviso.exito{display:block;background:#EEF3EC;color:var(--sauce-osc);}
+
 /* ===== PORTADA ===== */
-.portada{position:relative;height:220px;background:linear-gradient(160deg,#3a2420 0%,#7A4A3A 60%,#C9A24B 100%);overflow:hidden;}
-.portada-img{width:100%;height:100%;object-fit:cover;display:block;}
-.portada-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(43,39,35,0.7) 100%);}
-
-/* ===== PERFIL ===== */
-.perfil-wrap{position:relative;padding:0 20px 0;margin-top:-56px;z-index:2;}
-.perfil-foto-ring{width:112px;height:112px;border-radius:50%;border:4px solid var(--blanco);box-shadow:0 4px 18px rgba(43,39,35,0.22);overflow:hidden;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:40px;}
-.perfil-foto-ring img{width:100%;height:100%;object-fit:cover;display:block;}
-.perfil-info{padding:12px 20px 0;}
-.perfil-nombre{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(24px,6vw,36px);color:var(--terracota-osc);line-height:1.2;margin-bottom:6px;}
-.perfil-fechas{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--carbon-suave);letter-spacing:0.02em;margin-bottom:10px;}
+.portada{position:relative;height:200px;background:linear-gradient(160deg,#3a2420 0%,#7A4A3A 60%,#C9A24B 100%);overflow:hidden;}
+.portada img{width:100%;height:100%;object-fit:cover;display:block;}
+.portada-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(43,39,35,0.65) 100%);}
+.perfil-wrap{padding:0 20px;margin-top:-52px;position:relative;z-index:2;}
+.perfil-foto-ring{width:104px;height:104px;border-radius:50%;border:4px solid var(--blanco);box-shadow:0 4px 16px rgba(43,39,35,0.2);overflow:hidden;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.perfil-foto-ring img{width:100%;height:100%;object-fit:cover;}
+.perfil-info{padding:10px 20px 0;}
+.perfil-nombre{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,5.5vw,36px);color:var(--terracota-osc);line-height:1.2;margin-bottom:5px;}
+.perfil-fechas{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon-suave);margin-bottom:8px;}
 .perfil-fechas .sep{color:var(--dorado);margin:0 8px;}
-.perfil-bio{font-size:14px;color:var(--carbon-suave);font-style:italic;max-width:560px;margin-bottom:16px;}
+.perfil-bio{font-size:14px;color:var(--carbon-suave);font-style:italic;max-width:520px;margin-bottom:14px;}
 
-/* Vela decorativa pequeña */
-.vela-deco{display:inline-flex;align-items:flex-end;width:16px;height:28px;margin-left:8px;vertical-align:middle;}
-.vela-deco-cuerpo{width:9px;height:20px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:2px;}
-.vela-deco-flama{width:6px;height:9px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-bottom:1px;margin-left:1.5px;transform-origin:bottom center;animation:parpadeo 2.4s ease-in-out infinite;}
+/* Vela deco */
+.vela-deco{display:inline-flex;align-items:flex-end;width:14px;height:24px;margin-left:6px;vertical-align:middle;}
+.vela-deco-cuerpo{width:8px;height:18px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:2px;}
+.vela-deco-flama{width:6px;height:9px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-bottom:1px;margin-left:1px;animation:parpadeo 2.4s ease-in-out infinite;}
 @keyframes parpadeo{0%,100%{transform:scaleY(1) rotate(0deg);}25%{transform:scaleY(1.1) rotate(-2deg);}50%{transform:scaleY(0.92) rotate(1.5deg);}75%{transform:scaleY(1.06) rotate(-1deg);}}
-@media(prefers-reduced-motion:reduce){.vela-deco-flama,.vela-premium-flama{animation:none;}}
+@media(prefers-reduced-motion:reduce){.vela-deco-flama,.veladora-mini-flama,.vela-premium-flama{animation:none;}}
 
-/* ===== VELADORAS ===== */
-.veladoras-strip{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
+/* ===== VELADORAS STRIP ===== */
+.veladoras-strip{display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
 .veladoras-strip::-webkit-scrollbar{display:none;}
-.btn-veladora{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:9px 16px;background:var(--hueso);border:1.5px solid var(--borde);border-radius:30px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--carbon);transition:all 0.2s;}
-.btn-veladora:hover{border-color:var(--dorado);}
+.btn-veladora{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 15px;background:var(--hueso);border:1.5px solid var(--borde);border-radius:28px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--carbon);transition:all 0.2s;}
 .btn-veladora.encendida{border-color:var(--dorado);background:#FDF8EC;color:var(--terracota-osc);}
-.veladora-mini{position:relative;width:18px;height:26px;display:flex;align-items:flex-end;justify-content:center;}
-.veladora-mini-cuerpo{width:8px;height:18px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:1px;}
-.veladora-mini-flama{width:6px;height:9px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;position:absolute;top:-7px;left:1px;opacity:0;transition:opacity 0.4s;}
+.veladora-mini{position:relative;width:16px;height:24px;display:flex;align-items:flex-end;justify-content:center;}
+.veladora-mini-cuerpo{width:8px;height:16px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:1px;}
+.veladora-mini-flama{width:6px;height:8px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;position:absolute;top:-6px;left:1px;opacity:0;transition:opacity 0.4s;}
 .btn-veladora.encendida .veladora-mini-flama{opacity:1;animation:parpadeo 2.4s ease-in-out infinite;}
-.veladoras-info{flex-shrink:0;font-size:12.5px;color:var(--carbon-suave);white-space:nowrap;}
+.veladoras-info{flex-shrink:0;font-size:12px;color:var(--carbon-suave);white-space:nowrap;}
 
 /* ===== TABS ===== */
 .tabs-nav{position:sticky;top:0;z-index:10;display:flex;background:var(--blanco);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
 .tabs-nav::-webkit-scrollbar{display:none;}
-.tab-btn{flex:1 0 auto;min-width:fit-content;padding:14px 18px;background:none;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--carbon-suave);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;white-space:nowrap;}
+.tab-btn{flex:1 0 auto;min-width:fit-content;padding:13px 16px;background:none;border:none;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--carbon-suave);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab-btn.activo{color:var(--terracota-osc);border-bottom-color:var(--terracota);}
 .tab-panel{display:none;animation:fadeIn 0.3s ease;}
 .tab-panel.activo{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 
 /* ===== INFO ===== */
-.info-wrap{max-width:600px;margin:0 auto;padding:20px 16px 60px;}
-.info-bloque{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:18px;margin-bottom:12px;}
-.info-titulo{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--sauce);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.info-titulo::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--sauce);}
-.info-fila{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--hueso-osc);gap:12px;}
+.info-wrap{max-width:600px;margin:0 auto;padding:18px 14px 60px;}
+.info-bloque{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:10px;}
+.info-titulo{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--sauce);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.info-titulo::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--sauce);}
+.info-fila{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--hueso-osc);gap:10px;}
 .info-fila:last-of-type{border-bottom:none;}
-.info-etq{font-size:13px;color:var(--carbon-suave);}
-.info-val{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--carbon);font-weight:500;text-align:right;}
-.info-ubic{font-size:13px;color:var(--carbon-suave);margin-top:5px;}
-.reglas-aviso{background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:6px;padding:11px 13px;font-size:13px;color:var(--carbon-suave);margin-top:4px;}
+.info-etq{font-size:12.5px;color:var(--carbon-suave);}
+.info-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon);font-weight:500;text-align:right;}
+.info-ubic{font-size:12.5px;color:var(--carbon-suave);margin-top:4px;}
+.reglas-aviso{background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--carbon-suave);}
 
 /* ===== RECUERDOS ===== */
-.rec-wrap{max-width:600px;margin:0 auto;padding:16px 14px 80px;}
-.form-rec{background:var(--blanco);border:1px solid var(--borde);border-radius:12px;padding:16px;margin-bottom:18px;}
-.campo{margin-bottom:11px;}
-.campo label{display:block;font-size:11px;font-weight:700;color:var(--carbon-suave);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.03em;}
-.campo input,.campo textarea{width:100%;padding:9px 11px;border:1px solid var(--borde);border-radius:7px;font-family:'Inter',sans-serif;font-size:14px;color:var(--carbon);background:var(--hueso);}
-.campo input:focus,.campo textarea:focus{outline:2px solid var(--terracota);outline-offset:1px;}
-.foto-zona{border:2px dashed var(--borde);border-radius:8px;padding:13px;text-align:center;cursor:pointer;margin-bottom:11px;transition:border-color 0.2s;}
+.rec-wrap{max-width:600px;margin:0 auto;padding:14px 12px 80px;}
+.form-rec{background:var(--blanco);border:1px solid var(--borde);border-radius:12px;padding:14px;margin-bottom:16px;}
+.foto-zona{border:2px dashed var(--borde);border-radius:8px;padding:12px;text-align:center;cursor:pointer;margin-bottom:10px;transition:border-color 0.2s;}
 .foto-zona:hover{border-color:var(--terracota);}
 .foto-zona input{display:none;}
 .foto-zona-txt{font-size:13px;color:var(--carbon-suave);}
-.foto-preview-wrap{text-align:center;margin-bottom:11px;}
-.foto-preview-wrap img{max-width:140px;max-height:140px;border-radius:8px;border:2px solid var(--terracota);}
-.btn-qfoto{background:var(--terracota);color:white;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin-top:6px;display:block;margin:6px auto 0;}
+.foto-preview-wrap{text-align:center;margin-bottom:10px;}
+.foto-preview-wrap img{max-width:120px;max-height:120px;border-radius:8px;border:2px solid var(--terracota);}
+.btn-qfoto{background:var(--terracota);color:white;border:none;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin:5px auto 0;display:block;}
 .btn-pub{width:100%;padding:12px;background:var(--terracota);color:var(--blanco);border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
 .btn-pub:hover{background:var(--terracota-osc);}
 .btn-pub:disabled{background:var(--borde);cursor:not-allowed;}
-.aviso{margin-top:9px;font-size:13px;padding:9px 12px;border-radius:7px;display:none;}
-.aviso.exito{display:block;background:#EEF3EC;color:var(--sauce-osc);}
-.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
 
-/* Burbujas chat */
-.burbuja{display:flex;flex-direction:column;margin-bottom:12px;}
-.burbuja-inner{background:var(--blanco);border:1px solid var(--borde);border-radius:14px 14px 14px 4px;padding:13px;max-width:90%;box-shadow:0 1px 4px rgba(43,39,35,0.05);}
-.burbuja-nombre{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--terracota-osc);margin-bottom:6px;}
-.burbuja-foto{width:100%;max-width:240px;border-radius:9px;display:block;margin-bottom:7px;cursor:pointer;}
-.burbuja-pie{font-size:12px;color:var(--carbon-suave);font-style:italic;margin-bottom:5px;}
-.burbuja-txt{font-size:14px;color:var(--carbon);line-height:1.5;}
-.burbuja-hora{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--carbon-suave);margin-top:7px;text-align:right;}
-.vacio{text-align:center;padding:32px 14px;color:var(--carbon-suave);font-size:13.5px;}
-
-/* Gestos en burbuja */
-.burbuja-gesto{background:var(--blanco);border:1px solid var(--borde);border-radius:14px 14px 14px 4px;padding:11px 14px;max-width:280px;margin-bottom:12px;box-shadow:0 1px 4px rgba(43,39,35,0.05);}
-.gesto-emisor{font-size:12px;color:var(--carbon-suave);margin-bottom:4px;}
-.gesto-contenido{font-size:26px;line-height:1.3;}
-.gesto-tipo{font-size:12.5px;color:var(--carbon-suave);margin-top:3px;}
-
-/* Vela premium en feed */
-.vela-premium-wrap{background:linear-gradient(135deg,#2B2723 0%,#3d2d1f 100%);border-radius:14px 14px 14px 4px;padding:16px;max-width:260px;margin-bottom:12px;text-align:center;}
-.vela-premium-nombre{font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:10px;}
-.vela-premium{display:inline-flex;flex-direction:column;align-items:center;gap:4px;}
-.vela-premium-flama{width:18px;height:26px;background:radial-gradient(ellipse at 50% 80%,#FFD700 0%,#FF8C00 50%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:parpadeo 1.8s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,180,0,0.8));}
-.vela-premium-cuerpo{width:14px;height:36px;background:linear-gradient(180deg,#FFFDF6 0%,#F0E0C0 50%,#D4B896 100%);border-radius:3px;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
-.vela-premium-txt{font-size:13px;color:var(--dorado);margin-top:8px;font-style:italic;}
-
-/* ===== TIENDA CRÉDITOS ===== */
-.tienda-wrap{max-width:600px;margin:0 auto;padding:16px 14px 80px;}
-.creditos-saldo{background:linear-gradient(135deg,var(--terracota-osc) 0%,#8B5A3A 100%);border-radius:14px;padding:20px;margin-bottom:18px;color:var(--blanco);text-align:center;}
-.creditos-saldo-num{font-family:'Fraunces',serif;font-size:42px;font-weight:500;line-height:1;}
-.creditos-saldo-txt{font-size:13px;opacity:0.85;margin-top:4px;}
-.creditos-saldo-email{font-size:11.5px;opacity:0.7;margin-top:8px;font-family:'JetBrains Mono',monospace;}
-
-.seccion-titulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--carbon-suave);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--borde);}
-
-/* Paquetes de créditos */
-.paquetes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px;}
-.paquete{background:var(--blanco);border:1.5px solid var(--borde);border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.paquete:hover,.paquete.sel{border-color:var(--terracota);background:var(--hueso-osc);}
-.paquete-cred{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:var(--terracota-osc);}
-.paquete-txt{font-size:11px;color:var(--carbon-suave);margin:2px 0 4px;}
-.paquete-precio{font-size:13px;font-weight:700;color:var(--carbon);}
-.btn-comprar{width:100%;padding:12px;background:var(--terracota);color:var(--blanco);border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;}
-.btn-comprar:disabled{background:var(--borde);cursor:not-allowed;}
-
-/* Catálogo de gestos */
-.gestos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.gesto-card{background:var(--blanco);border:1.5px solid var(--borde);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all 0.2s;}
-.gesto-card:hover{border-color:var(--dorado);transform:translateY(-2px);}
-.gesto-card:active{transform:scale(0.97);}
-.gesto-emoji{font-size:32px;margin-bottom:6px;}
-.gesto-nombre{font-size:13px;font-weight:600;color:var(--carbon);margin-bottom:3px;}
-.gesto-desc{font-size:11.5px;color:var(--carbon-suave);margin-bottom:8px;line-height:1.4;}
-.gesto-precio{display:inline-block;background:var(--hueso-osc);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--terracota-osc);}
-.gesto-card.especial{border-color:var(--dorado);background:linear-gradient(135deg,#2B2723 0%,#3d2d1f 100%);}
-.gesto-card.especial .gesto-nombre{color:var(--dorado);}
-.gesto-card.especial .gesto-desc{color:rgba(255,255,255,0.65);}
-.gesto-card.especial .gesto-precio{background:rgba(201,162,75,0.2);color:var(--dorado);}
-.gesto-card.flores-fisicas{border-color:var(--sauce);}
-.gesto-card.flores-fisicas .gesto-precio{background:#EEF3EC;color:var(--sauce-osc);}
-
-/* email para recibir créditos */
-.email-form{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:16px;}
-.email-form p{font-size:13px;color:var(--carbon-suave);margin-bottom:10px;}
-
-/* ===== VIDEOLLAMADA ===== */
-.llamada-wrap{max-width:600px;margin:0 auto;padding:20px 16px 60px;}
-.llamada-card{background:var(--blanco);border:1px solid var(--borde);border-left:3px solid var(--sauce);border-radius:10px;padding:16px;margin-bottom:10px;}
-.llamada-titulo{font-family:'Fraunces',serif;font-size:17px;color:var(--sauce-osc);margin-bottom:5px;}
-.llamada-fecha{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon-suave);margin-bottom:11px;}
-.btn-unirse{display:inline-block;padding:9px 16px;background:var(--sauce);color:var(--blanco);text-decoration:none;border-radius:7px;font-size:13px;font-weight:600;}
-
-/* ===== MODAL ===== */
-.modal{position:fixed;inset:0;background:rgba(43,39,35,0.88);display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0;}
-.modal.activo{display:flex;}
-.modal-box{background:var(--blanco);border-radius:18px 18px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s ease;}
-@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal-titulo{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:4px;}
-.modal-sub{font-size:13px;color:var(--carbon-suave);margin-bottom:18px;}
-.modal-cerrar{position:absolute;top:18px;right:18px;background:none;border:none;font-size:22px;color:var(--carbon-suave);cursor:pointer;}
-
-/* Lightbox */
-.lightbox{position:fixed;inset:0;background:rgba(43,39,35,0.95);display:none;align-items:center;justify-content:center;z-index:200;padding:16px;}
-.lightbox.activo{display:flex;}
-.lightbox img{max-width:100%;max-height:90vh;border-radius:8px;}
-
-.reacciones{display:flex;gap:8px;margin-top:8px;}
-.btn-reaccion{display:flex;align-items:center;gap:4px;padding:5px 11px;border:1.5px solid var(--borde);border-radius:20px;background:var(--hueso);font-size:13px;cursor:pointer;transition:all 0.2s;}
-.btn-reaccion:hover{border-color:var(--dorado);}
+/* Burbujas */
+.burbuja{display:flex;flex-direction:column;margin-bottom:11px;}
+.burbuja-inner{background:var(--blanco);border:1px solid var(--borde);border-radius:13px 13px 13px 3px;padding:12px;max-width:90%;box-shadow:0 1px 3px rgba(43,39,35,0.05);}
+.burbuja-nombre{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;color:var(--terracota-osc);margin-bottom:5px;}
+.burbuja-foto{width:100%;max-width:220px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;}
+.burbuja-pie{font-size:12px;color:var(--carbon-suave);font-style:italic;margin-bottom:4px;}
+.burbuja-txt{font-size:13.5px;color:var(--carbon);line-height:1.5;}
+.reacciones{display:flex;gap:7px;margin-top:8px;}
+.btn-reaccion{display:flex;align-items:center;gap:4px;padding:4px 10px;border:1.5px solid var(--borde);border-radius:18px;background:var(--hueso);font-size:12.5px;cursor:pointer;transition:all 0.2s;}
 .btn-reaccion.like.activo{border-color:var(--sauce);background:#EEF3EC;color:var(--sauce-osc);}
 .btn-reaccion.dislike.activo{border-color:var(--rojo);background:#F7E9E6;color:var(--rojo);}
-footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
+.burbuja-hora{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--carbon-suave);margin-top:6px;text-align:right;}
+
+/* Gestos en feed */
+.burbuja-gesto{background:var(--blanco);border:1px solid var(--borde);border-radius:13px 13px 13px 3px;padding:10px 13px;max-width:260px;margin-bottom:11px;}
+.gesto-emisor{font-size:11.5px;color:var(--carbon-suave);margin-bottom:3px;}
+.gesto-contenido{font-size:24px;line-height:1.3;}
+.gesto-tipo{font-size:12px;color:var(--carbon-suave);margin-top:2px;}
+.vela-premium-wrap{background:linear-gradient(135deg,#2B2723 0%,#3d2d1f 100%);border-radius:13px 13px 13px 3px;padding:14px;max-width:240px;margin-bottom:11px;text-align:center;}
+.vela-premium-nombre{font-size:11.5px;color:rgba(255,255,255,0.7);margin-bottom:8px;}
+.vela-premium-flama{width:16px;height:22px;background:radial-gradient(ellipse at 50% 80%,#FFD700 0%,#FF8C00 50%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:parpadeo 1.8s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(255,180,0,0.8));margin:0 auto 4px;}
+.vela-premium-cuerpo{width:12px;height:30px;background:linear-gradient(180deg,#FFFDF6,#D4B896);border-radius:2px;margin:0 auto;}
+.vela-premium-txt{font-size:12px;color:var(--dorado);margin-top:7px;font-style:italic;}
+.vacio{text-align:center;padding:30px 12px;color:var(--carbon-suave);font-size:13px;}
+
+/* ===== TIENDA ===== */
+.tienda-wrap{max-width:600px;margin:0 auto;padding:14px 12px 80px;}
+.creditos-saldo{background:linear-gradient(135deg,var(--terracota-osc) 0%,#8B5A3A 100%);border-radius:12px;padding:18px;margin-bottom:16px;color:var(--blanco);text-align:center;}
+.creditos-saldo-num{font-family:'Fraunces',serif;font-size:40px;font-weight:500;line-height:1;}
+.creditos-saldo-txt{font-size:12.5px;opacity:0.85;margin-top:3px;}
+.creditos-saldo-email{font-size:11px;opacity:0.7;margin-top:6px;font-family:'JetBrains Mono',monospace;}
+.seccion-titulo{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--carbon-suave);margin:16px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--borde);}
+.paquetes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:4px;}
+.paquete{background:var(--blanco);border:1.5px solid var(--borde);border-radius:9px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.paquete:hover,.paquete.sel{border-color:var(--terracota);background:var(--hueso-osc);}
+.paquete-cred{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--terracota-osc);}
+.paquete-txt{font-size:10.5px;color:var(--carbon-suave);margin:1px 0 3px;}
+.paquete-precio{font-size:12.5px;font-weight:700;color:var(--carbon);}
+.btn-comprar{width:100%;padding:11px;background:var(--terracota);color:var(--blanco);border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;}
+.btn-comprar:disabled{background:var(--borde);cursor:not-allowed;}
+.gestos-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.gesto-card{background:var(--blanco);border:1.5px solid var(--borde);border-radius:9px;padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.gesto-card:hover{border-color:var(--dorado);transform:translateY(-1px);}
+.gesto-emoji{font-size:28px;margin-bottom:5px;}
+.gesto-nombre{font-size:12.5px;font-weight:600;color:var(--carbon);margin-bottom:2px;}
+.gesto-desc{font-size:11px;color:var(--carbon-suave);margin-bottom:6px;line-height:1.4;}
+.gesto-precio{display:inline-block;background:var(--hueso-osc);border-radius:18px;padding:3px 9px;font-size:11.5px;font-weight:700;color:var(--terracota-osc);}
+.gesto-card.especial{border-color:var(--dorado);background:linear-gradient(135deg,#2B2723 0%,#3d2d1f 100%);}
+.gesto-card.especial .gesto-nombre{color:var(--dorado);}
+.gesto-card.especial .gesto-desc{color:rgba(255,255,255,0.6);}
+.gesto-card.especial .gesto-precio{background:rgba(201,162,75,0.2);color:var(--dorado);}
+.gesto-card.fisico{border-color:var(--sauce);grid-column:span 2;}
+.gesto-card.fisico .gesto-precio{background:#EEF3EC;color:var(--sauce-osc);}
+
+/* ===== VIDEOLLAMADA ===== */
+.llamada-wrap{max-width:600px;margin:0 auto;padding:18px 14px 80px;}
+.llamada-promo{background:linear-gradient(135deg,var(--terracota-osc) 0%,#8B5A3A 100%);border-radius:14px;padding:22px;color:var(--blanco);text-align:center;margin-bottom:18px;}
+.llamada-promo-ico{font-size:38px;margin-bottom:10px;}
+.llamada-promo-titulo{font-family:'Fraunces',serif;font-size:22px;margin-bottom:6px;}
+.llamada-promo-desc{font-size:13.5px;opacity:0.88;line-height:1.5;margin-bottom:16px;}
+.llamada-promo-precio{font-size:28px;font-weight:700;font-family:'Fraunces',serif;margin-bottom:16px;}
+.llamada-promo-precio span{font-size:14px;font-weight:400;opacity:0.8;}
+.btn-solicitar{display:inline-block;padding:13px 28px;background:var(--dorado);color:var(--carbon);border:none;border-radius:30px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.btn-solicitar:hover{opacity:0.88;}
+.llamada-activa{background:var(--blanco);border:1px solid var(--borde);border-left:3px solid var(--sauce);border-radius:10px;padding:16px;margin-bottom:10px;}
+.llamada-activa-titulo{font-family:'Fraunces',serif;font-size:17px;color:var(--sauce-osc);margin-bottom:4px;}
+.llamada-activa-fecha{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon-suave);margin-bottom:12px;}
+.btn-unirse{display:inline-block;padding:10px 18px;background:var(--sauce);color:var(--blanco);text-decoration:none;border-radius:7px;font-size:13px;font-weight:600;}
+
+/* ===== MODAL GESTO ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(43,39,35,0.85);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.activo{display:flex;}
+.modal-box{background:var(--blanco);border-radius:16px 16px 0 0;padding:22px 18px 36px;width:100%;max-width:500px;animation:slideUp 0.3s ease;}
+.modal-titulo{font-family:'Fraunces',serif;font-size:19px;color:var(--terracota-osc);margin-bottom:3px;}
+.modal-sub{font-size:13px;color:var(--carbon-suave);margin-bottom:16px;}
+.modal-cerrar{position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:var(--carbon-suave);cursor:pointer;}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(43,39,35,0.95);display:none;align-items:center;justify-content:center;z-index:300;padding:14px;}
+.lightbox.activo{display:flex;}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:7px;}
+
+footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
 </style>
 </head>
 <body>
 
-<!-- PORTADA + PERFIL -->
-<div class="portada">
-  <img id="portadaImg" class="portada-img" style="display:none;" alt="">
-  <div class="portada-overlay"></div>
+<!-- MODAL REGISTRO (se muestra al entrar) -->
+<div class="overlay" id="overlayRegistro">
+  <div class="modal-reg">
+    <div class="modal-reg-titulo">Bienvenido 🕊</div>
+    <div class="modal-reg-sub">Para dejar condolencias, encender una veladora o enviar gestos de cariño, escribe tu nombre y correo. Solo tarda un momento.</div>
+    <div class="campo">
+      <label for="regNombre">Tu nombre</label>
+      <input type="text" id="regNombre" placeholder="¿Cómo te llamas?" maxlength="60" autocomplete="name">
+    </div>
+    <div class="campo">
+      <label for="regEmail">Tu correo electrónico</label>
+      <input type="email" id="regEmail" placeholder="tu@correo.com" autocomplete="email">
+    </div>
+    <button class="btn-reg" id="btnRegistro">Entrar a la página →</button>
+    <div class="aviso" id="avisoRegistro"></div>
+  </div>
 </div>
 
+<!-- PORTADA + PERFIL -->
+<div class="portada">
+  <img id="portadaImg" style="display:none;" alt="">
+  <div class="portada-overlay"></div>
+</div>
 <div class="perfil-wrap">
   <div class="perfil-foto-ring" id="perfilFotoRing">🕊</div>
 </div>
-
 <div class="perfil-info">
   <div class="perfil-nombre" id="heroNombre">
     Cargando...
@@ -207,9 +223,9 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
   <p class="perfil-bio" id="heroBio" style="display:none;"></p>
 </div>
 
-<!-- STRIP DE VELADORAS -->
+<!-- STRIP VELADORAS -->
 <div class="veladoras-strip">
-  <button class="btn-veladora" id="btnVeladora" onclick="toggleVeladora()">
+  <button class="btn-veladora" id="btnVeladora" onclick="accionRegistrada(toggleVeladora)">
     <div class="veladora-mini">
       <div class="veladora-mini-flama"></div>
       <div class="veladora-mini-cuerpo"></div>
@@ -224,7 +240,7 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
   <button class="tab-btn activo" data-tab="info">Información</button>
   <button class="tab-btn" data-tab="recuerdos">Recuerdos</button>
   <button class="tab-btn" data-tab="tienda">🕯 Gestos</button>
-  <button class="tab-btn" data-tab="llamada">Videollamada</button>
+  <button class="tab-btn" data-tab="llamada">📹 Videollamada</button>
 </nav>
 
 <!-- INFO -->
@@ -257,11 +273,7 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
   <div class="rec-wrap">
     <div class="form-rec">
       <div class="campo">
-        <label for="recNombre">Tu nombre</label>
-        <input type="text" id="recNombre" maxlength="60" placeholder="¿Cómo te llamas?">
-      </div>
-      <div class="campo">
-        <label for="recMensaje">Tu mensaje (opcional si subes foto)</label>
+        <label for="recMensaje">Tu mensaje</label>
         <textarea id="recMensaje" maxlength="500" rows="3" placeholder="Comparte un recuerdo o palabras de cariño..."></textarea>
       </div>
       <label class="foto-zona" id="fotoZona">
@@ -276,134 +288,44 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
           <input type="text" id="recPieFoto" maxlength="120" placeholder="Ej. En su cumpleaños de 1998...">
         </div>
       </div>
-      <button class="btn-pub" id="btnEnviar">Publicar recuerdo</button>
+      <button class="btn-pub" id="btnEnviar" onclick="accionRegistrada(enviarRecuerdo)">Publicar recuerdo</button>
       <div class="aviso" id="avisoRec"></div>
     </div>
     <div id="listaRecuerdos"></div>
   </div>
 </section>
 
-<!-- TIENDA DE GESTOS -->
+<!-- TIENDA -->
 <section class="tab-panel" id="panel-tienda">
   <div class="tienda-wrap">
-
-    <!-- Saldo -->
     <div class="creditos-saldo">
       <div class="creditos-saldo-num" id="saldoNum">0</div>
       <div class="creditos-saldo-txt">Créditos Huerta disponibles</div>
       <div class="creditos-saldo-email" id="saldoEmail"></div>
     </div>
-
-    <!-- Email para identificarse -->
-    <div class="email-form" id="emailForm">
-      <p>Ingresa tu correo para ver o usar tus créditos:</p>
-      <div class="campo">
-        <input type="email" id="inputEmail" placeholder="tu@correo.com">
-      </div>
-      <button class="btn-pub" onclick="identificarUsuario()">Continuar</button>
-    </div>
-
-    <!-- Comprar créditos -->
-    <div id="seccionCompra" style="display:none;">
-      <div class="seccion-titulo">Comprar créditos</div>
-      <div class="paquetes">
-        <div class="paquete" data-creditos="50" data-precio="50" onclick="selPaquete(this)">
-          <div class="paquete-cred">50</div>
-          <div class="paquete-txt">créditos</div>
-          <div class="paquete-precio">$50</div>
-        </div>
-        <div class="paquete" data-creditos="120" data-precio="100" onclick="selPaquete(this)">
-          <div class="paquete-cred">120</div>
-          <div class="paquete-txt">créditos</div>
-          <div class="paquete-precio">$100</div>
-        </div>
-        <div class="paquete" data-creditos="280" data-precio="200" onclick="selPaquete(this)">
-          <div class="paquete-cred">280</div>
-          <div class="paquete-txt">créditos</div>
-          <div class="paquete-precio">$200</div>
-        </div>
-      </div>
-      <button class="btn-comprar" id="btnComprar" disabled onclick="comprarCreditos()">Selecciona un paquete</button>
-      <div class="aviso" id="avisoPago"></div>
-    </div>
-
-    <!-- Catálogo de gestos -->
-    <div id="seccionGestos" style="display:none;">
-      <div class="seccion-titulo">Enviar un gesto de cariño</div>
-      <div class="gestos-grid">
-
-        <div class="gesto-card" onclick="enviarGesto('rosas','🌹 Rosas rojas','rosas','5')">
-          <div class="gesto-emoji">🌹</div>
-          <div class="gesto-nombre">Rosas rojas</div>
-          <div class="gesto-desc">Un ramo de rosas en su memoria</div>
-          <div class="gesto-precio">5 créditos</div>
-        </div>
-
-        <div class="gesto-card" onclick="enviarGesto('girasoles','🌻 Girasoles','girasoles','5')">
-          <div class="gesto-emoji">🌻</div>
-          <div class="gesto-nombre">Girasoles</div>
-          <div class="gesto-desc">Alegría y luz eterna</div>
-          <div class="gesto-precio">5 créditos</div>
-        </div>
-
-        <div class="gesto-card" onclick="enviarGesto('paloma','🕊 Paloma de paz','paloma','5')">
-          <div class="gesto-emoji">🕊</div>
-          <div class="gesto-nombre">Paloma de paz</div>
-          <div class="gesto-desc">Que descanse en paz</div>
-          <div class="gesto-precio">5 créditos</div>
-        </div>
-
-        <div class="gesto-card" onclick="enviarGesto('corazon','💛 Abrazo de luz','corazon','5')">
-          <div class="gesto-emoji">💛</div>
-          <div class="gesto-nombre">Abrazo de luz</div>
-          <div class="gesto-desc">Un abrazo para la familia</div>
-          <div class="gesto-precio">5 créditos</div>
-        </div>
-
-        <div class="gesto-card" onclick="enviarGesto('arreglo','💐 Arreglo floral virtual','arreglo_virtual','20')">
-          <div class="gesto-emoji">💐</div>
-          <div class="gesto-nombre">Arreglo virtual</div>
-          <div class="gesto-desc">Arreglo floral especial visible en la página</div>
-          <div class="gesto-precio">20 créditos</div>
-        </div>
-
-        <div class="gesto-card especial" onclick="enviarGesto('vela_premium','🕯 Vela premium','vela_premium','15')">
-          <div class="gesto-emoji">🕯</div>
-          <div class="gesto-nombre">Vela premium</div>
-          <div class="gesto-desc">Vela especial con luz dorada en la página</div>
-          <div class="gesto-precio">15 créditos</div>
-        </div>
-
-        <div class="gesto-card flores-fisicas" style="grid-column:span 2;" onclick="enviarGesto('flores_fisicas','🌺 Arreglo floral FÍSICO','flores_fisicas','80')">
-          <div class="gesto-emoji">🌺</div>
-          <div class="gesto-nombre">Arreglo floral FÍSICO</div>
-          <div class="gesto-desc">Un arreglo real llegará al domicilio o sala de velación. La funeraria coordinará la entrega.</div>
-          <div class="gesto-precio">80 créditos · ~$200 MXN</div>
-        </div>
-
-      </div>
-    </div>
+    <div class="seccion-titulo">Comprar créditos</div>
+    <div class="paquetes" id="listaPaquetes"></div>
+    <button class="btn-comprar" id="btnComprar" disabled onclick="comprarCreditos()">Selecciona un paquete</button>
+    <div class="aviso" id="avisoPago"></div>
+    <div class="seccion-titulo">Enviar un gesto de cariño</div>
+    <div class="gestos-grid" id="listaGestos"></div>
   </div>
 </section>
 
 <!-- VIDEOLLAMADA -->
 <section class="tab-panel" id="panel-llamada">
-  <div class="llamada-wrap">
-    <div id="listaLlamadas"></div>
+  <div class="llamada-wrap" id="llamadaWrap">
+    <div class="vacio">Cargando...</div>
   </div>
 </section>
 
-<!-- MODAL confirmar gesto -->
-<div class="modal" id="modalGesto">
+<!-- MODAL GESTO -->
+<div class="modal-overlay" id="modalGesto">
   <div class="modal-box" style="position:relative;">
     <button class="modal-cerrar" onclick="cerrarModal()">×</button>
     <div class="modal-titulo" id="modalTitulo">Enviar gesto</div>
     <div class="modal-sub" id="modalSub"></div>
-    <div class="campo">
-      <label for="modalNombre">Tu nombre</label>
-      <input type="text" id="modalNombre" maxlength="60" placeholder="¿Cómo te llamas?">
-    </div>
-    <div class="campo" id="campoFloresFisicas" style="display:none;">
+    <div class="campo" id="campoDireccion" style="display:none;">
       <label for="modalDireccion">Dirección de entrega</label>
       <input type="text" id="modalDireccion" maxlength="200" placeholder="Calle, número, colonia, ciudad">
     </div>
@@ -417,7 +339,7 @@ footer{text-align:center;padding:22px 16px;font-size:11.5px;color:var(--carbon-s
   <img id="lightboxImg" src="" alt="">
 </div>
 
-<footer>Página de homenaje · hecha con cariño para quienes no pudieron estar presentes</footer>
+<footer>Página de homenaje · hecha con cariño</footer>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
@@ -425,7 +347,7 @@ const params = new URLSearchParams(window.location.search);
 const slug = params.get('p');
 let servicio = null;
 let fotoBase64 = null;
-let emailUsuario = localStorage.getItem('emailUsuario') || '';
+let usuario = JSON.parse(localStorage.getItem('usuario_pc') || 'null');
 let saldoUsuario = 0;
 let gestoActual = null;
 let paqueteSeleccionado = null;
@@ -435,9 +357,8 @@ function esc(s){const d=document.createElement('div');d.textContent=s||'';return
 
 function driveUrl(url) {
   if (!url) return '';
-  // Convierte cualquier link de Drive al formato que sí funciona en web
-  const m = url.match(/[-\w]{25,}/);
-  if (m && (url.includes('drive.google') || url.includes('docs.google'))) {
+  const m = String(url).match(/[-\w]{25,}/);
+  if (m && (String(url).includes('drive.google') || String(url).includes('docs.google'))) {
     return 'https://lh3.googleusercontent.com/d/' + m[0];
   }
   return url;
@@ -496,6 +417,44 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+// ===== REGISTRO =====
+// Si ya está registrado, ocultar el modal
+if (usuario) {
+  document.getElementById('overlayRegistro').classList.add('oculto');
+}
+
+document.getElementById('btnRegistro').addEventListener('click', async () => {
+  const nombre = document.getElementById('regNombre').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const aviso = document.getElementById('avisoRegistro');
+
+  if (!nombre) { aviso.className='aviso error'; aviso.textContent='Por favor escribe tu nombre.'; return; }
+  if (!email || !email.includes('@')) { aviso.className='aviso error'; aviso.textContent='Por favor escribe un correo válido.'; return; }
+
+  usuario = { nombre, email };
+  localStorage.setItem('usuario_pc', JSON.stringify(usuario));
+  document.getElementById('overlayRegistro').classList.add('oculto');
+
+  // Dar créditos gratis si es primera vez en esta página
+  if (servicio && !localStorage.getItem('cg_'+servicio.id+'_'+email)) {
+    const resp = await api('darCreditosGratis', {email, servicioId: servicio.id}, 'POST');
+    if (resp.ok && resp.cantidad > 0) {
+      localStorage.setItem('cg_'+servicio.id+'_'+email, '1');
+      setTimeout(()=>alert('🎁 ¡Te regalamos '+resp.cantidad+' créditos Huerta!\nÚsalos para enviar flores o encender una vela.'), 600);
+    }
+  }
+  actualizarSaldo();
+});
+
+// Ejecuta una acción solo si el usuario está registrado, si no abre el modal
+function accionRegistrada(fn) {
+  if (!usuario) {
+    document.getElementById('overlayRegistro').classList.remove('oculto');
+    return;
+  }
+  fn();
+}
+
 // ===== CARGAR SERVICIO =====
 async function cargarServicio() {
   if (!slug){document.getElementById('heroNombre').textContent='Página no especificada';return;}
@@ -505,97 +464,80 @@ async function cargarServicio() {
   pintarHero(servicio);
   pintarInfo(servicio);
   cargarRecuerdos();
-  cargarLlamadas();
   cargarVeladoras();
-  if (emailUsuario) identificarUsuario();
+  cargarTienda();
+  cargarVideollamada();
+  if (usuario) actualizarSaldo();
 }
 
 function pintarHero(s) {
   document.getElementById('heroNombre').innerHTML = esc(s.nombreFinado) +
-    `<span class="vela-deco" aria-hidden="true"><div class="vela-deco-flama"></div><div class="vela-deco-cuerpo"></div></span>`;
-
-  // Foto de portada
-  if (s.fotoPortadaUrl || s.fotoUrl) {
-    const urlPortada = driveUrl(s.fotoPortadaUrl || s.fotoUrl);
-    const pImg = document.getElementById('portadaImg');
-    pImg.src = urlPortada;
-    pImg.style.display = 'block';
+    '<span class="vela-deco" aria-hidden="true"><div class="vela-deco-flama"></div><div class="vela-deco-cuerpo"></div></span>';
+  const urlPortada = driveUrl(s.fotoPortadaUrl || s.fotoUrl);
+  if (urlPortada) {
+    const pi = document.getElementById('portadaImg');
+    pi.src = urlPortada; pi.style.display='block';
   }
-
-  // Foto de perfil
   if (s.fotoUrl) {
     const urlPerfil = driveUrl(s.fotoUrl);
-    const ring = document.getElementById('perfilFotoRing');
-    ring.innerHTML = `<img src="${urlPerfil}" alt="${esc(s.nombreFinado)}" onerror="this.parentElement.textContent='🕊'">`;
+    document.getElementById('perfilFotoRing').innerHTML =
+      `<img src="${urlPerfil}" alt="${esc(s.nombreFinado)}" onerror="this.parentElement.textContent='🕊'">`;
   }
-
   const nac = formatFecha(s.fechaNacimiento);
   const def = formatFecha(s.fechaDefuncion);
   document.getElementById('heroFechas').innerHTML = `${nac}<span class="sep">·</span>${def}`;
-
-  if (s.biografia) {
-    const b = document.getElementById('heroBio');
-    b.textContent = s.biografia; b.style.display = 'block';
-  }
+  if (s.biografia){const b=document.getElementById('heroBio');b.textContent=s.biografia;b.style.display='block';}
 }
 
 function pintarInfo(s) {
-  const bloques = [
-    {p:'Cepelio',fecha:s.fechaCepelio,hora:s.horaCepelio,ubic:s.ubicacionCepelio},
-    {p:'Misa',   fecha:s.fechaMisa,   hora:s.horaMisa,   ubic:s.ubicacionMisa},
-    {p:'Salida', fecha:s.fechaSalida, hora:s.horaSalida, ubic:s.ubicacionSalida}
-  ];
-  bloques.forEach(b=>{
-    const tiene = b.fecha||b.hora||b.ubic;
-    const el = document.getElementById('bloque'+b.p);
-    if(!tiene){el.style.display='none';return;}
-    document.getElementById('fecha'+b.p).textContent = formatFecha(b.fecha);
-    document.getElementById('hora'+b.p).textContent = formatHora(b.hora);
-    document.getElementById('ubicacion'+b.p).textContent = b.ubic||'';
+  [{p:'Cepelio',fecha:s.fechaCepelio,hora:s.horaCepelio,ubic:s.ubicacionCepelio},
+   {p:'Misa',fecha:s.fechaMisa,hora:s.horaMisa,ubic:s.ubicacionMisa},
+   {p:'Salida',fecha:s.fechaSalida,hora:s.horaSalida,ubic:s.ubicacionSalida}
+  ].forEach(b=>{
+    const el=document.getElementById('bloque'+b.p);
+    if(!b.fecha&&!b.hora&&!b.ubic){el.style.display='none';return;}
+    document.getElementById('fecha'+b.p).textContent=formatFecha(b.fecha);
+    document.getElementById('hora'+b.p).textContent=formatHora(b.hora);
+    document.getElementById('ubicacion'+b.p).textContent=b.ubic||'';
   });
-  const reg = s.reglasPublicacion;
-  if(reg){const av=document.getElementById('reglasAviso');av.textContent=reg;av.style.display='block';}
+  if(s.reglasPublicacion){const av=document.getElementById('reglasAviso');av.textContent=s.reglasPublicacion;av.style.display='block';}
 }
 
 // ===== VELADORAS =====
 async function cargarVeladoras() {
   const resp = await api('obtenerVeladoras',{servicioId:servicio.id});
   if(!resp.ok) return;
-  actualizarUIVeladoras(resp.total, resp.nombres);
+  if(resp.total>0){
+    const n=resp.nombres.slice(0,3).join(', ')+(resp.nombres.length>3?' y '+(resp.nombres.length-3)+' más':'');
+    document.getElementById('veladoras-info').textContent='🕯 '+resp.total+' · '+n;
+  }
   if(localStorage.getItem('veladora_'+servicio.id)){
     document.getElementById('btnVeladora').classList.add('encendida');
     document.getElementById('textoVeladora').textContent='Veladora encendida';
   }
 }
 
-function actualizarUIVeladoras(total, nombres) {
-  const info = document.getElementById('veladoras-info');
-  if(total>0){
-    const n = nombres.slice(0,3).join(', ')+(nombres.length>3?' y '+(nombres.length-3)+' más':'');
-    info.textContent = `🕯 ${total} veladora${total>1?'s':''} · ${n}`;
-  }
-}
-
 async function toggleVeladora() {
   if(localStorage.getItem('veladora_'+servicio.id)) return;
-  const nombre = prompt('¿Cuál es tu nombre para encender la veladora?');
-  if(!nombre||!nombre.trim()) return;
-  const resp = await api('encenderVeladora',{servicioId:servicio.id,nombre:nombre.trim()},'POST');
+  const resp = await api('encenderVeladora',{servicioId:servicio.id,nombre:usuario.nombre},'POST');
   if(resp.ok){
     localStorage.setItem('veladora_'+servicio.id,'1');
     document.getElementById('btnVeladora').classList.add('encendida');
     document.getElementById('textoVeladora').textContent='Veladora encendida';
-    actualizarUIVeladoras(resp.total, resp.nombres);
+    if(resp.total>0){
+      const n=resp.nombres.slice(0,3).join(', ')+(resp.nombres.length>3?' y '+(resp.nombres.length-3)+' más':'');
+      document.getElementById('veladoras-info').textContent='🕯 '+resp.total+' · '+n;
+    }
   }
 }
 
 // ===== RECUERDOS =====
 document.getElementById('inputFoto').addEventListener('change', e=>{
-  const a = e.target.files[0]; if(!a) return;
-  const r = new FileReader();
-  r.onload = ev=>{
-    fotoBase64 = ev.target.result;
-    document.getElementById('fotoPreviewImg').src = fotoBase64;
+  const a=e.target.files[0]; if(!a) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    fotoBase64=ev.target.result;
+    document.getElementById('fotoPreviewImg').src=fotoBase64;
     document.getElementById('fotoPreviewWrap').style.display='block';
     document.getElementById('fotoZona').style.display='none';
   };
@@ -609,222 +551,248 @@ function quitarFoto(){
   document.getElementById('fotoZona').style.display='block';
 }
 
-document.getElementById('btnEnviar').addEventListener('click', async()=>{
-  const nombre=document.getElementById('recNombre').value.trim();
+async function enviarRecuerdo() {
   const mensaje=document.getElementById('recMensaje').value.trim();
   const pieFoto=document.getElementById('recPieFoto').value.trim();
   const aviso=document.getElementById('avisoRec');
   const btn=document.getElementById('btnEnviar');
-  if(!nombre){aviso.className='aviso error';aviso.textContent='Por favor escribe tu nombre.';return;}
   if(!mensaje&&!fotoBase64){aviso.className='aviso error';aviso.textContent='Escribe un mensaje o agrega una foto.';return;}
   btn.disabled=true; btn.textContent=fotoBase64?'Subiendo...':'Publicando...';
   try{
-    const resp=await api('publicarRecuerdo',{servicioId:servicio.id,nombre,mensaje,pieFoto,imagenBase64:fotoBase64||null,tipoMime:'image/jpeg'},'POST');
+    const resp=await api('publicarRecuerdo',{servicioId:servicio.id,nombre:usuario.nombre,mensaje,pieFoto,imagenBase64:fotoBase64||null,tipoMime:'image/jpeg'},'POST');
     if(resp.ok){
       aviso.className='aviso exito';
-      aviso.textContent='✓ Tu recuerdo fue enviado. Aparecerá tras ser revisado por la funeraria.';
-      document.getElementById('recNombre').value='';
+      aviso.textContent='✓ Tu recuerdo fue enviado. Aparecerá tras ser revisado.';
       document.getElementById('recMensaje').value='';
       document.getElementById('recPieFoto').value='';
       quitarFoto();
-    } else {
-      aviso.className='aviso error';aviso.textContent=resp.error||'Error al enviar.';
-    }
-  } catch(e){aviso.className='aviso error';aviso.textContent='Sin conexión. Intenta de nuevo.';}
+    } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al enviar.'; }
+  } catch(e){ aviso.className='aviso error'; aviso.textContent='Sin conexión.'; }
   btn.disabled=false; btn.textContent='Publicar recuerdo';
-});
+}
 
 async function cargarRecuerdos() {
   const resp = await api('obtenerRecuerdos',{servicioId:servicio.id});
   const lista = document.getElementById('listaRecuerdos');
   if(!resp.ok||!resp.recuerdos||resp.recuerdos.length===0){
-    lista.innerHTML='<div class="vacio">Sé el primero en compartir un recuerdo 🕊</div>';return;
+    lista.innerHTML='<div class="vacio">Sé el primero en compartir un recuerdo 🕊</div>'; return;
   }
   lista.innerHTML = resp.recuerdos.map(r=>{
-    if(r.tipo==='gesto') return renderGesto(r);
-    if(r.tipo==='vela_premium') return renderVelaPremium(r);
-    const yaReacciono = localStorage.getItem('reac_'+r.id);
+    if(r.tipo==='vela_premium') return `
+      <div class="vela-premium-wrap">
+        <div class="vela-premium-nombre">${esc(r.nombre)} encendió una vela premium</div>
+        <div class="vela-premium-flama"></div>
+        <div class="vela-premium-cuerpo"></div>
+        <div class="vela-premium-txt">"Que su luz brille eternamente"</div>
+      </div>`;
+    if(r.tipo==='gesto') return `
+      <div class="burbuja-gesto">
+        <div class="gesto-emisor">${esc(r.nombre)} envió:</div>
+        <div class="gesto-contenido">${esc(r.emoji||'💐')}</div>
+        <div class="gesto-tipo">${esc(r.descripcion||'')}</div>
+      </div>`;
+    const yaReacciono=localStorage.getItem('reac_'+r.id);
     return `<div class="burbuja"><div class="burbuja-inner">
       <div class="burbuja-nombre">${esc(r.nombre)}</div>
-      ${r.urlFoto?`<img class="burbuja-foto" src="${driveUrl(r.urlFoto)}" alt="" onclick="abrirLightbox('${driveUrl(r.urlFoto)}')" loading="lazy" onerror="this.style.display='none'">`:'' }
+      ${r.urlFoto?`<img class="burbuja-foto" src="${driveUrl(r.urlFoto)}" alt="" onclick="abrirLightbox('${driveUrl(r.urlFoto)}')" loading="lazy" onerror="this.style.display='none'">` :''}
       ${r.pieFoto?`<div class="burbuja-pie">${esc(r.pieFoto)}</div>`:''}
       ${r.mensaje?`<div class="burbuja-txt">${esc(r.mensaje)}</div>`:''}
       <div class="reacciones">
-        <button class="btn-reaccion like ${yaReacciono==='like'?'activo':''}" onclick="reaccionar('${r.id}','like',this)">👍 Me une</button>
-        <button class="btn-reaccion dislike ${yaReacciono==='dislike'?'activo':''}" onclick="reaccionar('${r.id}','dislike',this)">👎</button>
+        <button class="btn-reaccion like ${yaReacciono==='like'?'activo':''}" onclick="accionRegistrada(()=>reaccionar('${r.id}','like',this))">👍 Me une</button>
+        <button class="btn-reaccion dislike ${yaReacciono==='dislike'?'activo':''}" onclick="accionRegistrada(()=>reaccionar('${r.id}','dislike',this))">👎</button>
       </div>
       <div class="burbuja-hora">${horaCorta(r.creadoEn)}</div>
     </div></div>`;
   }).join('');
 }
 
-function renderGesto(r) {
-  return `<div class="burbuja-gesto">
-    <div class="gesto-emisor">${esc(r.nombre)} envió:</div>
-    <div class="gesto-contenido">${esc(r.emoji||'💐')}</div>
-    <div class="gesto-tipo">${esc(r.descripcion||r.tipoGesto)}</div>
-  </div>`;
-}
-
-function renderVelaPremium(r) {
-  return `<div class="vela-premium-wrap">
-    <div class="vela-premium-nombre">${esc(r.nombre)} encendió una vela premium</div>
-    <div class="vela-premium">
-      <div class="vela-premium-flama"></div>
-      <div class="vela-premium-cuerpo"></div>
-    </div>
-    <div class="vela-premium-txt">"Que su luz brille eternamente"</div>
-  </div>`;
-}
-
-// ===== TIENDA DE CRÉDITOS =====
-async function identificarUsuario() {
-  const input = document.getElementById('inputEmail');
-  if(input.value) emailUsuario = input.value.trim();
-  if(!emailUsuario) return;
-  localStorage.setItem('emailUsuario', emailUsuario);
-  document.getElementById('emailForm').style.display='none';
-  document.getElementById('seccionCompra').style.display='block';
-  document.getElementById('seccionGestos').style.display='block';
-  document.getElementById('saldoEmail').textContent = emailUsuario;
-  // Dar créditos gratis si es primera vez en esta página
-  if (!localStorage.getItem('creditosGratis_'+servicio.id+'_'+emailUsuario)) {
-    const resp = await api('darCreditosGratis',{email:emailUsuario, servicioId:servicio.id},'POST');
-    if (resp.ok && resp.cantidad > 0) {
-      localStorage.setItem('creditosGratis_'+servicio.id+'_'+emailUsuario,'1');
-      setTimeout(()=>alert('🎁 ¡Te regalamos '+resp.cantidad+' créditos Huerta para que envíes un gesto de cariño!'), 800);
-    }
-  }
-  await actualizarSaldo();
-}
-
 async function reaccionar(recuerdoId, tipo, btn) {
-  const yaReacciono = localStorage.getItem('reac_'+recuerdoId);
-  if (yaReacciono) return;
-  const nombre = prompt('¿Tu nombre para reaccionar?');
-  if (!nombre || !nombre.trim()) return;
-  const resp = await api('reaccionarRecuerdo',{
-    recuerdoId, tipo, nombre:nombre.trim(), servicioId:servicio.id
-  },'POST');
-  if (resp.ok) {
-    localStorage.setItem('reac_'+recuerdoId, tipo);
-    btn.classList.add('activo');
+  if(localStorage.getItem('reac_'+recuerdoId)) return;
+  await api('reaccionarRecuerdo',{recuerdoId,tipo,nombre:usuario.nombre,servicioId:servicio.id},'POST');
+  localStorage.setItem('reac_'+recuerdoId,tipo);
+  btn.classList.add('activo');
+}
+
+// ===== TIENDA (carga dinámica del backend) =====
+let paquetesSistema = [];
+let articulosSistema = [];
+
+async function cargarTienda() {
+  const [rPaq, rArt] = await Promise.all([
+    api('obtenerPaquetesCreditos', {}),
+    api('obtenerArticulosTienda', {})
+  ]);
+
+  // Paquetes
+  paquetesSistema = rPaq.paquetes || [];
+  const listaPaq = document.getElementById('listaPaquetes');
+  if (paquetesSistema.length === 0) {
+    listaPaq.innerHTML = '<div class="vacio" style="grid-column:span 3">No hay paquetes disponibles.</div>';
+  } else {
+    listaPaq.innerHTML = paquetesSistema.map(p=>`
+      <div class="paquete" data-id="${p.id}" data-creditos="${p.creditos}" data-precio="${p.precio}" onclick="selPaquete(this)">
+        <div class="paquete-cred">${p.creditos}</div>
+        <div class="paquete-txt">créditos</div>
+        <div class="paquete-precio">$${p.precio}</div>
+      </div>`).join('');
   }
+
+  // Artículos
+  articulosSistema = rArt.articulos || [];
+  const listaArt = document.getElementById('listaGestos');
+  if (articulosSistema.length === 0) {
+    listaArt.innerHTML = '<div class="vacio" style="grid-column:span 2">No hay artículos disponibles.</div>';
+  } else {
+    listaArt.innerHTML = articulosSistema.map(a=>`
+      <div class="gesto-card ${a.tipo==='premium'?'especial':''} ${a.tipo==='fisico'?'fisico':''}"
+           onclick="accionRegistrada(()=>enviarGesto('${a.id}','${esc(a.emoji)} ${esc(a.nombre)}','${a.tipo}',${a.creditos},'${esc(a.emoji)}','${esc(a.descripcion)}'))">
+        <div class="gesto-emoji">${a.emoji||'🌹'}</div>
+        <div class="gesto-nombre">${esc(a.nombre)}</div>
+        <div class="gesto-desc">${esc(a.descripcion)}</div>
+        <div class="gesto-precio">${a.creditos} créditos</div>
+      </div>`).join('');
+  }
+
+  if (usuario) actualizarSaldo();
 }
 
 async function actualizarSaldo() {
-  if(!emailUsuario||!servicio) return;
-  const resp = await api('obtenerSaldo',{email:emailUsuario,servicioId:servicio.id});
+  if(!usuario||!servicio) return;
+  const resp = await api('obtenerSaldo',{email:usuario.email,servicioId:servicio.id});
   if(resp.ok){
-    saldoUsuario = resp.saldo;
-    document.getElementById('saldoNum').textContent = saldoUsuario;
+    saldoUsuario=resp.saldo;
+    document.getElementById('saldoNum').textContent=saldoUsuario;
+    document.getElementById('saldoEmail').textContent=usuario.email;
   }
 }
 
 function selPaquete(el) {
   document.querySelectorAll('.paquete').forEach(p=>p.classList.remove('sel'));
   el.classList.add('sel');
-  paqueteSeleccionado = {creditos:+el.dataset.creditos, precio:+el.dataset.precio};
-  const btn = document.getElementById('btnComprar');
-  btn.disabled = false;
-  btn.textContent = `Comprar ${paqueteSeleccionado.creditos} créditos por $${paqueteSeleccionado.precio}`;
+  paqueteSeleccionado={creditos:+el.dataset.creditos, precio:+el.dataset.precio};
+  const btn=document.getElementById('btnComprar');
+  btn.disabled=false;
+  btn.textContent=`Comprar ${paqueteSeleccionado.creditos} créditos por $${paqueteSeleccionado.precio}`;
 }
 
 async function comprarCreditos() {
   if(!paqueteSeleccionado) return;
-  const aviso = document.getElementById('avisoPago');
-  const btn = document.getElementById('btnComprar');
+  if(!usuario){document.getElementById('overlayRegistro').classList.remove('oculto');return;}
+  const aviso=document.getElementById('avisoPago');
+  const btn=document.getElementById('btnComprar');
   btn.disabled=true; btn.textContent='Generando pago...';
-  const resp = await api('crearSesionCreditos',{
-    email:emailUsuario,
-    servicioId:servicio.id,
-    creditos:paqueteSeleccionado.creditos,
-    precio:paqueteSeleccionado.precio,
-    urlExito:window.location.href+'&creditosOk=1',
-    urlCancelado:window.location.href
+  const resp=await api('crearSesionCreditos',{
+    email:usuario.email, servicioId:servicio.id,
+    creditos:paqueteSeleccionado.creditos, precio:paqueteSeleccionado.precio,
+    urlExito:window.location.href+'&creditosOk=1', urlCancelado:window.location.href
   },'POST');
-  if(resp.ok){
-    window.location.href = resp.urlPago;
-  } else {
-    aviso.className='aviso error';aviso.textContent=resp.error||'Error al generar pago.';
-    btn.disabled=false; btn.textContent='Reintentar';
-  }
+  if(resp.ok){ window.location.href=resp.urlPago; }
+  else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al generar pago.'; btn.disabled=false; btn.textContent='Reintentar'; }
 }
 
-// Si regresó de Stripe con pago exitoso
-if(params.get('creditosOk')==='1') {
-  setTimeout(()=>{
-    document.querySelector('[data-tab="tienda"]').click();
-    actualizarSaldo();
-  }, 800);
+if(params.get('creditosOk')==='1'){
+  setTimeout(()=>{ document.querySelector('[data-tab="tienda"]').click(); actualizarSaldo(); },800);
 }
 
-// ===== GESTOS =====
-function enviarGesto(tipo, nombre, tipoGesto, creditos) {
-  if(!emailUsuario){
+function enviarGesto(artId, nombre, tipo, creditos, emoji, descripcion) {
+  if(saldoUsuario < creditos){
     document.querySelector('[data-tab="tienda"]').click();
+    alert('Necesitas '+creditos+' créditos. Tu saldo actual es '+saldoUsuario+'.\nCompra un paquete para continuar.');
     return;
   }
-  if(saldoUsuario < +creditos){
-    document.querySelector('[data-tab="tienda"]').click();
-    alert(`Necesitas ${creditos} créditos. Tu saldo actual es ${saldoUsuario}.`);
-    return;
-  }
-  gestoActual = {tipo, nombre, tipoGesto, creditos:+creditos};
-  document.getElementById('modalTitulo').textContent = nombre;
-  document.getElementById('modalSub').textContent = `Costo: ${creditos} créditos · Tu saldo: ${saldoUsuario}`;
-  document.getElementById('campoFloresFisicas').style.display = tipoGesto==='flores_fisicas'?'block':'none';
+  gestoActual={artId, nombre, tipo, creditos, emoji, descripcion};
+  document.getElementById('modalTitulo').textContent=nombre;
+  document.getElementById('modalSub').textContent='Costo: '+creditos+' créditos · Tu saldo: '+saldoUsuario;
+  document.getElementById('campoDireccion').style.display=tipo==='fisico'?'block':'none';
   document.getElementById('avisoGesto').style.display='none';
-  document.getElementById('modalNombre').value='';
   document.getElementById('modalGesto').classList.add('activo');
 }
 
 function cerrarModal(){document.getElementById('modalGesto').classList.remove('activo');}
 
 async function confirmarGesto() {
-  const nombre = document.getElementById('modalNombre').value.trim();
-  const aviso = document.getElementById('avisoGesto');
-  const btn = document.getElementById('btnConfirmarGesto');
-  if(!nombre){aviso.className='aviso error';aviso.textContent='Escribe tu nombre.';return;}
-  if(gestoActual.tipoGesto==='flores_fisicas'){
-    const dir = document.getElementById('modalDireccion').value.trim();
-    if(!dir){aviso.className='aviso error';aviso.textContent='Escribe la dirección de entrega.';return;}
-    gestoActual.direccion = dir;
-  }
+  const aviso=document.getElementById('avisoGesto');
+  const btn=document.getElementById('btnConfirmarGesto');
+  const direccion=document.getElementById('modalDireccion').value.trim();
+  if(gestoActual.tipo==='fisico'&&!direccion){aviso.className='aviso error';aviso.textContent='Escribe la dirección de entrega.';return;}
   btn.disabled=true; btn.textContent='Enviando...';
-  const resp = await api('enviarGesto',{
-    servicioId:servicio.id,
-    email:emailUsuario,
-    nombre,
-    tipoGesto:gestoActual.tipoGesto,
-    creditos:gestoActual.creditos,
-    direccion:gestoActual.direccion||''
+  const resp=await api('enviarGesto',{
+    servicioId:servicio.id, email:usuario.email, nombre:usuario.nombre,
+    tipoGesto:gestoActual.tipo==='fisico'?'flores_fisicas':gestoActual.tipo==='premium'?'vela_premium':gestoActual.artId,
+    creditos:gestoActual.creditos, direccion, emoji:gestoActual.emoji, descripcion:gestoActual.descripcion
   },'POST');
   if(resp.ok){
-    aviso.className='aviso exito';aviso.textContent='✓ ¡Gesto enviado con éxito!';
-    saldoUsuario = resp.nuevoSaldo;
-    document.getElementById('saldoNum').textContent = saldoUsuario;
-    setTimeout(()=>{cerrarModal();cargarRecuerdos();},1200);
-  } else {
-    aviso.className='aviso error';aviso.textContent=resp.error||'Error al enviar.';
-  }
+    aviso.className='aviso exito'; aviso.textContent='✓ ¡Gesto enviado!';
+    saldoUsuario=resp.nuevoSaldo;
+    document.getElementById('saldoNum').textContent=saldoUsuario;
+    setTimeout(()=>{cerrarModal();cargarRecuerdos();},1000);
+  } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al enviar.'; }
   btn.disabled=false; btn.textContent='Confirmar envío';
 }
 
-// ===== VIDEOLLAMADAS =====
-async function cargarLlamadas() {
-  const resp = await api('obtenerVideoLlamadas',{servicioId:servicio.id});
-  const lista = document.getElementById('listaLlamadas');
-  if(!resp.ok||resp.videoLlamadas.length===0){
-    lista.innerHTML='<div class="vacio">No hay videollamadas programadas por ahora.</div>';return;
+// ===== VIDEOLLAMADA CON PAGO =====
+async function cargarVideollamada() {
+  const wrap = document.getElementById('llamadaWrap');
+  const [respConfig, respLlamadas] = await Promise.all([
+    api('obtenerConfigMaestro', {masterKey:'__public__'}),
+    api('obtenerVideoLlamadas', {servicioId:servicio.id})
+  ]);
+
+  const precioVL = respConfig.precioVideollamada || 150;
+
+  // Si hay videollamadas activas/pagadas, mostrarlas
+  const llamadas = respLlamadas.videoLlamadas || [];
+  const yaCompro = localStorage.getItem('vl_'+servicio.id+'_'+(usuario?usuario.email:''));
+  const llamadaActiva = llamadas.find(v=>v.linkActivo);
+
+  let html = '';
+
+  if (llamadaActiva && yaCompro) {
+    html += `<div class="llamada-activa">
+      <div class="llamada-activa-titulo">📹 ${esc(llamadaActiva.titulo)}</div>
+      <div class="llamada-activa-fecha">${formatFecha(llamadaActiva.fecha)} · ${llamadaActiva.hora} hrs</div>
+      <a href="${esc(llamadaActiva.enlace)}" target="_blank" rel="noopener" class="btn-unirse">Unirse a la videollamada →</a>
+    </div>`;
+  } else {
+    html += `<div class="llamada-promo">
+      <div class="llamada-promo-ico">📹</div>
+      <div class="llamada-promo-titulo">Videollamada conmemorativa</div>
+      <div class="llamada-promo-desc">Conéctate con familiares y amigos que no pudieron estar presentes. Comparte este momento especial en tiempo real.</div>
+      <div class="llamada-promo-precio">$${precioVL} MXN <span>/ acceso por persona</span></div>
+      <button class="btn-solicitar" onclick="accionRegistrada(solicitarVideollamada)">Solicitar videollamada →</button>
+    </div>`;
+    if (llamadaActiva && !yaCompro) {
+      html += `<p style="text-align:center;font-size:13px;color:var(--carbon-suave);">Hay una videollamada programada. Adquiere tu acceso para unirte.</p>`;
+    }
   }
-  lista.innerHTML = resp.videoLlamadas.map(v=>`
-    <div class="llamada-card">
-      <div class="llamada-titulo">${esc(v.titulo)}</div>
-      <div class="llamada-fecha">${formatFecha(v.fecha)} · ${v.hora} hrs</div>
-      <a href="${esc(v.enlace)}" target="_blank" rel="noopener" class="btn-unirse">Unirse →</a>
-    </div>
-  `).join('');
+
+  wrap.innerHTML = html;
+}
+
+async function solicitarVideollamada() {
+  const respConfig = await api('obtenerConfigMaestro', {masterKey:'__public__'});
+  const precio = respConfig.precioVideollamada || 150;
+
+  const resp = await api('crearSesionVideollamada', {
+    email: usuario.email,
+    nombre: usuario.nombre,
+    servicioId: servicio.id,
+    precio,
+    urlExito: window.location.href+'&vlOk=1',
+    urlCancelado: window.location.href
+  }, 'POST');
+
+  if (resp.ok) {
+    window.location.href = resp.urlPago;
+  } else {
+    alert(resp.error || 'Error al generar el pago. Intenta de nuevo.');
+  }
+}
+
+// Al regresar de pago exitoso de videollamada
+if (params.get('vlOk')==='1' && usuario) {
+  localStorage.setItem('vl_'+slug+'_'+usuario.email, '1');
+  setTimeout(()=>{ document.querySelector('[data-tab="llamada"]').click(); cargarVideollamada(); }, 800);
 }
 
 // ===== LIGHTBOX =====
