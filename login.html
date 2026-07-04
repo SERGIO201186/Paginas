@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acceso · Páginas Conmemorativas</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest-login.json">
+  <meta name="theme-color" content="#7A4A3A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="P. Conmemorativas">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Acceso · Páginas Conmemorativas</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;--dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;--borde:#E3D9C8;--blanco:#FFFFFF;}
@@ -85,6 +93,15 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
     btn.textContent = 'Ingresar →';
   }
 });
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Paginas/sw.js')
+      .catch(err => console.log('SW no registrado:', err));
+  });
+}
 </script>
 </body>
 </html>
