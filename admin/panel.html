@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel de Funeraria · Páginas Conmemorativas</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7A4A3A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="P. Conmemorativas">
+  <link rel="apple-touch-icon" href="../icons/icon-192.png">
+  <title>Panel de Funeraria · Páginas Conmemorativas</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -348,6 +356,7 @@
 <div class="vista" id="vistaLista">
   <div class="topbar">
     <span class="topbar-titulo" id="nombreFunerariaTop">Mi funeraria</span>
+    <span id="badgePlan" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#E3D9C8;color:#56504A;">Gratis</span>
     <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
   </div>
   <div class="contenedor">
@@ -455,12 +464,9 @@
       <div class="aviso-estado" id="avisoPortada"></div>
 
       <div class="seccion-titulo">Transferir página a la familia</div>
-      <p style="font-size:13px; color:var(--carbon-suave); margin-bottom:12px;">
-        Cuando el servicio haya terminado, genera el cobro para que la familia pague en línea y reciba acceso propio y permanente a todo lo compartido.
-      </p>
-      <div class="campo"><label for="emailFamilia">Correo de la familia</label><input type="email" id="emailFamilia" placeholder="familia@correo.com"></div>
-      <button class="btn btn-primario btn-full" id="btnGenerarCobro">Generar cobro de transferencia</button>
-      <div class="aviso-estado" id="avisoCobro"></div>
+      <div id="seccionTransferenciaPlan">
+        <!-- Se rellena dinámicamente según el plan -->
+      </div>
     </div>
   </div>
 </div>
@@ -473,6 +479,7 @@
   const URL_PAGINA_PUBLICA = "https://sergio201186.github.io/Paginas/publica/pagina.html"; // ej: https://tuusuario.github.io/repo/publica/pagina.html
 
   let sesion = JSON.parse(localStorage.getItem('sesionFuneraria') || 'null');
+  let planFuneraria = 'gratis'; // se actualiza al cargar
   let servicioActualId = null;
   let tabModeracionActiva = 'condolencias';
 
@@ -494,9 +501,87 @@
 
   // ===== LOGIN =====
   if (sesion) {
+    planFuneraria = localStorage.getItem('planFuneraria') || 'gratis';
     document.getElementById('nombreFunerariaTop').textContent = sesion.nombre;
     mostrarVista('vistaLista');
     cargarListaServicios();
+    cargarPlan();
+  }
+
+  async function cargarPlan() {
+    if (!sesion) return;
+    const resp = await llamarAPI('obtenerPlanFuneraria', {
+      funerariaId: sesion.funerariaId,
+      codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+    if (resp.ok) {
+      planFuneraria = resp.plan || 'gratis';
+      localStorage.setItem('planFuneraria', planFuneraria);
+      aplicarRestriccionesPlan();
+    }
+  }
+
+  function aplicarRestriccionesPlan() {
+    const esPro = planFuneraria === 'pro';
+    // Mostrar badge del plan en el topbar
+    const badge = document.getElementById('badgePlan');
+    if (badge) {
+      badge.textContent = esPro ? '⭐ Pro' : 'Gratis';
+      badge.style.background = esPro ? '#C9A24B' : '#E3D9C8';
+      badge.style.color = esPro ? '#2B2723' : '#56504A';
+    }
+  }
+
+  function mostrarSeccionTransferencia(servicioId, estado) {
+    const cont = document.getElementById('seccionTransferenciaPlan');
+    if (!cont) return;
+    if (estado === 'transferido') {
+      cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--sauce-osc);">✓ Esta página ya fue transferida a la familia.</div>';
+      return;
+    }
+    if (planFuneraria !== 'pro') {
+      cont.innerHTML = `<div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:14px;font-size:13.5px;color:var(--carbon-suave);">
+        <strong style="color:var(--terracota-osc);">Función exclusiva del Plan Pro</strong><br>
+        Para transferir páginas a las familias necesitas el Plan Pro.<br><br>
+        <a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank"
+           style="display:inline-block;padding:9px 18px;background:var(--terracota);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">
+          Ver Plan Pro →
+        </a>
+      </div>`;
+      return;
+    }
+    cont.innerHTML = `
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:12px;">
+        Genera el cobro para que la familia pague y reciba acceso permanente a su página.
+      </p>
+      <div class="campo"><label for="emailFamilia">Correo de la familia</label>
+        <input type="email" id="emailFamilia" placeholder="familia@correo.com">
+      </div>
+      <button class="btn btn-primario btn-full" id="btnGenerarCobro">Generar cobro de transferencia</button>
+      <div class="aviso-estado" id="avisoCobro"></div>`;
+    // Re-bind del botón de cobro
+    setTimeout(() => {
+      const btn = document.getElementById('btnGenerarCobro');
+      if (btn) btn.addEventListener('click', generarCobro);
+    }, 100);
+  }
+
+  async function generarCobro() {
+    const aviso = document.getElementById('avisoCobro');
+    const emailFamilia = document.getElementById('emailFamilia').value.trim();
+    if (!emailFamilia) {
+      aviso.className = 'aviso-estado error'; aviso.textContent = 'Ingresa el correo de la familia.'; return;
+    }
+    const resp = await llamarAPI('crearSesionPago', {
+      servicioId: servicioActualId, emailFamilia,
+      urlExito: window.location.href, urlCancelado: window.location.href
+    }, 'POST');
+    if (resp.ok) {
+      aviso.className = 'aviso-estado exito';
+      aviso.innerHTML = `Cobro generado. Comparte este link con la familia:<br><br><a href="${resp.urlPago}" target="_blank" style="word-break:break-all;">${resp.urlPago}</a>`;
+    } else {
+      aviso.className = 'aviso-estado error'; aviso.textContent = resp.error || 'No se pudo generar el cobro.';
+    }
   }
 
   document.getElementById('btnLogin').addEventListener('click', async () => {
@@ -511,6 +596,7 @@
       document.getElementById('nombreFunerariaTop').textContent = sesion.nombre;
       mostrarVista('vistaLista');
       cargarListaServicios();
+      cargarPlan();
     } else {
       aviso.className = 'aviso-estado error';
       aviso.textContent = resp.error || 'Código inválido.';
@@ -604,6 +690,7 @@
     cargarModeracion();
     cargarLlamadasAdmin();
     cargarPedidosFlores();
+    mostrarSeccionTransferencia(id, s.estado);
     if (s.fotoPortadaUrl) document.getElementById("fFotoPortada").value = s.fotoPortadaUrl;
 
     mostrarVista('vistaFormulario');
@@ -833,5 +920,14 @@
 
 </script>
 
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Paginas/sw.js')
+      .catch(err => console.log('SW no registrado:', err));
+  });
+}
+</script>
 </body>
 </html>
