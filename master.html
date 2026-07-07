@@ -255,6 +255,26 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
       </div>
       <div id="listaComisiones"><div class="vacio">Selecciona una funeraria para ver sus comisiones.</div></div>
 
+      <div class="seccion-titulo" style="margin-top:24px;">Solicitudes de videollamada pendientes</div>
+      <div id="listaSolicitudesVLMaster"><div class="vacio">Cargando...</div></div>
+
+      <div class="seccion-titulo" style="margin-top:24px;">Distribuir link de videollamada</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:12px;">Cuando la funeraria te pase el link de Meet, ingrésalo aquí y el sistema lo envía automáticamente por correo a todos los que pagaron.</p>
+      <div class="campo">
+        <label for="vlServicioId">ID del servicio</label>
+        <input type="text" id="vlServicioId" placeholder="ID del servicio (ej. ec7f5c94-...)">
+      </div>
+      <div class="campo">
+        <label for="vlEnlace">Link de Google Meet</label>
+        <input type="text" id="vlEnlace" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+      </div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="vlFecha">Fecha</label><input type="date" id="vlFecha"></div>
+        <div class="campo"><label for="vlHora">Hora</label><input type="time" id="vlHora"></div>
+      </div>
+      <button class="btn btn-sauce btn-full" onclick="distribuirLink()">Enviar link a compradores</button>
+      <div class="aviso" id="avisoVLDist"></div>
+
       <div class="seccion-titulo" style="margin-top:24px;">Historial de suscripciones</div>
       <div id="listaSuscripciones"><div class="vacio">Cargando...</div></div>
 
@@ -695,6 +715,55 @@ if ('serviceWorker' in navigator) {
       </div>`).join('');
   }
 
+  async function cargarSolicitudesVLMaster() {
+    const resp = await api('obtenerSolicitudesVLMaster', {masterKey});
+    const lista = document.getElementById('listaSolicitudesVLMaster');
+    if (!resp.ok || !resp.solicitudes.length) {
+      lista.innerHTML = '<div class="vacio">Sin solicitudes de videollamada.</div>'; return;
+    }
+    const pendientes = resp.solicitudes.filter(s => s.estado === 'completado');
+    if (!pendientes.length) {
+      lista.innerHTML = '<div class="vacio">Sin solicitudes pagadas pendientes de link.</div>'; return;
+    }
+    lista.innerHTML = pendientes.map(s => `
+      <div class="card-item">
+        <div class="card-item-nombre">${s.nombre || s.email}</div>
+        <div class="card-item-meta">${s.email} · Servicio: ${s.servicioId ? s.servicioId.substring(0,8) : ''}...</div>
+        <div class="card-item-meta">${new Date(s.creadoEn).toLocaleDateString('es-MX')} · $${s.precio} MXN</div>
+        <button class="btn btn-pequeno btn-sauce" style="margin-top:8px;"
+          onclick="document.getElementById('vlServicioId').value='${s.servicioId}';document.getElementById('vlServicioId').scrollIntoView({behavior:'smooth'});">
+          Ingresar link →
+        </button>
+      </div>`).join('');
+  }
+
+  async function distribuirLink() {
+    const aviso = document.getElementById('avisoVLDist');
+    const servicioId = document.getElementById('vlServicioId').value.trim();
+    const enlace = document.getElementById('vlEnlace').value.trim();
+    const fecha = document.getElementById('vlFecha').value;
+    const hora = document.getElementById('vlHora').value;
+    if (!servicioId || !enlace) {
+      aviso.className = 'aviso error'; aviso.textContent = 'ID del servicio y link son obligatorios.'; return;
+    }
+    if (!enlace.includes('meet.google.com') && !enlace.includes('zoom.us')) {
+      aviso.className = 'aviso error'; aviso.textContent = 'El link debe ser de Google Meet o Zoom.'; return;
+    }
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    const resp = await api('distribuirLinkVL', {masterKey, servicioId, enlace, fecha, hora}, 'POST');
+    if (resp.ok) {
+      aviso.className = 'aviso exito';
+      aviso.textContent = `✓ Link enviado a ${resp.enviados} persona(s) por correo.`;
+      document.getElementById('vlEnlace').value = '';
+      document.getElementById('vlServicioId').value = '';
+      cargarSolicitudesVLMaster();
+    } else {
+      aviso.className = 'aviso error'; aviso.textContent = resp.error || 'Error al distribuir.';
+    }
+    btn.disabled = false; btn.textContent = 'Enviar link a compradores';
+  }
+
   async function cargarSuscripciones() {
     const resp = await api('obtenerSuscripcionesFuneraria', {masterKey});
     const lista = document.getElementById('listaSuscripciones');
@@ -713,9 +782,9 @@ if ('serviceWorker' in navigator) {
 
   // Cargar selects de funerarias al entrar a cobros
   document.querySelector('[data-tab="cobros"]').addEventListener('click', () => {
-    if (!document.getElementById('cobroFunerariaId').options.length > 1) return;
     cargarSelectFunerarias();
     cargarSuscripciones();
+    cargarSolicitudesVLMaster();
   });
 
 </script>
