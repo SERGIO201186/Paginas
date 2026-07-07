@@ -195,7 +195,7 @@ footer a{color:var(--terracota);text-decoration:none;}
           <li>Código QR</li>
           <li>Info del servicio</li>
         </ul>
-        <a href="login.html" class="btn-plan" style="background:var(--sauce);">Solicitar demo</a>
+        <button class="btn-plan" style="background:var(--sauce);border:none;cursor:pointer;" onclick="abrirModalDemo()">Solicitar demo</button>
       </div>
 
       <div class="plan destacado">
@@ -212,12 +212,12 @@ footer a{color:var(--terracota);text-decoration:none;}
           <li>Transferencia a la familia</li>
           <li>25% de comisión por gestos</li>
         </ul>
-        <a href="https://wa.me/TU_NUMERO?text=Quiero%20contratar%20Páginas%20Conmemorativas" target="_blank" class="btn-plan">Contratar ahora →</a>
+        <button class="btn-plan" style="border:none;cursor:pointer;" onclick="abrirModalContratar()">Contratar ahora →</button>
       </div>
 
     </div>
     <p style="text-align:center;font-size:12.5px;color:var(--carbon-suave);margin-top:14px;">
-      ¿Tienes más de 10 servicios al mes? <a href="https://wa.me/2281845114" style="color:var(--terracota);">Contáctanos para un plan personalizado</a>
+      ¿Tienes más de 10 servicios al mes? <a href="https://wa.me/TU_NUMERO" style="color:var(--terracota);">Contáctanos para un plan personalizado</a>
     </p>
   </div>
 </section>
@@ -226,12 +226,12 @@ footer a{color:var(--terracota);text-decoration:none;}
 <section class="cta-final">
   <h2>¿Listo para ofrecer este servicio?</h2>
   <p>Regístrate en segundos. Tu primera página de homenaje lista en minutos.</p>
-  <a href="login.html" class="btn-primario">Acceder al panel →</a>
+  <a href="login.html" class="btn-primario">Acceso funerarias →</a>
 </section>
 
 <!-- CONTACTO WHATSAPP -->
 <div style="position:fixed;bottom:20px;right:16px;z-index:50;">
-  <a href="https://wa.me/2281845114?text=Hola,%20me%20interesa%20el%20servicio%20de%20páginas%20conmemorativas" target="_blank"
+  <a href="https://wa.me/TU_NUMERO_WHATSAPP?text=Hola,%20me%20interesa%20el%20servicio%20de%20páginas%20conmemorativas" target="_blank"
      style="display:flex;align-items:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:12px 18px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(37,211,102,0.35);">
     <span style="font-size:20px;">💬</span> Contactar por WhatsApp
   </a>
@@ -241,5 +241,136 @@ footer a{color:var(--terracota);text-decoration:none;}
   <p>© 2025 Páginas Conmemorativas · <a href="login.html">Acceso funerarias</a></p>
 </footer>
 
+
+<!-- MODAL SOLICITUD DEMO -->
+<div id="modalDemo" style="display:none;position:fixed;inset:0;background:rgba(43,39,35,0.85);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:#FAF6F0;border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease;">
+    <div style="font-family:'Fraunces',serif;font-size:22px;color:#5E3A2D;margin-bottom:6px;">Solicitar demo gratuito</div>
+    <div style="font-size:13.5px;color:#56504A;margin-bottom:20px;">Te enviamos tu código de acceso en menos de 24 horas. Sin tarjeta de crédito.</div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Nombre de tu funeraria</label>
+      <input type="text" id="demoNombre" placeholder="Funeraria San Ángel" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Tu nombre</label>
+      <input type="text" id="demoContacto" placeholder="¿Con quién hablamos?" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">WhatsApp</label>
+      <input type="tel" id="demoWA" placeholder="2281234567" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Correo electrónico</label>
+      <input type="email" id="demoEmail" placeholder="funeraria@correo.com" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <button onclick="enviarSolicitudDemo()" style="width:100%;padding:14px;background:#5C6B57;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Solicitar demo gratuito</button>
+    <button onclick="cerrarModalDemo()" style="width:100%;padding:12px;background:none;color:#56504A;border:1px solid #E3D9C8;border-radius:8px;font-size:14px;cursor:pointer;">Cancelar</button>
+    <div id="avisoDemo" style="margin-top:10px;font-size:13px;padding:10px;border-radius:7px;display:none;"></div>
+  </div>
+</div>
+
+<!-- MODAL CONTRATAR -->
+<div id="modalContratar" style="display:none;position:fixed;inset:0;background:rgba(43,39,35,0.85);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:#FAF6F0;border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease;">
+    <div style="font-family:'Fraunces',serif;font-size:22px;color:#5E3A2D;margin-bottom:6px;">Contratar servicio</div>
+    <div style="font-size:13.5px;color:#56504A;margin-bottom:20px;">Completa tus datos y nos ponemos en contacto contigo para activar tu cuenta.</div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Nombre de tu funeraria</label>
+      <input type="text" id="contNombre" placeholder="Funeraria San Ángel" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Tu nombre</label>
+      <input type="text" id="contContacto" placeholder="¿Con quién hablamos?" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">WhatsApp</label>
+      <input type="tel" id="contWA" placeholder="2281234567" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Correo electrónico</label>
+      <input type="email" id="contEmail" placeholder="funeraria@correo.com" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Ciudad / Estado</label>
+      <input type="text" id="contCiudad" placeholder="Xalapa, Veracruz" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
+    </div>
+    <button onclick="enviarSolicitudContrato()" style="width:100%;padding:14px;background:#7A4A3A;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Enviar solicitud</button>
+    <button onclick="cerrarModalContratar()" style="width:100%;padding:12px;background:none;color:#56504A;border:1px solid #E3D9C8;border-radius:8px;font-size:14px;cursor:pointer;">Cancelar</button>
+    <div id="avisoContratar" style="margin-top:10px;font-size:13px;padding:10px;border-radius:7px;display:none;"></div>
+  </div>
+</div>
+
+<style>
+@keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+</style>
+
+<script>
+const API_URL_LANDING = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
+const TU_WHATSAPP = "522281845114";
+
+function abrirModalDemo() {
+  document.getElementById('modalDemo').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function cerrarModalDemo() {
+  document.getElementById('modalDemo').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function abrirModalContratar() {
+  document.getElementById('modalContratar').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function cerrarModalContratar() {
+  document.getElementById('modalContratar').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function enviarSolicitudDemo() {
+  const nombre = document.getElementById('demoNombre').value.trim();
+  const contacto = document.getElementById('demoContacto').value.trim();
+  const wa = document.getElementById('demoWA').value.trim();
+  const email = document.getElementById('demoEmail').value.trim();
+  const aviso = document.getElementById('avisoDemo');
+  if (!nombre || !wa) {
+    aviso.style.display='block'; aviso.style.background='#F7E9E6'; aviso.style.color='#5E3A2D';
+    aviso.textContent='Por favor ingresa el nombre de la funeraria y tu WhatsApp.'; return;
+  }
+  // Enviar notificación por WhatsApp a ti
+  const msg = '🆕 SOLICITUD DE DEMO
+Funeraria: ' + nombre + '
+Contacto: ' + contacto + '
+WhatsApp: ' + wa + '
+Email: ' + email;
+  const urlWA = 'https://wa.me/' + TU_WHATSAPP + '?text=' + encodeURIComponent(msg);
+  aviso.style.display='block'; aviso.style.background='#EEF3EC'; aviso.style.color='#43503F';
+  aviso.textContent='✓ Solicitud enviada. Te contactaremos en menos de 24 horas.';
+  setTimeout(() => { window.open(urlWA, '_blank'); }, 1000);
+}
+
+async function enviarSolicitudContrato() {
+  const nombre = document.getElementById('contNombre').value.trim();
+  const contacto = document.getElementById('contContacto').value.trim();
+  const wa = document.getElementById('contWA').value.trim();
+  const email = document.getElementById('contEmail').value.trim();
+  const ciudad = document.getElementById('contCiudad').value.trim();
+  const aviso = document.getElementById('avisoContratar');
+  if (!nombre || !wa) {
+    aviso.style.display='block'; aviso.style.background='#F7E9E6'; aviso.style.color='#5E3A2D';
+    aviso.textContent='Por favor ingresa el nombre de la funeraria y tu WhatsApp.'; return;
+  }
+  const msg = '🤝 SOLICITUD DE CONTRATO
+Funeraria: ' + nombre + '
+Contacto: ' + contacto + '
+WhatsApp: ' + wa + '
+Email: ' + email + '
+Ciudad: ' + ciudad + '
+
+Plan: Pago por servicio ($500 setup + $99/mes + $149/página)';
+  const urlWA = 'https://wa.me/' + TU_WHATSAPP + '?text=' + encodeURIComponent(msg);
+  aviso.style.display='block'; aviso.style.background='#EEF3EC'; aviso.style.color='#43503F';
+  aviso.textContent='✓ Solicitud enviada. Te contactaremos para activar tu cuenta.';
+  setTimeout(() => { window.open(urlWA, '_blank'); }, 1000);
+}
+</script>
 </body>
 </html>
