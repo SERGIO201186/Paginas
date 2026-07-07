@@ -3,49 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest-login.json">
-  <meta name="theme-color" content="#7A4A3A">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="P. Conmemorativas">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <title>Acceso · Páginas Conmemorativas</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Funeral360 · Acceso</title>
+<link rel="manifest" href="manifest-login.json">
+<meta name="theme-color" content="#1B2A4A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Funeral360">
+<link rel="apple-touch-icon" href="icons/funeral360-icono.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap" rel="stylesheet">
 <style>
-:root{--hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;--dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;--borde:#E3D9C8;--blanco:#FFFFFF;}
+:root{
+  --marino:#1B2A4A;--marino-osc:#111E35;--marino-med:#243760;
+  --dorado:#B8964E;--dorado-claro:#D4B06A;
+  --gris-claro:#F4F6FA;--gris-med:#E8ECF4;--gris-borde:#D1D8E8;
+  --carbon:#1A1F2E;--carbon-suave:#4A5568;--blanco:#FFFFFF;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{min-height:100vh;background:var(--hueso);font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
-.logo{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:32px;display:flex;align-items:center;gap:8px;}
-.card{background:var(--blanco);border:1px solid var(--borde);border-radius:16px;padding:32px 26px;width:100%;max-width:380px;box-shadow:0 12px 32px rgba(43,39,35,0.08);}
-.card h1{font-family:'Fraunces',serif;font-size:22px;color:var(--terracota-osc);margin-bottom:6px;}
-.card p{font-size:13.5px;color:var(--carbon-suave);margin-bottom:24px;}
+body{
+  min-height:100vh;
+  background:linear-gradient(160deg, var(--marino-osc) 0%, var(--marino) 60%, var(--marino-med) 100%);
+  font-family:'Inter',sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+  -webkit-font-smoothing:antialiased;
+}
+
+.logo-wrap{margin-bottom:32px;text-align:center;}
+.logo-wrap img{height:48px;filter:brightness(0) invert(1);}
+.logo-wrap .tagline{font-size:11.5px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;}
+
+.card{
+  background:var(--blanco);
+  border-radius:16px;
+  padding:32px 26px;
+  width:100%;max-width:380px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.25);
+}
+.card-titulo{
+  font-family:'Fraunces',serif;
+  font-size:22px;font-weight:300;
+  color:var(--marino);
+  margin-bottom:4px;
+}
+.card-sub{font-size:13.5px;color:var(--carbon-suave);margin-bottom:24px;}
+
 .campo{margin-bottom:16px;}
-.campo label{display:block;font-size:11.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;}
-.campo input{width:100%;padding:12px 14px;border:1px solid var(--borde);border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;color:var(--carbon);background:var(--hueso);}
-.campo input:focus{outline:2px solid var(--terracota);outline-offset:1px;}
-.btn{width:100%;padding:13px;background:var(--terracota);color:var(--blanco);border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s;}
-.btn:hover{background:var(--terracota-osc);}
+.campo label{display:block;font-size:11px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;}
+.campo input{
+  width:100%;padding:13px 14px;
+  border:1.5px solid var(--gris-borde);
+  border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:15px;
+  color:var(--carbon);background:var(--gris-claro);
+  transition:border-color 0.2s;
+}
+.campo input:focus{outline:none;border-color:var(--marino);}
+
+.btn-login{
+  width:100%;padding:14px;
+  background:var(--marino);color:var(--blanco);
+  border:none;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;transition:background 0.2s;
+  margin-top:4px;
+}
+.btn-login:hover{background:var(--marino-med);}
+.btn-login:disabled{background:var(--gris-borde);cursor:not-allowed;}
+
 .aviso{margin-top:12px;font-size:13px;padding:10px 13px;border-radius:7px;display:none;}
-.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
-.volver{margin-top:20px;font-size:13px;color:var(--carbon-suave);text-align:center;}
-.volver a{color:var(--terracota);text-decoration:none;}
+.aviso.error{display:block;background:#FEF2F2;color:#9B2C2C;border:1px solid #FECACA;}
+
+.volver{margin-top:20px;font-size:13px;color:rgba(255,255,255,0.6);text-align:center;}
+.volver a{color:var(--dorado-claro);text-decoration:none;font-weight:600;}
+
+.divisor{display:flex;align-items:center;gap:10px;margin:20px 0;}
+.divisor-linea{flex:1;height:1px;background:var(--gris-borde);}
+.divisor-txt{font-size:12px;color:var(--carbon-suave);}
+
+.btn-demo{
+  width:100%;padding:12px;
+  background:transparent;color:var(--marino);
+  border:1.5px solid var(--gris-borde);
+  border-radius:8px;font-family:'Inter',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:background 0.2s;text-decoration:none;
+  display:block;text-align:center;
+}
+.btn-demo:hover{background:var(--gris-claro);}
 </style>
 </head>
 <body>
 
-<div class="logo">🕊 Páginas Conmemorativas</div>
+<div class="logo-wrap">
+  <img src="icons/funeral360-logo.png" alt="Funeral360">
+  <div class="tagline">Software para funerarias inteligentes</div>
+</div>
 
 <div class="card">
-  <h1>Acceso funerarias</h1>
-  <p>Ingresa tu código de acceso para administrar tus páginas conmemorativas.</p>
+  <div class="card-titulo">Bienvenido</div>
+  <div class="card-sub">Ingresa tu código de acceso para continuar.</div>
+
   <div class="campo">
     <label for="codigo">Código de acceso</label>
-    <input type="text" id="codigo" placeholder="Ej. A7K2X9" autocomplete="off" style="text-transform:uppercase;" maxlength="10">
+    <input type="text" id="codigo" placeholder="Ej. A7K2X9"
+      autocomplete="off" maxlength="10"
+      style="text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-size:18px;text-align:center;">
   </div>
-  <button class="btn" id="btnLogin">Ingresar →</button>
+  <button class="btn-login" id="btnLogin">Ingresar →</button>
   <div class="aviso" id="aviso"></div>
+
+  <div class="divisor">
+    <div class="divisor-linea"></div>
+    <div class="divisor-txt">¿No tienes acceso?</div>
+    <div class="divisor-linea"></div>
+  </div>
+  <a href="index.html#precios" class="btn-demo">Solicitar demo gratuito</a>
 </div>
 
 <div class="volver"><a href="index.html">← Volver al inicio</a></div>
@@ -53,26 +125,22 @@ body{min-height:100vh;background:var(--hueso);font-family:'Inter',sans-serif;dis
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
 
-document.getElementById('codigo').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btnLogin').click();
-});
+const inp = document.getElementById('codigo');
+inp.addEventListener('input', () => inp.value = inp.value.toUpperCase());
+inp.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('btnLogin').click(); });
 
 document.getElementById('btnLogin').addEventListener('click', async () => {
-  const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+  const codigo = inp.value.trim().toUpperCase();
   const aviso = document.getElementById('aviso');
   const btn = document.getElementById('btnLogin');
   if (!codigo) return;
-
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
-
+  btn.disabled=true; btn.textContent='Verificando...';
   try {
     const resp = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({ accion: 'loginFuneraria', codigoAcceso: codigo })
+      method:'POST',
+      body: JSON.stringify({accion:'loginFuneraria', codigoAcceso:codigo})
     });
     const data = await resp.json();
-
     if (data.ok) {
       localStorage.setItem('sesionFuneraria', JSON.stringify({
         funerariaId: data.funerariaId,
@@ -81,26 +149,19 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
       }));
       window.location.href = 'admin/panel.html';
     } else {
-      aviso.className = 'aviso error';
-      aviso.textContent = 'Código inválido. Verifica e intenta de nuevo.';
-      btn.disabled = false;
-      btn.textContent = 'Ingresar →';
+      aviso.className='aviso error';
+      aviso.textContent='Código inválido. Verifica e intenta de nuevo.';
+      btn.disabled=false; btn.textContent='Ingresar →';
     }
   } catch(e) {
-    aviso.className = 'aviso error';
-    aviso.textContent = 'Error de conexión. Intenta de nuevo.';
-    btn.disabled = false;
-    btn.textContent = 'Ingresar →';
+    aviso.className='aviso error';
+    aviso.textContent='Error de conexión. Intenta de nuevo.';
+    btn.disabled=false; btn.textContent='Ingresar →';
   }
 });
-</script>
 
-<script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/Paginas/sw.js')
-      .catch(err => console.log('SW no registrado:', err));
-  });
+  navigator.serviceWorker.register('/Paginas/sw.js').catch(()=>{});
 }
 </script>
 </body>
