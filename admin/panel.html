@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="P. Conmemorativas">
   <link rel="apple-touch-icon" href="../icons/icon-192.png">
-  <title>Panel de Funeraria · Páginas Conmemorativas</title>
+  <title>Funeral360 · Panel de Funeraria</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -66,15 +66,15 @@
 
   /* ===== LAYOUT GENERAL ===== */
   .topbar{
-    background:var(--blanco);
-    border-bottom:1px solid var(--borde);
-    padding:14px 20px;
+    background:var(--marino-osc);
+    padding:12px 16px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     position:sticky;
     top:0;
     z-index:20;
+    box-shadow:0 2px 8px rgba(0,0,0,0.2);
   }
   .topbar-titulo{
     font-size:15px;
@@ -83,7 +83,7 @@
   }
   .btn-salir{
     font-size:12.5px;
-    color:var(--carbon-suave);
+    color:rgba(255,255,255,0.6);
     background:none;
     border:none;
     cursor:pointer;
@@ -112,12 +112,12 @@
   }
   .btn:hover{ opacity:0.9; }
   .btn:disabled{ opacity:0.5; cursor:not-allowed; }
-  .btn-primario{ background:var(--terracota); color:var(--blanco); }
-  .btn-secundario{ background:var(--blanco); color:var(--terracota); border:1px solid var(--terracota); }
-  .btn-sauce{ background:var(--sauce); color:var(--blanco); }
+  .btn-primario{ background:var(--marino); color:var(--blanco); }
+  .btn-secundario{ background:var(--blanco); color:var(--marino); border:1.5px solid var(--marino); }
+  .btn-sauce{ background:#2D6A4F; color:var(--blanco); }
   .btn-full{ width:100%; }
   .btn-pequeno{ padding:8px 14px; font-size:12.5px; }
-  .btn-aprobar{ background:var(--sauce); color:var(--blanco); }
+  .btn-aprobar{ background:#2D6A4F; color:var(--blanco); }
   .btn-rechazar{ background:var(--blanco); color:var(--rojo); border:1px solid var(--rojo); }
 
   /* ===== CAMPOS ===== */
@@ -156,7 +156,7 @@
     font-weight:700;
     text-transform:uppercase;
     letter-spacing:0.04em;
-    color:var(--sauce-osc);
+    color:#1A4D38;
     margin:28px 0 14px;
     padding-bottom:8px;
     border-bottom:1px solid var(--borde);
@@ -196,8 +196,8 @@
     border-radius:20px;
     letter-spacing:0.03em;
   }
-  .estado-en_curso{ background:#FDF1DD; color:#8A6111; }
-  .estado-transferido{ background:#EEF3EC; color:var(--sauce-osc); }
+  .estado-en_curso{ background:#EBF4FF; color:#1B2A4A; }
+  .estado-transferido{ background:#EEF3EC; color:#1A4D38; }
 
   .servicio-meta{
     font-family:'JetBrains Mono',monospace;
@@ -281,7 +281,7 @@
     border-radius:7px;
     display:none;
   }
-  .aviso-estado.exito{ display:block; background:#EEF3EC; color:var(--sauce-osc); }
+  .aviso-estado.exito{ display:block; background:#EEF3EC; color:#1A4D38; }
   .aviso-estado.error{ display:block; background:#F7E9E6; color:var(--terracota-osc); }
 
   .btn-volver{
@@ -314,7 +314,7 @@
     margin-bottom:8px;
   }
   .estado-pendiente{ background:#FDF1DD; color:#8A6111; }
-  .estado-entregado{ background:#EEF3EC; color:var(--sauce-osc); }
+  .estado-entregado{ background:#EEF3EC; color:#1A4D38; }
   .pedido-dato{ font-size:13px; color:var(--carbon-suave); margin-bottom:3px; }
   .pedido-dato strong{ color:var(--carbon); }
   .badge{
@@ -339,7 +339,7 @@
     width:56px;
     height:56px;
     border-radius:50%;
-    background:var(--terracota);
+    background:var(--marino);
     color:var(--blanco);
     border:none;
     font-size:26px;
@@ -370,8 +370,11 @@
 <!-- LISTA DE SERVICIOS -->
 <div class="vista" id="vistaLista">
   <div class="topbar">
-    <span class="topbar-titulo" id="nombreFunerariaTop">Mi funeraria</span>
-    <span id="badgePlan" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#E3D9C8;color:#56504A;">Gratis</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="../icons/funeral360-logo.png" alt="Funeral360" style="height:24px;filter:brightness(0) invert(1);">
+      <span id="nombreFunerariaTop" style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:500;"></span>
+    </div>
+    <span id="badgePlan" style="font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(184,150,78,0.2);color:#D4B06A;">Demo</span>
     <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
   </div>
   <div class="contenedor">
@@ -389,7 +392,7 @@
   <div class="contenedor">
     <button class="btn-volver" id="btnVolverLista">← Volver a mis páginas</button>
 
-    <div id="bannerTransferido" style="display:none; background:#EEF3EC; color:var(--sauce-osc); padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px;">
+    <div id="bannerTransferido" style="display:none; background:#EEF3EC; color:#1A4D38; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px;">
       Esta página ya fue transferida a la familia y no puede editarse.
     </div>
 
@@ -563,7 +566,7 @@
     const cont = document.getElementById('seccionTransferenciaPlan');
     if (!cont) return;
     if (estado === 'transferido') {
-      cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--sauce-osc);">✓ Esta página ya fue transferida a la familia.</div>';
+      cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:#1A4D38;">✓ Esta página ya fue transferida a la familia.</div>';
       return;
     }
     if (planFuneraria !== 'pro') {
