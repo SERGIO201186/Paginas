@@ -1,0 +1,12 @@
+<svg width="640" height="200" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(15,30) scale(1.15)">
+    <path d="M 64.81 14.25 A 46 46 0 1 1 14.25 55.19"
+          fill="none" stroke="#0A1F44" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 15.01 50.44 A 46 46 0 0 1 60.0 14.0"
+          fill="none" stroke="#C2A379" stroke-width="14" stroke-linecap="round"/>
+  </g>
+  <text x="185" y="120" font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="58">
+    <tspan fill="#0A1F44">FUNERAL</tspan><tspan fill="#C2A379">360</tspan>
+  </text>
+  <text x="187" y="152" font-family="Lato, Arial, sans-serif" font-size="15" letter-spacing="3" fill="#333333">SOFTWARE PARA FUNERARIAS INTELIGENTES</text>
+</svg>
