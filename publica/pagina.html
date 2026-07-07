@@ -180,6 +180,32 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .lightbox.activo{display:flex;}
 .lightbox img{max-width:100%;max-height:90vh;border-radius:7px;}
 
+.mapa-wrap{
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid var(--borde);
+  margin-top:10px;
+  background:var(--hueso-osc);
+}
+.mapa-wrap iframe{
+  width:100%;
+  height:200px;
+  border:none;
+  display:block;
+}
+.mapa-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  background:var(--blanco);
+  border-top:1px solid var(--borde);
+  font-size:13px;
+  color:var(--terracota);
+  text-decoration:none;
+  font-weight:600;
+}
+.mapa-btn:hover{background:var(--hueso-osc);}
 footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
 </style>
 </head>
@@ -251,19 +277,21 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
       <div class="info-fila"><span class="info-etq">Fecha</span><span class="info-val" id="fechaCepelio">—</span></div>
       <div class="info-fila"><span class="info-etq">Hora</span><span class="info-val" id="horaCepelio">—</span></div>
       <div class="info-ubic" id="ubicacionCepelio"></div>
+      <div id="mapaCepelio"></div>
     </div>
     <div class="info-bloque" id="bloqueMisa">
       <div class="info-titulo">Misa</div>
       <div class="info-fila"><span class="info-etq">Fecha</span><span class="info-val" id="fechaMisa">—</span></div>
       <div class="info-fila"><span class="info-etq">Hora</span><span class="info-val" id="horaMisa">—</span></div>
       <div class="info-ubic" id="ubicacionMisa"></div>
+      <div id="mapaMisa"></div>
     </div>
     <div class="info-bloque" id="bloqueSalida">
       <div class="info-titulo">Salida</div>
       <div class="info-fila"><span class="info-etq">Fecha</span><span class="info-val" id="fechaSalida">—</span></div>
       <div class="info-fila"><span class="info-etq">Hora</span><span class="info-val" id="horaSalida">—</span></div>
       <div class="info-ubic" id="ubicacionSalida"></div>
-      <a href="#" id="mapsSalida" target="_blank" rel="noopener" style="display:none;margin-top:6px;font-size:12.5px;font-weight:600;color:var(--terracota-osc);text-decoration:none;">📍 Ver ubicación en Google Maps</a>
+      <div id="mapaSalida"></div>
     </div>
     <div class="reglas-aviso" id="reglasAviso" style="display:none;"></div>
   </div>
@@ -490,6 +518,18 @@ function pintarHero(s) {
   if (s.biografia){const b=document.getElementById('heroBio');b.textContent=s.biografia;b.style.display='block';}
 }
 
+function generarMapa(direccion) {
+  if (!direccion || direccion.trim() === '') return '';
+  const q = encodeURIComponent(direccion + ', Xalapa, Veracruz, México');
+  const urlMapa = 'https://www.google.com/maps?q=' + q + '&output=embed';
+  const urlLink = 'https://www.google.com/maps/search/?api=1&query=' + q;
+  return '<div class="mapa-wrap">' +
+    '<iframe src="' + urlMapa + '" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>' +
+    '<a href="' + urlLink + '" target="_blank" rel="noopener" class="mapa-btn">' +
+    '📍 Abrir en Google Maps →</a>' +
+    '</div>';
+}
+
 function pintarInfo(s) {
   [{p:'Cepelio',fecha:s.fechaCepelio,hora:s.horaCepelio,ubic:s.ubicacionCepelio},
    {p:'Misa',fecha:s.fechaMisa,hora:s.horaMisa,ubic:s.ubicacionMisa},
@@ -499,13 +539,15 @@ function pintarInfo(s) {
     if(!b.fecha&&!b.hora&&!b.ubic){el.style.display='none';return;}
     document.getElementById('fecha'+b.p).textContent=formatFecha(b.fecha);
     document.getElementById('hora'+b.p).textContent=formatHora(b.hora);
-    document.getElementById('ubicacion'+b.p).textContent=b.ubic||'';
+    const ubicEl=document.getElementById('ubicacion'+b.p);
+    ubicEl.textContent=b.ubic||'';
+    // Agregar mapa si hay ubicación
+    if(b.ubic && b.ubic.trim()!==''){
+      const mapaEl=document.getElementById('mapa'+b.p);
+      if(mapaEl) mapaEl.innerHTML=generarMapa(b.ubic);
+    }
   });
   if(s.reglasPublicacion){const av=document.getElementById('reglasAviso');av.textContent=s.reglasPublicacion;av.style.display='block';}
-
-  const linkMaps=document.getElementById('mapsSalida');
-  if(s.mapsUrlSalida){linkMaps.href=s.mapsUrlSalida;linkMaps.style.display='inline-block';}
-  else{linkMaps.style.display='none';}
 }
 
 // ===== VELADORAS =====
@@ -703,9 +745,10 @@ let paquetesSistema = [];
 let articulosSistema = [];
 
 async function cargarTienda() {
+  const ts = Date.now();
   const [rPaq, rArt] = await Promise.all([
-    api('obtenerPaquetesCreditos', {}),
-    api('obtenerArticulosTienda', {})
+    api('obtenerPaquetesCreditos', {t: ts}),
+    api('obtenerArticulosTienda', {t: ts})
   ]);
 
   // Paquetes
@@ -714,7 +757,13 @@ async function cargarTienda() {
     {id:'pkg2', creditos:120, precio:130, etiqueta:'Más popular'},
     {id:'pkg3', creditos:300, precio:299, etiqueta:'Mejor valor'}
   ];
-  paquetesSistema = (rPaq.paquetes && rPaq.paquetes.length > 0) ? rPaq.paquetes : PAQUETES_FALLBACK;
+  if (rPaq && rPaq.ok && rPaq.paquetes && rPaq.paquetes.length > 0) {
+    paquetesSistema = rPaq.paquetes;
+    console.log('Paquetes cargados del backend:', paquetesSistema.length);
+  } else {
+    paquetesSistema = PAQUETES_FALLBACK;
+    console.log('Usando paquetes fallback. Respuesta backend:', JSON.stringify(rPaq));
+  }
   const listaPaq = document.getElementById('listaPaquetes');
   listaPaq.innerHTML = paquetesSistema.map(p=>`
     <div class="paquete" data-id="${p.id}" data-creditos="${p.creditos}" data-precio="${p.precio}" onclick="selPaquete(this)">
@@ -736,7 +785,14 @@ async function cargarTienda() {
     {id:'flores_gr',   emoji:'🌸', nombre:'Arreglo físico grande',  descripcion:'Arreglo real grande (~$720 MXN)',             creditos:600, tipo:'fisico'}
   ];
 
-  articulosSistema = (rArt.articulos && rArt.articulos.length > 0) ? rArt.articulos : CATALOGO_FALLBACK;
+  // Usar backend si devuelve artículos, si no usar fallback
+  if (rArt && rArt.ok && rArt.articulos && rArt.articulos.length > 0) {
+    articulosSistema = rArt.articulos;
+    console.log('Artículos cargados del backend:', articulosSistema.length);
+  } else {
+    articulosSistema = CATALOGO_FALLBACK;
+    console.log('Usando catálogo fallback. Respuesta backend:', JSON.stringify(rArt));
+  }
   const listaArt = document.getElementById('listaGestos');
   listaArt.innerHTML = '';
   articulosSistema.forEach(a => {
