@@ -437,6 +437,7 @@
       <div class="campo"><label for="fHoraSalida">Hora</label><input type="time" id="fHoraSalida"></div>
     </div>
     <div class="campo"><label for="fUbicSalida">Ubicación</label><input type="text" id="fUbicSalida" placeholder="Dirección de salida"></div>
+    <div class="campo"><label for="fMapsSalida">URL de Google Maps (opcional)</label><input type="text" id="fMapsSalida" placeholder="https://maps.app.goo.gl/..."></div>
 
     <div class="seccion-titulo">Reglas de publicación</div>
     <div class="campo">
@@ -675,7 +676,7 @@
     ['fNombre','fNacimiento','fDefuncion','fFotoUrl','fBio',
      'fFechaCepelio','fHoraCepelio','fUbicCepelio',
      'fFechaMisa','fHoraMisa','fUbicMisa',
-     'fFechaSalida','fHoraSalida','fUbicSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
+     'fFechaSalida','fHoraSalida','fUbicSalida','fMapsSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
   }
 
   // ===== ABRIR SERVICIO EXISTENTE =====
@@ -701,6 +702,7 @@
     document.getElementById('fFechaSalida').value = s.fechaSalida || '';
     document.getElementById('fHoraSalida').value = s.horaSalida || '';
     document.getElementById('fUbicSalida').value = s.ubicacionSalida || '';
+    document.getElementById('fMapsSalida').value = s.mapsUrlSalida || '';
     document.getElementById('fReglas').value = s.reglasPublicacion || '';
 
     const transferido = s.estado === 'transferido';
@@ -739,6 +741,7 @@
       fechaSalida: document.getElementById('fFechaSalida').value,
       horaSalida: document.getElementById('fHoraSalida').value,
       ubicacionSalida: document.getElementById('fUbicSalida').value.trim(),
+      mapsUrlSalida: document.getElementById('fMapsSalida').value.trim(),
       reglasPublicacion: document.getElementById('fReglas').value.trim()
     };
 
