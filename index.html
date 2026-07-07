@@ -181,36 +181,44 @@ footer a{color:var(--terracota);text-decoration:none;}
   <div class="precios-inner">
     <h2>Planes para tu funeraria</h2>
     <p class="precios-sub">Sin contratos. Pagas solo por los servicios que usas.</p>
-    <div class="planes">
-      <div class="plan">
-        <div class="plan-badge">Básico</div>
-        <div class="plan-nombre">Inicio</div>
-        <div class="plan-precio">Gratis<span> / página</span></div>
-        <div class="plan-desc">Para comenzar a ofrecer el servicio.</div>
+    <!-- 3 columnas en desktop, stack en móvil -->
+    <div style="display:grid;grid-template-columns:1fr;gap:14px;">
+
+      <div class="plan" style="display:flex;flex-direction:column;gap:4px;">
+        <div class="plan-badge">🎯 Demo gratuito</div>
+        <div class="plan-nombre">Prueba el sistema</div>
+        <div class="plan-precio">Gratis<span> · sin tarjeta</span></div>
+        <div class="plan-desc">Crea una página de prueba y muéstrasela a tus familias antes de contratar.</div>
         <ul class="plan-items">
-          <li>Página de homenaje</li>
+          <li>1 página demo activa</li>
           <li>Muro de recuerdos</li>
           <li>Código QR</li>
           <li>Info del servicio</li>
         </ul>
-        <a href="login.html" class="btn-plan">Comenzar gratis</a>
+        <a href="login.html" class="btn-plan" style="background:var(--sauce);">Solicitar demo</a>
       </div>
+
       <div class="plan destacado">
-        <div class="plan-badge">⭐ Completo</div>
-        <div class="plan-nombre">Pro</div>
-        <div class="plan-precio">$299<span> / página</span></div>
-        <div class="plan-desc">Para ofrecer una experiencia premium.</div>
+        <div class="plan-badge">⭐ Más popular</div>
+        <div class="plan-nombre">Pago por servicio</div>
+        <div class="plan-precio">$149<span> / página activa</span></div>
+        <div class="plan-desc">Paga solo cuando activas una página. Sin mensualidades forzadas.</div>
         <ul class="plan-items">
-          <li>Todo lo de Inicio</li>
-          <li>Tienda de gestos</li>
-          <li>Créditos gratis</li>
-          <li>Videollamadas</li>
-          <li>Arreglos físicos</li>
-          <li>Transferencia familia</li>
+          <li>Setup inicial $500 (única vez)</li>
+          <li>$99/mes mantenimiento</li>
+          <li>Tienda de gestos activa</li>
+          <li>Videollamadas de pago</li>
+          <li>Arreglos florales físicos</li>
+          <li>Transferencia a la familia</li>
+          <li>25% de comisión por gestos</li>
         </ul>
-        <a href="login.html" class="btn-plan">Comenzar ahora</a>
+        <a href="https://wa.me/TU_NUMERO?text=Quiero%20contratar%20Páginas%20Conmemorativas" target="_blank" class="btn-plan">Contratar ahora →</a>
       </div>
+
     </div>
+    <p style="text-align:center;font-size:12.5px;color:var(--carbon-suave);margin-top:14px;">
+      ¿Tienes más de 10 servicios al mes? <a href="https://wa.me/2281845114" style="color:var(--terracota);">Contáctanos para un plan personalizado</a>
+    </p>
   </div>
 </section>
 
@@ -223,7 +231,7 @@ footer a{color:var(--terracota);text-decoration:none;}
 
 <!-- CONTACTO WHATSAPP -->
 <div style="position:fixed;bottom:20px;right:16px;z-index:50;">
-  <a href="https://wa.me/TU_NUMERO_WHATSAPP?text=Hola,%20me%20interesa%20el%20servicio%20de%20páginas%20conmemorativas" target="_blank"
+  <a href="https://wa.me/2281845114?text=Hola,%20me%20interesa%20el%20servicio%20de%20páginas%20conmemorativas" target="_blank"
      style="display:flex;align-items:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:12px 18px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(37,211,102,0.35);">
     <span style="font-size:20px;">💬</span> Contactar por WhatsApp
   </a>
