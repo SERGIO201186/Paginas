@@ -422,22 +422,24 @@
       <div class="campo"><label for="fFechaCepelio">Fecha</label><input type="date" id="fFechaCepelio"></div>
       <div class="campo"><label for="fHoraCepelio">Hora</label><input type="time" id="fHoraCepelio"></div>
     </div>
-    <div class="campo"><label for="fUbicCepelio">Ubicación</label><input type="text" id="fUbicCepelio" placeholder="Panteón / dirección"></div>
+    <div class="campo"><label for="fUbicCepelio">Ubicación</label><input type="text" id="fUbicCepelio" placeholder="Ej. Panteón Municipal, Av. Lázaro Cárdenas 123, Xalapa"></div>
 
     <div class="seccion-titulo">Misa</div>
     <div class="campo-grupo">
       <div class="campo"><label for="fFechaMisa">Fecha</label><input type="date" id="fFechaMisa"></div>
       <div class="campo"><label for="fHoraMisa">Hora</label><input type="time" id="fHoraMisa"></div>
     </div>
-    <div class="campo"><label for="fUbicMisa">Ubicación</label><input type="text" id="fUbicMisa" placeholder="Iglesia / dirección"></div>
+    <div class="campo"><label for="fUbicMisa">Ubicación</label><input type="text" id="fUbicMisa" placeholder="Ej. Iglesia La Resurrección, Calle Bravo 45, Xalapa"></div>
 
     <div class="seccion-titulo">Salida (domicilio o sala de velación)</div>
     <div class="campo-grupo">
       <div class="campo"><label for="fFechaSalida">Fecha</label><input type="date" id="fFechaSalida"></div>
       <div class="campo"><label for="fHoraSalida">Hora</label><input type="time" id="fHoraSalida"></div>
     </div>
-    <div class="campo"><label for="fUbicSalida">Ubicación</label><input type="text" id="fUbicSalida" placeholder="Dirección de salida"></div>
-    <div class="campo"><label for="fMapsSalida">URL de Google Maps (opcional)</label><input type="text" id="fMapsSalida" placeholder="https://maps.app.goo.gl/..."></div>
+    <div class="campo"><label for="fUbicSalida">Ubicación</label><input type="text" id="fUbicSalida" placeholder="Ej. Calle Insurgentes 78, Col. Centro, Xalapa"></div>
+    <div style="background:var(--hueso-osc);border-radius:7px;padding:10px 12px;font-size:12.5px;color:var(--carbon-suave);margin-bottom:4px;">
+      💡 Escribe la dirección completa para que aparezca un mapa en la página del finado.
+    </div>
 
     <div class="seccion-titulo">Reglas de publicación</div>
     <div class="campo">
@@ -676,7 +678,7 @@
     ['fNombre','fNacimiento','fDefuncion','fFotoUrl','fBio',
      'fFechaCepelio','fHoraCepelio','fUbicCepelio',
      'fFechaMisa','fHoraMisa','fUbicMisa',
-     'fFechaSalida','fHoraSalida','fUbicSalida','fMapsSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
+     'fFechaSalida','fHoraSalida','fUbicSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
   }
 
   // ===== ABRIR SERVICIO EXISTENTE =====
@@ -702,7 +704,6 @@
     document.getElementById('fFechaSalida').value = s.fechaSalida || '';
     document.getElementById('fHoraSalida').value = s.horaSalida || '';
     document.getElementById('fUbicSalida').value = s.ubicacionSalida || '';
-    document.getElementById('fMapsSalida').value = s.mapsUrlSalida || '';
     document.getElementById('fReglas').value = s.reglasPublicacion || '';
 
     const transferido = s.estado === 'transferido';
@@ -741,7 +742,6 @@
       fechaSalida: document.getElementById('fFechaSalida').value,
       horaSalida: document.getElementById('fHoraSalida').value,
       ubicacionSalida: document.getElementById('fUbicSalida').value.trim(),
-      mapsUrlSalida: document.getElementById('fMapsSalida').value.trim(),
       reglasPublicacion: document.getElementById('fReglas').value.trim()
     };
 
