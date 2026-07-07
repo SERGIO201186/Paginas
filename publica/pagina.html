@@ -704,34 +704,50 @@ async function cargarTienda() {
   ]);
 
   // Paquetes
-  paquetesSistema = rPaq.paquetes || [];
+  const PAQUETES_FALLBACK = [
+    {id:'pkg1', creditos:50,  precio:60,  etiqueta:''},
+    {id:'pkg2', creditos:120, precio:130, etiqueta:'Más popular'},
+    {id:'pkg3', creditos:300, precio:299, etiqueta:'Mejor valor'}
+  ];
+  paquetesSistema = (rPaq.paquetes && rPaq.paquetes.length > 0) ? rPaq.paquetes : PAQUETES_FALLBACK;
   const listaPaq = document.getElementById('listaPaquetes');
-  if (paquetesSistema.length === 0) {
-    listaPaq.innerHTML = '<div class="vacio" style="grid-column:span 3">No hay paquetes disponibles.</div>';
-  } else {
-    listaPaq.innerHTML = paquetesSistema.map(p=>`
-      <div class="paquete" data-id="${p.id}" data-creditos="${p.creditos}" data-precio="${p.precio}" onclick="selPaquete(this)">
-        <div class="paquete-cred">${p.creditos}</div>
-        <div class="paquete-txt">créditos</div>
-        <div class="paquete-precio">$${p.precio}</div>
-      </div>`).join('');
-  }
+  listaPaq.innerHTML = paquetesSistema.map(p=>`
+    <div class="paquete" data-id="${p.id}" data-creditos="${p.creditos}" data-precio="${p.precio}" onclick="selPaquete(this)">
+      <div class="paquete-cred">${p.creditos}</div>
+      <div class="paquete-txt">créditos</div>
+      <div class="paquete-precio">$${p.precio}</div>
+      ${p.etiqueta ? `<div style="font-size:9px;color:var(--terracota);font-weight:700;margin-top:2px;">${esc(p.etiqueta)}</div>` : ''}
+    </div>`).join('');
 
-  // Artículos
-  articulosSistema = rArt.articulos || [];
+  // Artículos — catálogo predeterminado como fallback
+  const CATALOGO_FALLBACK = [
+    {id:'rosas',       emoji:'🌹', nombre:'Rosa virtual',          descripcion:'Una rosa en su memoria',                     creditos:10,  tipo:'virtual'},
+    {id:'paloma',      emoji:'🕊️', nombre:'Paloma de paz',         descripcion:'Que descanse en paz',                        creditos:10,  tipo:'virtual'},
+    {id:'abrazo',      emoji:'💛', nombre:'Abrazo de luz',          descripcion:'Un abrazo para la familia',                  creditos:10,  tipo:'virtual'},
+    {id:'arreglo_v',   emoji:'💐', nombre:'Arreglo virtual',        descripcion:'Arreglo floral especial en la página',        creditos:30,  tipo:'virtual'},
+    {id:'vela_p',      emoji:'🕯', nombre:'Vela premium',           descripcion:'Vela con luz dorada especial',               creditos:25,  tipo:'premium'},
+    {id:'flores_ch',   emoji:'🌺', nombre:'Arreglo físico chico',   descripcion:'Arreglo real entregado en el velorio (~$300)',creditos:250, tipo:'fisico'},
+    {id:'flores_med',  emoji:'💐', nombre:'Arreglo físico mediano', descripcion:'Arreglo real mediano (~$480 MXN)',            creditos:400, tipo:'fisico'},
+    {id:'flores_gr',   emoji:'🌸', nombre:'Arreglo físico grande',  descripcion:'Arreglo real grande (~$720 MXN)',             creditos:600, tipo:'fisico'}
+  ];
+
+  articulosSistema = (rArt.articulos && rArt.articulos.length > 0) ? rArt.articulos : CATALOGO_FALLBACK;
   const listaArt = document.getElementById('listaGestos');
-  if (articulosSistema.length === 0) {
-    listaArt.innerHTML = '<div class="vacio" style="grid-column:span 2">No hay artículos disponibles.</div>';
-  } else {
-    listaArt.innerHTML = articulosSistema.map(a=>`
-      <div class="gesto-card ${a.tipo==='premium'?'especial':''} ${a.tipo==='fisico'?'fisico':''}"
-           onclick="accionRegistrada(()=>enviarGesto('${a.id}','${esc(a.emoji)} ${esc(a.nombre)}','${a.tipo}',${a.creditos},'${esc(a.emoji)}','${esc(a.descripcion)}'))">
-        <div class="gesto-emoji">${a.emoji||'🌹'}</div>
-        <div class="gesto-nombre">${esc(a.nombre)}</div>
-        <div class="gesto-desc">${esc(a.descripcion)}</div>
-        <div class="gesto-precio">${a.creditos} créditos</div>
-      </div>`).join('');
-  }
+  listaArt.innerHTML = '';
+  articulosSistema.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'gesto-card' +
+      (a.tipo === 'premium' ? ' especial' : '') +
+      (a.tipo === 'fisico' ? ' fisico' : '');
+    card.innerHTML = `<div class="gesto-emoji">${a.emoji||'🌹'}</div>
+      <div class="gesto-nombre">${esc(a.nombre)}</div>
+      <div class="gesto-desc">${esc(a.descripcion)}</div>
+      <div class="gesto-precio">${a.creditos} créditos</div>`;
+    card.onclick = () => accionRegistrada(() =>
+      enviarGesto(a.id, (a.emoji||'') + ' ' + a.nombre, a.tipo, a.creditos, a.emoji||'', a.descripcion||'')
+    );
+    listaArt.appendChild(card);
+  });
 
   if (usuario) actualizarSaldo();
 }
@@ -813,52 +829,82 @@ async function confirmarGesto() {
 // ===== VIDEOLLAMADA CON PAGO =====
 async function cargarVideollamada() {
   const wrap = document.getElementById('llamadaWrap');
-  const [respConfig, respLlamadas] = await Promise.all([
-    api('obtenerConfigMaestro', {masterKey:'__public__'}),
-    api('obtenerVideoLlamadas', {servicioId:servicio.id})
+  wrap.innerHTML = '<div class="vacio">Cargando...</div>';
+
+  const [respLlamadas, respSolicitud] = await Promise.all([
+    api('obtenerVideoLlamadas', {servicioId: servicio.id}),
+    usuario ? api('verificarSolicitudVL', {servicioId: servicio.id, email: usuario.email}) : Promise.resolve({ok:false})
   ]);
 
-  const precioVL = respConfig.precioVideollamada || 150;
-
-  // Si hay videollamadas activas/pagadas, mostrarlas
   const llamadas = respLlamadas.videoLlamadas || [];
-  const yaCompro = localStorage.getItem('vl_'+servicio.id+'_'+(usuario?usuario.email:''));
-  const llamadaActiva = llamadas.find(v=>v.linkActivo);
+  const llamadaActiva = llamadas.find(v => v.enlace && v.enlace.trim() !== '');
+  const yaPago = respSolicitud.ok && respSolicitud.estado === 'completado';
+  const yaSolicito = respSolicitud.ok && respSolicitud.estado === 'pendiente';
 
   let html = '';
 
-  if (llamadaActiva && yaCompro) {
+  // BANNER INFORMATIVO siempre visible
+  html += `<div style="background:var(--hueso-osc);border:1px solid var(--borde);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;">
+    <div style="font-size:28px;flex-shrink:0;">📹</div>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:var(--carbon);margin-bottom:4px;">Videollamada conmemorativa disponible</div>
+      <div style="font-size:13px;color:var(--carbon-suave);line-height:1.5;">¿No pudiste estar presente? Conectate con la familia desde donde estés. Todos pueden ver, escuchar y hablar en tiempo real.</div>
+    </div>
+  </div>`;
+
+  // Si ya pagó y hay link activo
+  if (yaPago && llamadaActiva) {
     html += `<div class="llamada-activa">
-      <div class="llamada-activa-titulo">📹 ${esc(llamadaActiva.titulo)}</div>
-      <div class="llamada-activa-fecha">${formatFecha(llamadaActiva.fecha)} · ${llamadaActiva.hora} hrs</div>
-      <a href="${esc(llamadaActiva.enlace)}" target="_blank" rel="noopener" class="btn-unirse">Unirse a la videollamada →</a>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--sauce);letter-spacing:0.04em;margin-bottom:8px;">✓ Acceso confirmado</div>
+      <div class="llamada-activa-titulo">📹 ${esc(llamadaActiva.titulo || 'Videollamada conmemorativa')}</div>
+      <div class="llamada-activa-fecha">${formatFecha(llamadaActiva.fecha)} · ${llamadaActiva.hora || ''} hrs</div>
+      <a href="${esc(llamadaActiva.enlace)}" target="_blank" rel="noopener" class="btn-unirse" style="display:block;text-align:center;">
+        Unirse a la videollamada →
+      </a>
+      <p style="font-size:11.5px;color:var(--carbon-suave);margin-top:10px;text-align:center;">El link también fue enviado a ${esc(usuario ? usuario.email : '')}</p>
     </div>`;
+
+  // Si ya pagó pero aún no hay link
+  } else if (yaPago && !llamadaActiva) {
+    html += `<div class="llamada-activa">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dorado);letter-spacing:0.04em;margin-bottom:8px;">⏳ Pago confirmado</div>
+      <div style="font-size:14px;font-weight:600;color:var(--carbon);margin-bottom:6px;">Tu acceso está reservado</div>
+      <div style="font-size:13px;color:var(--carbon-suave);line-height:1.5;">La funeraria está coordinando la videollamada. Recibirás el link de conexión en tu correo <strong>${esc(usuario ? usuario.email : '')}</strong> en cuanto esté lista.</div>
+    </div>`;
+
+  // Si ya solicitó pero no ha pagado (raro, pero por si acaso)
+  } else if (yaSolicito) {
+    html += `<div class="llamada-activa">
+      <div style="font-size:13px;color:var(--carbon-suave);">Tu solicitud está en proceso. Si ya pagaste, espera unos minutos y recarga la página.</div>
+    </div>`;
+
+  // Si no ha solicitado — mostrar opción de compra
   } else {
     html += `<div class="llamada-promo">
-      <div class="llamada-promo-ico">📹</div>
-      <div class="llamada-promo-titulo">Videollamada conmemorativa</div>
-      <div class="llamada-promo-desc">Conéctate con familiares y amigos que no pudieron estar presentes. Comparte este momento especial en tiempo real.</div>
-      <div class="llamada-promo-precio">$${precioVL} MXN <span>/ acceso por persona</span></div>
-      <button class="btn-solicitar" onclick="accionRegistrada(solicitarVideollamada)">Solicitar videollamada →</button>
+      <div class="llamada-promo-ico">🎥</div>
+      <div class="llamada-promo-titulo">Conéctate con la familia</div>
+      <div class="llamada-promo-desc">Aunque estés lejos, puedes acompañar a la familia en este momento. Video y audio completos para todos los participantes.</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;">
+        <div class="llamada-promo-precio" style="margin-bottom:0;">$299 <span>MXN</span></div>
+      </div>
+      <div style="font-size:12px;opacity:0.8;margin-bottom:16px;">Pago único · hasta 100 personas · sin límite de tiempo</div>
+      <button class="btn-solicitar" onclick="accionRegistrada(solicitarVideollamada)">
+        Solicitar videollamada → 
+      </button>
+      <div style="font-size:11.5px;opacity:0.75;margin-top:10px;">Recibirás el link por correo cuando la funeraria lo confirme</div>
     </div>`;
-    if (llamadaActiva && !yaCompro) {
-      html += `<p style="text-align:center;font-size:13px;color:var(--carbon-suave);">Hay una videollamada programada. Adquiere tu acceso para unirte.</p>`;
-    }
   }
 
   wrap.innerHTML = html;
 }
 
 async function solicitarVideollamada() {
-  const respConfig = await api('obtenerConfigMaestro', {masterKey:'__public__'});
-  const precio = respConfig.precioVideollamada || 150;
-
   const resp = await api('crearSesionVideollamada', {
     email: usuario.email,
     nombre: usuario.nombre,
     servicioId: servicio.id,
-    precio,
-    urlExito: window.location.href+'&vlOk=1',
+    precio: 299,
+    urlExito: window.location.href + '&vlOk=1',
     urlCancelado: window.location.href
   }, 'POST');
 
@@ -870,9 +916,11 @@ async function solicitarVideollamada() {
 }
 
 // Al regresar de pago exitoso de videollamada
-if (params.get('vlOk')==='1' && usuario) {
-  localStorage.setItem('vl_'+slug+'_'+usuario.email, '1');
-  setTimeout(()=>{ document.querySelector('[data-tab="llamada"]').click(); cargarVideollamada(); }, 800);
+if (params.get('vlOk') === '1' && usuario) {
+  setTimeout(() => {
+    document.querySelector('[data-tab="llamada"]').click();
+    cargarVideollamada();
+  }, 1000);
 }
 
 // ===== LIGHTBOX =====
