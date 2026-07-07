@@ -263,6 +263,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
       <div class="info-fila"><span class="info-etq">Fecha</span><span class="info-val" id="fechaSalida">—</span></div>
       <div class="info-fila"><span class="info-etq">Hora</span><span class="info-val" id="horaSalida">—</span></div>
       <div class="info-ubic" id="ubicacionSalida"></div>
+      <a href="#" id="mapsSalida" target="_blank" rel="noopener" style="display:none;margin-top:6px;font-size:12.5px;font-weight:600;color:var(--terracota-osc);text-decoration:none;">📍 Ver ubicación en Google Maps</a>
     </div>
     <div class="reglas-aviso" id="reglasAviso" style="display:none;"></div>
   </div>
@@ -501,6 +502,10 @@ function pintarInfo(s) {
     document.getElementById('ubicacion'+b.p).textContent=b.ubic||'';
   });
   if(s.reglasPublicacion){const av=document.getElementById('reglasAviso');av.textContent=s.reglasPublicacion;av.style.display='block';}
+
+  const linkMaps=document.getElementById('mapsSalida');
+  if(s.mapsUrlSalida){linkMaps.href=s.mapsUrlSalida;linkMaps.style.display='inline-block';}
+  else{linkMaps.style.display='none';}
 }
 
 // ===== VELADORAS =====
