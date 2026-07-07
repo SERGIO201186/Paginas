@@ -295,10 +295,10 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
       <button class="btn btn-primario btn-full" onclick="guardarPrecioTransf()">Guardar precio</button>
       <div class="aviso" id="avisoTransf"></div>
 
-      <div class="seccion-titulo">Precio de videollamada</div>
-      <div class="campo"><label for="cfgPrecioVL">Precio por persona en MXN</label><input type="number" id="cfgPrecioVL" placeholder="150"></div>
-      <button class="btn btn-primario btn-full" onclick="guardarPrecioVL()">Guardar precio</button>
-      <div class="aviso" id="avisoVL"></div>
+      <div class="seccion-titulo">Videollamada</div>
+      <div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--carbon-suave);">
+        El precio de la videollamada es <strong style="color:var(--terracota-osc);">$299 MXN fijo</strong> por servicio. Las familias pagan directo desde la página del finado y reciben el link de Google Meet por correo.
+      </div>
 
       <div class="seccion-titulo">Solicitudes de videollamada pendientes</div>
       <div id="listaSolicitudesVL"><div class="vacio">Cargando...</div></div>
@@ -445,7 +445,10 @@ async function cargarFunerarias() {
           <div class="card-item-nombre">${f.nombre}</div>
           <div class="card-item-meta">Código: <strong>${f.codigoAcceso}</strong></div>
         </div>
-        <span class="${f.activo==='TRUE'||f.activo===true?'badge-activo':'badge-inactivo'}">${f.activo==='TRUE'||f.activo===true?'Activa':'Inactiva'}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="${f.activo==='TRUE'||f.activo===true?'badge-activo':'badge-inactivo'}">${f.activo==='TRUE'||f.activo===true?'Activa':'Inactiva'}</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${f.plan==='pro'?'#C9A24B':'#E3D9C8'};color:${f.plan==='pro'?'#2B2723':'#56504A'};">${f.plan==='pro'?'⭐ Pro':'Demo'}</span>
+        </div>
       </div>
       <div style="display:flex;gap:6px;margin-top:10px;">
         <button class="btn btn-pequeno ${f.activo==='TRUE'||f.activo===true?'btn-danger':'btn-sauce'}"
@@ -590,7 +593,7 @@ async function cargarConfig() {
   if (resp.email) document.getElementById('cfgEmail').value = resp.email;
   if (resp.precioTransferencia) document.getElementById('cfgPrecioTransf').value = resp.precioTransferencia;
   if (resp.creditosGratis) document.getElementById('creditosGratis').value = resp.creditosGratis;
-  if (resp.precioVideollamada) document.getElementById('cfgPrecioVL').value = resp.precioVideollamada;
+  // precio VL fijo $299
   cargarSolicitudesVL();
 }
 
@@ -615,15 +618,7 @@ async function guardarPrecioTransf() {
   aviso.textContent = resp.ok ? '✓ Precio guardado.' : (resp.error||'Error.');
 }
 
-async function guardarPrecioVL() {
-  const aviso = document.getElementById('avisoVL');
-  const resp = await api('guardarConfigMaestro', {
-    masterKey,
-    precioVideollamada: +document.getElementById('cfgPrecioVL').value
-  }, 'POST');
-  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
-  aviso.textContent = resp.ok ? '✓ Precio de videollamada guardado.' : (resp.error||'Error.');
-}
+// precio videollamada es fijo $299
 
 async function cargarSolicitudesVL() {
   const lista = document.getElementById('listaSolicitudesVL');
