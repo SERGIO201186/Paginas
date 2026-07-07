@@ -3,374 +3,341 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Páginas Conmemorativas · Recuerda, comparte, honra</title>
+<title>Funeral360 · Software para funerarias inteligentes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;
-  --dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;
-  --borde:#E3D9C8;--blanco:#FFFFFF;
+  --marino:#1B2A4A;--marino-osc:#111E35;--marino-med:#243760;
+  --dorado:#B8964E;--dorado-osc:#9A7A3A;--dorado-claro:#D4B06A;
+  --gris-claro:#F4F6FA;--gris-med:#E8ECF4;--gris-borde:#D1D8E8;
+  --carbon:#1A1F2E;--carbon-suave:#4A5568;--blanco:#FFFFFF;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body{background:var(--blanco);color:var(--carbon);font-family:'Inter',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
 
 /* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:var(--blanco);border-bottom:1px solid var(--borde);position:sticky;top:0;z-index:20;}
-.nav-logo{font-family:'Fraunces',serif;font-size:18px;color:var(--terracota-osc);display:flex;align-items:center;gap:8px;}
-.nav-logo span{font-size:20px;}
-.btn-acceso{padding:10px 20px;background:var(--terracota);color:var(--blanco);border:none;border-radius:30px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.2s;}
-.btn-acceso:hover{background:var(--terracota-osc);}
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--blanco);border-bottom:1px solid var(--gris-borde);position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(27,42,74,0.06);}
+.nav-logo img{height:34px;}
+.nav-btns{display:flex;gap:10px;align-items:center;}
+.btn-nav-sec{padding:8px 16px;background:transparent;color:var(--marino);border:1.5px solid var(--marino);border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;}
+.btn-nav-pri{padding:9px 18px;background:var(--marino);color:var(--blanco);border:none;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;transition:background 0.2s;}
+.btn-nav-pri:hover{background:var(--marino-med);}
 
 /* HERO */
-.hero{padding:72px 24px 60px;text-align:center;max-width:680px;margin:0 auto;}
-.hero-badge{display:inline-block;background:var(--hueso-osc);border:1px solid var(--borde);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--terracota);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:22px;}
-.hero h1{font-family:'Fraunces',serif;font-size:clamp(32px,7vw,52px);font-weight:400;color:var(--terracota-osc);line-height:1.15;margin-bottom:18px;}
-.hero h1 em{font-style:italic;color:var(--dorado);}
-.hero p{font-size:17px;color:var(--carbon-suave);max-width:480px;margin:0 auto 32px;}
-.hero-ctas{display:flex;flex-direction:column;gap:12px;align-items:center;}
-.btn-primario{padding:15px 32px;background:var(--terracota);color:var(--blanco);border:none;border-radius:30px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.2s;}
-.btn-primario:hover{background:var(--terracota-osc);}
-.btn-secundario{padding:14px 28px;background:transparent;color:var(--terracota);border:2px solid var(--terracota);border-radius:30px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.2s;}
-.btn-secundario:hover{background:var(--hueso-osc);}
+.hero{padding:64px 20px 56px;text-align:center;background:linear-gradient(180deg,var(--gris-claro) 0%,var(--blanco) 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--marino);color:var(--dorado);border-radius:20px;padding:5px 14px;font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(30px,7vw,52px);font-weight:300;color:var(--marino);line-height:1.15;margin-bottom:16px;max-width:640px;margin-left:auto;margin-right:auto;}
+.hero h1 strong{font-weight:500;color:var(--dorado);}
+.hero p{font-size:16px;color:var(--carbon-suave);max-width:480px;margin:0 auto 32px;}
+.hero-ctas{display:flex;flex-direction:column;gap:10px;align-items:center;}
+.btn-pri{padding:15px 32px;background:var(--marino);color:var(--blanco);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.2s;}
+.btn-pri:hover{background:var(--marino-med);}
+.btn-sec{padding:13px 28px;background:transparent;color:var(--marino);border:2px solid var(--marino);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
 
-/* DEMO PREVIEW */
-.demo-wrap{background:var(--blanco);border:1px solid var(--borde);border-radius:18px;max-width:360px;margin:48px auto;overflow:hidden;box-shadow:0 16px 48px rgba(43,39,35,0.1);}
-.demo-portada{height:100px;background:linear-gradient(135deg,#3a2420 0%,#7A4A3A 60%,#C9A24B 100%);}
-.demo-perfil{padding:0 18px;margin-top:-32px;}
-.demo-foto{width:64px;height:64px;border-radius:50%;background:var(--hueso-osc);border:3px solid var(--blanco);display:flex;align-items:center;justify-content:center;font-size:28px;}
-.demo-info{padding:10px 18px 16px;}
-.demo-nombre{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:3px;}
-.demo-fechas{font-size:11px;color:var(--carbon-suave);font-family:monospace;margin-bottom:10px;}
-.demo-tabs{display:flex;border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);}
-.demo-tab{flex:1;padding:9px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--carbon-suave);text-transform:uppercase;letter-spacing:0.03em;}
-.demo-tab.activo{color:var(--terracota);border-bottom:2px solid var(--terracota);}
-.demo-burbuja{margin:14px 18px;background:var(--hueso);border-radius:10px 10px 10px 3px;padding:10px 12px;}
-.demo-burbuja-nombre{font-size:12px;font-weight:700;color:var(--terracota-osc);margin-bottom:3px;}
-.demo-burbuja-txt{font-size:12px;color:var(--carbon-suave);}
-.demo-gestos{display:flex;gap:8px;padding:0 18px 18px;flex-wrap:wrap;}
-.demo-gesto{background:var(--hueso-osc);border-radius:20px;padding:5px 10px;font-size:13px;}
+/* MÓDULOS */
+.modulos{padding:56px 20px;background:var(--marino);color:var(--blanco);}
+.modulos h2{font-family:'Fraunces',serif;font-size:26px;font-weight:300;text-align:center;margin-bottom:8px;color:var(--blanco);}
+.modulos-sub{text-align:center;font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:32px;}
+.modulos-grid{display:grid;grid-template-columns:1fr;gap:12px;max-width:640px;margin:0 auto;}
+.modulo-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:20px;display:flex;gap:14px;align-items:flex-start;}
+.modulo-ico{width:44px;height:44px;border-radius:10px;background:var(--dorado);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.modulo-titulo{font-size:15px;font-weight:700;color:var(--blanco);margin-bottom:4px;}
+.modulo-desc{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;}
+.modulo-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:20px;margin-top:6px;}
+.tag-activo{background:rgba(184,150,78,0.2);color:var(--dorado-claro);}
+.tag-proximo{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);}
 
 /* FEATURES */
-.features{padding:60px 20px;max-width:680px;margin:0 auto;}
-.features h2{font-family:'Fraunces',serif;font-size:28px;color:var(--terracota-osc);text-align:center;margin-bottom:36px;}
-.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.feature-card{background:var(--blanco);border:1px solid var(--borde);border-radius:12px;padding:18px;}
-.feature-ico{font-size:26px;margin-bottom:9px;}
-.feature-titulo{font-size:14px;font-weight:700;color:var(--carbon);margin-bottom:4px;}
-.feature-desc{font-size:13px;color:var(--carbon-suave);line-height:1.5;}
+.features{padding:56px 20px;background:var(--gris-claro);}
+.features h2{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--marino);text-align:center;margin-bottom:32px;}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:640px;margin:0 auto;}
+.feat{background:var(--blanco);border:1px solid var(--gris-borde);border-radius:10px;padding:16px;}
+.feat-ico{font-size:24px;margin-bottom:8px;}
+.feat-titulo{font-size:13.5px;font-weight:700;color:var(--marino);margin-bottom:3px;}
+.feat-desc{font-size:12.5px;color:var(--carbon-suave);line-height:1.45;}
 
 /* PRECIOS */
-.precios{padding:60px 20px;background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);}
-.precios-inner{max-width:680px;margin:0 auto;}
-.precios h2{font-family:'Fraunces',serif;font-size:28px;color:var(--terracota-osc);text-align:center;margin-bottom:8px;}
-.precios-sub{text-align:center;font-size:14px;color:var(--carbon-suave);margin-bottom:32px;}
-.planes{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.plan{border:1.5px solid var(--borde);border-radius:14px;padding:22px 18px;text-align:center;}
-.plan.destacado{border-color:var(--terracota);background:var(--hueso-osc);}
-.plan-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--terracota);margin-bottom:10px;}
-.plan-nombre{font-family:'Fraunces',serif;font-size:20px;color:var(--carbon);margin-bottom:6px;}
-.plan-precio{font-size:28px;font-weight:700;color:var(--terracota-osc);margin-bottom:4px;}
+.precios{padding:56px 20px;background:var(--blanco);}
+.precios h2{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--marino);text-align:center;margin-bottom:6px;}
+.precios-sub{text-align:center;font-size:13.5px;color:var(--carbon-suave);margin-bottom:28px;}
+.planes{display:grid;grid-template-columns:1fr;gap:14px;max-width:480px;margin:0 auto;}
+.plan{border:1.5px solid var(--gris-borde);border-radius:14px;padding:22px 20px;}
+.plan.destacado{border-color:var(--marino);background:linear-gradient(135deg,var(--gris-claro) 0%,var(--blanco) 100%);}
+.plan-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--dorado);margin-bottom:8px;}
+.plan-nombre{font-family:'Fraunces',serif;font-size:20px;color:var(--marino);margin-bottom:6px;}
+.plan-precio{font-size:30px;font-weight:800;color:var(--marino);margin-bottom:4px;}
 .plan-precio span{font-size:13px;font-weight:400;color:var(--carbon-suave);}
-.plan-desc{font-size:12.5px;color:var(--carbon-suave);margin-bottom:16px;line-height:1.5;}
-.plan-items{list-style:none;text-align:left;margin-bottom:18px;}
-.plan-items li{font-size:12.5px;color:var(--carbon-suave);padding:4px 0;border-bottom:1px solid var(--borde);}
-.plan-items li::before{content:'✓ ';color:var(--sauce);font-weight:700;}
-.btn-plan{width:100%;padding:11px;background:var(--terracota);color:var(--blanco);border:none;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none;display:block;transition:background 0.2s;}
-.btn-plan:hover{background:var(--terracota-osc);}
+.plan-desc{font-size:13px;color:var(--carbon-suave);margin-bottom:14px;line-height:1.5;}
+.plan-items{list-style:none;margin-bottom:18px;}
+.plan-items li{font-size:13px;color:var(--carbon-suave);padding:5px 0;border-bottom:1px solid var(--gris-med);display:flex;align-items:center;gap:7px;}
+.plan-items li::before{content:'✓';color:var(--dorado);font-weight:700;flex-shrink:0;}
+.btn-plan{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.btn-plan:hover{opacity:0.88;}
+.btn-plan-pri{background:var(--marino);color:var(--blanco);}
+.btn-plan-sec{background:var(--gris-med);color:var(--marino);}
 
 /* CTA FINAL */
-.cta-final{padding:64px 24px;text-align:center;max-width:560px;margin:0 auto;}
-.cta-final h2{font-family:'Fraunces',serif;font-size:26px;color:var(--terracota-osc);margin-bottom:12px;}
-.cta-final p{font-size:15px;color:var(--carbon-suave);margin-bottom:28px;}
+.cta-final{padding:56px 20px;text-align:center;background:var(--marino);}
+.cta-final h2{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--blanco);margin-bottom:10px;}
+.cta-final p{font-size:14.5px;color:rgba(255,255,255,0.7);margin-bottom:26px;}
+.btn-dorado{padding:15px 32px;background:var(--dorado);color:var(--marino-osc);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;}
 
 /* FOOTER */
-footer{text-align:center;padding:24px 16px;border-top:1px solid var(--borde);font-size:12px;color:var(--carbon-suave);}
-footer a{color:var(--terracota);text-decoration:none;}
+footer{padding:24px 20px;background:var(--marino-osc);text-align:center;}
+footer img{height:28px;margin-bottom:10px;opacity:0.85;}
+footer p{font-size:12px;color:rgba(255,255,255,0.4);}
+footer a{color:rgba(255,255,255,0.6);text-decoration:none;}
 
-/* Vela animada */
-.vela-hero{display:inline-flex;flex-direction:column;align-items:center;margin-bottom:6px;}
-.vela-flama{width:10px;height:16px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:parpadeo 2.4s ease-in-out infinite;}
-.vela-cuerpo{width:12px;height:28px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:2px;}
-@keyframes parpadeo{0%,100%{transform:scaleY(1) rotate(0deg);}25%{transform:scaleY(1.1) rotate(-2deg);}50%{transform:scaleY(0.92) rotate(1.5deg);}75%{transform:scaleY(1.06) rotate(-1deg);}}
-@media(prefers-reduced-motion:reduce){.vela-flama{animation:none;}}
+/* WA FLOTANTE */
+.wa-btn{position:fixed;bottom:20px;right:16px;z-index:50;display:flex;align-items:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:12px 18px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(37,211,102,0.35);}
+.wa-btn span{font-size:20px;}
+
+/* MODALES */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(27,42,74,0.88);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.abierto{display:flex;}
+.modal-box{background:var(--blanco);border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;}
+.modal-titulo{font-family:'Fraunces',serif;font-size:22px;color:var(--marino);margin-bottom:4px;}
+.modal-sub{font-size:13.5px;color:var(--carbon-suave);margin-bottom:20px;}
+.campo-modal{margin-bottom:13px;}
+.campo-modal label{display:block;font-size:11px;font-weight:700;color:var(--carbon-suave);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.campo-modal input{width:100%;padding:12px 14px;border:1.5px solid var(--gris-borde);border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;color:var(--carbon);background:var(--gris-claro);}
+.campo-modal input:focus{outline:2px solid var(--marino);outline-offset:1px;}
+.btn-modal-pri{width:100%;padding:14px;background:var(--marino);color:var(--blanco);border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn-modal-sec{width:100%;padding:12px;background:transparent;color:var(--carbon-suave);border:1px solid var(--gris-borde);border-radius:8px;font-size:14px;cursor:pointer;}
+.aviso-modal{margin-top:10px;font-size:13px;padding:10px 12px;border-radius:7px;display:none;}
+.aviso-exito{display:block!important;background:#EEF7F1;color:#2D6A4F;}
+.aviso-error{display:block!important;background:#FEF2F2;color:#9B2C2C;}
+
+@keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-box{animation:slideUp 0.3s ease;}
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-logo"><span>🕊</span> Páginas Conmemorativas</div>
-  <a href="login.html" class="btn-acceso">Acceso funerarias →</a>
+  <a href="#"><img src="icons/funeral360-logo.png" alt="Funeral360" style="height:34px;"></a>
+  <div class="nav-btns">
+    <a href="login.html" class="btn-nav-sec">Iniciar sesión</a>
+    <button class="btn-nav-pri" onclick="abrirModalContratar()">Contratar →</button>
+  </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="vela-hero"><div class="vela-flama"></div><div class="vela-cuerpo"></div></div>
-  <div class="hero-badge">Para funerarias profesionales</div>
-  <h1>Honra su memoria.<br>Comparte su <em>legado.</em></h1>
-  <p>Crea páginas de homenaje digitales para tus familias. Condolencias, fotos, videollamadas y más — todo en un solo lugar.</p>
+  <div class="hero-badge">🏆 Software para funerarias inteligentes</div>
+  <h1>Gestiona tu funeraria con <strong>tecnología de punta</strong></h1>
+  <p>Suite completa de software para funerarias: páginas conmemorativas, gestión de servicios, previsión y más.</p>
   <div class="hero-ctas">
-    <a href="login.html" class="btn-primario">Comenzar ahora · Es gratis</a>
-    <a href="#precios" class="btn-secundario">Ver planes y precios</a>
+    <button class="btn-pri" onclick="abrirModalDemo()">Solicitar demo gratuito →</button>
+    <a href="#modulos" class="btn-sec">Ver módulos</a>
   </div>
 </section>
 
-<!-- DEMO VISUAL -->
-<div class="demo-wrap">
-  <div class="demo-portada"></div>
-  <div class="demo-perfil"><div class="demo-foto">🕊</div></div>
-  <div class="demo-info">
-    <div class="demo-nombre">María Elena Flores</div>
-    <div class="demo-fechas">12 mar 1945 · 28 jun 2025</div>
+<!-- MÓDULOS -->
+<section class="modulos" id="modulos">
+  <h2>Una suite completa para tu funeraria</h2>
+  <p class="modulos-sub">Todos los módulos integrados en una sola plataforma</p>
+  <div class="modulos-grid">
+
+    <div class="modulo-card">
+      <div class="modulo-ico">🕊</div>
+      <div>
+        <div class="modulo-titulo">Páginas Conmemorativas</div>
+        <div class="modulo-desc">Crea páginas de homenaje digitales para cada servicio. Condolencias, fotos, videollamadas y tienda de gestos integrada.</div>
+        <span class="modulo-tag tag-activo">● Disponible</span>
+      </div>
+    </div>
+
+    <div class="modulo-card">
+      <div class="modulo-ico">📋</div>
+      <div>
+        <div class="modulo-titulo">Gestión de Servicios (ODS)</div>
+        <div class="modulo-desc">Administra servicios inmediatos, expedientes digitales, contratos y documentación desde tu celular.</div>
+        <span class="modulo-tag tag-activo">● Disponible</span>
+      </div>
+    </div>
+
+    <div class="modulo-card">
+      <div class="modulo-ico">📊</div>
+      <div>
+        <div class="modulo-titulo">Previsión Funeraria</div>
+        <div class="modulo-desc">Vende planes de previsión, gestiona contratos y pagos. Control total de tu cartera de clientes.</div>
+        <span class="modulo-tag tag-activo">● Disponible</span>
+      </div>
+    </div>
+
+    <div class="modulo-card">
+      <div class="modulo-ico">🛒</div>
+      <div>
+        <div class="modulo-titulo">Tienda Virtual</div>
+        <div class="modulo-desc">Vende artículos funerarios, urnas, flores y servicios adicionales en línea directamente a tus clientes.</div>
+        <span class="modulo-tag tag-proximo">○ Próximamente</span>
+      </div>
+    </div>
+
+    <div class="modulo-card">
+      <div class="modulo-ico">💳</div>
+      <div>
+        <div class="modulo-titulo">Punto de Venta (NovaPOS)</div>
+        <div class="modulo-desc">POS adaptado para funerarias con facturación CFDI 4.0, control de inventario y reportes.</div>
+        <span class="modulo-tag tag-proximo">○ Próximamente</span>
+      </div>
+    </div>
+
   </div>
-  <div class="demo-tabs">
-    <div class="demo-tab activo">Información</div>
-    <div class="demo-tab">Recuerdos</div>
-    <div class="demo-tab">🕯 Gestos</div>
-  </div>
-  <div class="demo-burbuja">
-    <div class="demo-burbuja-nombre">Roberto Mendoza</div>
-    <div class="demo-burbuja-txt">Siempre recordaré su sonrisa y su alegría. Un abrazo enorme a toda la familia 🌹</div>
-  </div>
-  <div class="demo-gestos">
-    <div class="demo-gesto">🌹 ×3</div>
-    <div class="demo-gesto">🕯 ×1</div>
-    <div class="demo-gesto">💐 ×2</div>
-  </div>
-</div>
+</section>
 
 <!-- FEATURES -->
 <section class="features">
-  <h2>Todo lo que tu familia necesita</h2>
+  <h2>Todo lo que necesitas, sin complicaciones</h2>
   <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-ico">📋</div>
-      <div class="feature-titulo">Información del servicio</div>
-      <div class="feature-desc">Horarios de cepelio, misa y salida en una sola página. Accesible con un QR.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-ico">💬</div>
-      <div class="feature-titulo">Muro de recuerdos</div>
-      <div class="feature-desc">Fotos y mensajes de condolencia moderados por la funeraria antes de publicarse.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-ico">📹</div>
-      <div class="feature-titulo">Videollamadas</div>
-      <div class="feature-desc">Programa Google Meet o Zoom para familiares que no puedan asistir en persona.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-ico">🌹</div>
-      <div class="feature-titulo">Tienda de gestos</div>
-      <div class="feature-desc">Flores virtuales, velas premium y arreglos florales físicos con entrega coordinada.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-ico">🕯</div>
-      <div class="feature-titulo">Veladoras digitales</div>
-      <div class="feature-desc">Cada visitante puede encender una veladora. El contador se muestra en la página.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-ico">🔒</div>
-      <div class="feature-titulo">Transferencia a la familia</div>
-      <div class="feature-desc">Al terminar el servicio, la familia compra acceso permanente con un solo pago.</div>
-    </div>
+    <div class="feat"><div class="feat-ico">📱</div><div class="feat-titulo">100% desde el celular</div><div class="feat-desc">Sin instalaciones. Funciona en cualquier smartphone.</div></div>
+    <div class="feat"><div class="feat-ico">☁️</div><div class="feat-titulo">En la nube</div><div class="feat-desc">Tus datos siempre seguros y disponibles.</div></div>
+    <div class="feat"><div class="feat-ico">📄</div><div class="feat-titulo">Documentos digitales</div><div class="feat-desc">Contratos, expedientes y pagarés en segundos.</div></div>
+    <div class="feat"><div class="feat-ico">💳</div><div class="feat-titulo">Cobros en línea</div><div class="feat-desc">Stripe integrado. Cobra con tarjeta fácilmente.</div></div>
+    <div class="feat"><div class="feat-ico">🔔</div><div class="feat-titulo">Alertas WhatsApp</div><div class="feat-desc">Notificaciones en tiempo real de pedidos y pagos.</div></div>
+    <div class="feat"><div class="feat-ico">📍</div><div class="feat-titulo">Mapas integrados</div><div class="feat-desc">Ubicación del servicio en Google Maps automáticamente.</div></div>
   </div>
 </section>
 
 <!-- PRECIOS -->
 <section class="precios" id="precios">
-  <div class="precios-inner">
-    <h2>Planes para tu funeraria</h2>
-    <p class="precios-sub">Sin contratos. Pagas solo por los servicios que usas.</p>
-    <!-- 3 columnas en desktop, stack en móvil -->
-    <div style="display:grid;grid-template-columns:1fr;gap:14px;">
+  <h2>Planes transparentes</h2>
+  <p class="precios-sub">Sin contratos anuales. Sin letras pequeñas.</p>
+  <div class="planes">
 
-      <div class="plan" style="display:flex;flex-direction:column;gap:4px;">
-        <div class="plan-badge">🎯 Demo gratuito</div>
-        <div class="plan-nombre">Prueba el sistema</div>
-        <div class="plan-precio">Gratis<span> · sin tarjeta</span></div>
-        <div class="plan-desc">Crea una página de prueba y muéstrasela a tus familias antes de contratar.</div>
-        <ul class="plan-items">
-          <li>1 página demo activa</li>
-          <li>Muro de recuerdos</li>
-          <li>Código QR</li>
-          <li>Info del servicio</li>
-        </ul>
-        <button class="btn-plan" style="background:var(--sauce);border:none;cursor:pointer;" onclick="abrirModalDemo()">Solicitar demo</button>
-      </div>
-
-      <div class="plan destacado">
-        <div class="plan-badge">⭐ Más popular</div>
-        <div class="plan-nombre">Pago por servicio</div>
-        <div class="plan-precio">$149<span> / página activa</span></div>
-        <div class="plan-desc">Paga solo cuando activas una página. Sin mensualidades forzadas.</div>
-        <ul class="plan-items">
-          <li>Setup inicial $500 (única vez)</li>
-          <li>$99/mes mantenimiento</li>
-          <li>Tienda de gestos activa</li>
-          <li>Videollamadas de pago</li>
-          <li>Arreglos florales físicos</li>
-          <li>Transferencia a la familia</li>
-          <li>25% de comisión por gestos</li>
-        </ul>
-        <button class="btn-plan" style="border:none;cursor:pointer;" onclick="abrirModalContratar()">Contratar ahora →</button>
-      </div>
-
+    <div class="plan">
+      <div class="plan-badge">🎯 Demo gratuito</div>
+      <div class="plan-nombre">Prueba el sistema</div>
+      <div class="plan-precio">Gratis <span>· sin tarjeta</span></div>
+      <div class="plan-desc">Conoce el sistema antes de comprometerte.</div>
+      <ul class="plan-items">
+        <li>1 página conmemorativa demo</li>
+        <li>Acceso a módulo ODS</li>
+        <li>Soporte por WhatsApp</li>
+      </ul>
+      <button class="btn-plan btn-plan-sec" onclick="abrirModalDemo()">Solicitar demo gratis</button>
     </div>
-    <p style="text-align:center;font-size:12.5px;color:var(--carbon-suave);margin-top:14px;">
-      ¿Tienes más de 10 servicios al mes? <a href="https://wa.me/TU_NUMERO" style="color:var(--terracota);">Contáctanos para un plan personalizado</a>
-    </p>
+
+    <div class="plan destacado">
+      <div class="plan-badge">⭐ Más popular</div>
+      <div class="plan-nombre">Suite Funeral360</div>
+      <div class="plan-precio">$500 <span>setup único</span></div>
+      <div class="plan-desc">$99/mes + $149 por página conmemorativa activa</div>
+      <ul class="plan-items">
+        <li>Módulo ODS completo</li>
+        <li>Módulo de Previsión</li>
+        <li>Páginas conmemorativas</li>
+        <li>Tienda de gestos (25% comisión tuya)</li>
+        <li>Videollamadas $299 por servicio</li>
+        <li>Transferencia de páginas a familias</li>
+        <li>Soporte prioritario</li>
+      </ul>
+      <button class="btn-plan btn-plan-pri" onclick="abrirModalContratar()">Contratar ahora →</button>
+    </div>
+
   </div>
+  <p style="text-align:center;font-size:12.5px;color:var(--carbon-suave);margin-top:16px;">
+    ¿Tienes más de 10 servicios al mes?
+    <a href="https://wa.me/522281845114" style="color:var(--marino);font-weight:600;"> Contáctanos para un plan personalizado</a>
+  </p>
 </section>
 
 <!-- CTA FINAL -->
 <section class="cta-final">
-  <h2>¿Listo para ofrecer este servicio?</h2>
-  <p>Regístrate en segundos. Tu primera página de homenaje lista en minutos.</p>
-  <a href="login.html" class="btn-primario">Acceso funerarias →</a>
+  <h2>¿Listo para modernizar tu funeraria?</h2>
+  <p>Más de 10 módulos integrados. Soporte en español. Desde tu celular.</p>
+  <button class="btn-dorado" onclick="abrirModalDemo()">Solicitar demo gratuito →</button>
 </section>
 
-<!-- CONTACTO WHATSAPP -->
-<div style="position:fixed;bottom:20px;right:16px;z-index:50;">
-  <a href="https://wa.me/TU_NUMERO_WHATSAPP?text=Hola,%20me%20interesa%20el%20servicio%20de%20páginas%20conmemorativas" target="_blank"
-     style="display:flex;align-items:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:12px 18px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:0 4px 16px rgba(37,211,102,0.35);">
-    <span style="font-size:20px;">💬</span> Contactar por WhatsApp
-  </a>
-</div>
-
 <footer>
-  <p>© 2025 Páginas Conmemorativas · <a href="login.html">Acceso funerarias</a></p>
+  <img src="icons/funeral360-logo.png" alt="Funeral360">
+  <p>© 2025 Funeral360 · Software para funerarias inteligentes<br>
+  <a href="login.html">Acceso clientes</a> · <a href="master.html">Panel maestro</a></p>
 </footer>
 
+<!-- WhatsApp flotante -->
+<a href="https://wa.me/522281845114?text=Hola,%20me%20interesa%20Funeral360" target="_blank" class="wa-btn">
+  <span>💬</span> WhatsApp
+</a>
 
-<!-- MODAL SOLICITUD DEMO -->
-<div id="modalDemo" style="display:none;position:fixed;inset:0;background:rgba(43,39,35,0.85);z-index:200;align-items:flex-end;justify-content:center;">
-  <div style="background:#FAF6F0;border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease;">
-    <div style="font-family:'Fraunces',serif;font-size:22px;color:#5E3A2D;margin-bottom:6px;">Solicitar demo gratuito</div>
-    <div style="font-size:13.5px;color:#56504A;margin-bottom:20px;">Te enviamos tu código de acceso en menos de 24 horas. Sin tarjeta de crédito.</div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Nombre de tu funeraria</label>
-      <input type="text" id="demoNombre" placeholder="Funeraria San Ángel" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Tu nombre</label>
-      <input type="text" id="demoContacto" placeholder="¿Con quién hablamos?" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">WhatsApp</label>
-      <input type="tel" id="demoWA" placeholder="2281234567" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Correo electrónico</label>
-      <input type="email" id="demoEmail" placeholder="funeraria@correo.com" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <button onclick="enviarSolicitudDemo()" style="width:100%;padding:14px;background:#5C6B57;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Solicitar demo gratuito</button>
-    <button onclick="cerrarModalDemo()" style="width:100%;padding:12px;background:none;color:#56504A;border:1px solid #E3D9C8;border-radius:8px;font-size:14px;cursor:pointer;">Cancelar</button>
-    <div id="avisoDemo" style="margin-top:10px;font-size:13px;padding:10px;border-radius:7px;display:none;"></div>
+<!-- MODAL DEMO -->
+<div class="modal-overlay" id="modalDemo">
+  <div class="modal-box">
+    <div class="modal-titulo">Demo gratuito</div>
+    <div class="modal-sub">Te enviamos tu acceso en menos de 24 horas.</div>
+    <div class="campo-modal"><label>Nombre de tu funeraria</label><input type="text" id="demoNombre" placeholder="Funeraria San Ángel"></div>
+    <div class="campo-modal"><label>Tu nombre</label><input type="text" id="demoContacto" placeholder="¿Con quién hablamos?"></div>
+    <div class="campo-modal"><label>WhatsApp</label><input type="tel" id="demoWA" placeholder="2281234567"></div>
+    <div class="campo-modal"><label>Correo electrónico</label><input type="email" id="demoEmail" placeholder="funeraria@correo.com"></div>
+    <button class="btn-modal-pri" onclick="enviarDemo()">Solicitar demo gratis</button>
+    <button class="btn-modal-sec" onclick="cerrarModal('modalDemo')">Cancelar</button>
+    <div class="aviso-modal" id="avisoDemo"></div>
   </div>
 </div>
 
 <!-- MODAL CONTRATAR -->
-<div id="modalContratar" style="display:none;position:fixed;inset:0;background:rgba(43,39,35,0.85);z-index:200;align-items:flex-end;justify-content:center;">
-  <div style="background:#FAF6F0;border-radius:18px 18px 0 0;padding:28px 22px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease;">
-    <div style="font-family:'Fraunces',serif;font-size:22px;color:#5E3A2D;margin-bottom:6px;">Contratar servicio</div>
-    <div style="font-size:13.5px;color:#56504A;margin-bottom:20px;">Completa tus datos y nos ponemos en contacto contigo para activar tu cuenta.</div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Nombre de tu funeraria</label>
-      <input type="text" id="contNombre" placeholder="Funeraria San Ángel" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Tu nombre</label>
-      <input type="text" id="contContacto" placeholder="¿Con quién hablamos?" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">WhatsApp</label>
-      <input type="tel" id="contWA" placeholder="2281234567" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Correo electrónico</label>
-      <input type="email" id="contEmail" placeholder="funeraria@correo.com" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:#56504A;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;">Ciudad / Estado</label>
-      <input type="text" id="contCiudad" placeholder="Xalapa, Veracruz" style="width:100%;padding:12px 14px;border:1px solid #E3D9C8;border-radius:8px;font-size:15px;background:#F1E9DD;">
-    </div>
-    <button onclick="enviarSolicitudContrato()" style="width:100%;padding:14px;background:#7A4A3A;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Enviar solicitud</button>
-    <button onclick="cerrarModalContratar()" style="width:100%;padding:12px;background:none;color:#56504A;border:1px solid #E3D9C8;border-radius:8px;font-size:14px;cursor:pointer;">Cancelar</button>
-    <div id="avisoContratar" style="margin-top:10px;font-size:13px;padding:10px;border-radius:7px;display:none;"></div>
+<div class="modal-overlay" id="modalContratar">
+  <div class="modal-box">
+    <div class="modal-titulo">Contratar Funeral360</div>
+    <div class="modal-sub">Completa tus datos y te contactamos para activar tu cuenta.</div>
+    <div class="campo-modal"><label>Nombre de tu funeraria</label><input type="text" id="contNombre" placeholder="Funeraria San Ángel"></div>
+    <div class="campo-modal"><label>Tu nombre</label><input type="text" id="contContacto" placeholder="¿Con quién hablamos?"></div>
+    <div class="campo-modal"><label>WhatsApp</label><input type="tel" id="contWA" placeholder="2281234567"></div>
+    <div class="campo-modal"><label>Correo electrónico</label><input type="email" id="contEmail" placeholder="funeraria@correo.com"></div>
+    <div class="campo-modal"><label>Ciudad / Estado</label><input type="text" id="contCiudad" placeholder="Xalapa, Veracruz"></div>
+    <button class="btn-modal-pri" onclick="enviarContrato()">Enviar solicitud</button>
+    <button class="btn-modal-sec" onclick="cerrarModal('modalContratar')">Cancelar</button>
+    <div class="aviso-modal" id="avisoContratar"></div>
   </div>
 </div>
 
-<style>
-@keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-</style>
-
 <script>
-const API_URL_LANDING = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
-const TU_WHATSAPP = "522281845114";
+const TU_WA = "522281845114";
 
-function abrirModalDemo() {
-  document.getElementById('modalDemo').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function cerrarModalDemo() {
-  document.getElementById('modalDemo').style.display = 'none';
-  document.body.style.overflow = '';
-}
-function abrirModalContratar() {
-  document.getElementById('modalContratar').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function cerrarModalContratar() {
-  document.getElementById('modalContratar').style.display = 'none';
-  document.body.style.overflow = '';
-}
+function abrirModalDemo(){document.getElementById('modalDemo').classList.add('abierto');document.body.style.overflow='hidden';}
+function abrirModalContratar(){document.getElementById('modalContratar').classList.add('abierto');document.body.style.overflow='hidden';}
+function cerrarModal(id){document.getElementById(id).classList.remove('abierto');document.body.style.overflow='';}
 
-async function enviarSolicitudDemo() {
-  const nombre = document.getElementById('demoNombre').value.trim();
-  const contacto = document.getElementById('demoContacto').value.trim();
-  const wa = document.getElementById('demoWA').value.trim();
-  const email = document.getElementById('demoEmail').value.trim();
-  const aviso = document.getElementById('avisoDemo');
-  if (!nombre || !wa) {
-    aviso.style.display='block'; aviso.style.background='#F7E9E6'; aviso.style.color='#5E3A2D';
-    aviso.textContent='Por favor ingresa el nombre de la funeraria y tu WhatsApp.'; return;
-  }
-  // Enviar notificación por WhatsApp a ti
-  const msg = '🆕 SOLICITUD DE DEMO
-Funeraria: ' + nombre + '
-Contacto: ' + contacto + '
-WhatsApp: ' + wa + '
-Email: ' + email;
-  const urlWA = 'https://wa.me/' + TU_WHATSAPP + '?text=' + encodeURIComponent(msg);
-  aviso.style.display='block'; aviso.style.background='#EEF3EC'; aviso.style.color='#43503F';
-  aviso.textContent='✓ Solicitud enviada. Te contactaremos en menos de 24 horas.';
-  setTimeout(() => { window.open(urlWA, '_blank'); }, 1000);
+// Cerrar al tocar fuera
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{if(e.target===m) cerrarModal(m.id);});
+});
+
+function enviarDemo(){
+  const nombre=document.getElementById('demoNombre').value.trim();
+  const contacto=document.getElementById('demoContacto').value.trim();
+  const wa=document.getElementById('demoWA').value.trim();
+  const email=document.getElementById('demoEmail').value.trim();
+  const aviso=document.getElementById('avisoDemo');
+  if(!nombre||!wa){aviso.className='aviso-modal aviso-error';aviso.textContent='Ingresa el nombre de la funeraria y tu WhatsApp.';return;}
+  const msg='🆕 SOLICITUD DE DEMO FUNERAL360\n\n📋 Funeraria: '+nombre+'\n👤 Contacto: '+contacto+'\n📱 WhatsApp: '+wa+'\n📧 Email: '+email;
+  aviso.className='aviso-modal aviso-exito';aviso.textContent='✓ Solicitud enviada. Te contactaremos en menos de 24 horas.';
+  setTimeout(()=>window.open('https://wa.me/'+TU_WA+'?text='+encodeURIComponent(msg),'_blank'),800);
 }
 
-async function enviarSolicitudContrato() {
-  const nombre = document.getElementById('contNombre').value.trim();
-  const contacto = document.getElementById('contContacto').value.trim();
-  const wa = document.getElementById('contWA').value.trim();
-  const email = document.getElementById('contEmail').value.trim();
-  const ciudad = document.getElementById('contCiudad').value.trim();
-  const aviso = document.getElementById('avisoContratar');
-  if (!nombre || !wa) {
-    aviso.style.display='block'; aviso.style.background='#F7E9E6'; aviso.style.color='#5E3A2D';
-    aviso.textContent='Por favor ingresa el nombre de la funeraria y tu WhatsApp.'; return;
-  }
-  const msg = '🤝 SOLICITUD DE CONTRATO
-Funeraria: ' + nombre + '
-Contacto: ' + contacto + '
-WhatsApp: ' + wa + '
-Email: ' + email + '
-Ciudad: ' + ciudad + '
-
-Plan: Pago por servicio ($500 setup + $99/mes + $149/página)';
-  const urlWA = 'https://wa.me/' + TU_WHATSAPP + '?text=' + encodeURIComponent(msg);
-  aviso.style.display='block'; aviso.style.background='#EEF3EC'; aviso.style.color='#43503F';
-  aviso.textContent='✓ Solicitud enviada. Te contactaremos para activar tu cuenta.';
-  setTimeout(() => { window.open(urlWA, '_blank'); }, 1000);
+function enviarContrato(){
+  const nombre=document.getElementById('contNombre').value.trim();
+  const contacto=document.getElementById('contContacto').value.trim();
+  const wa=document.getElementById('contWA').value.trim();
+  const email=document.getElementById('contEmail').value.trim();
+  const ciudad=document.getElementById('contCiudad').value.trim();
+  const aviso=document.getElementById('avisoContratar');
+  if(!nombre||!wa){aviso.className='aviso-modal aviso-error';aviso.textContent='Ingresa el nombre de la funeraria y tu WhatsApp.';return;}
+  const msg='🤝 SOLICITUD DE CONTRATO FUNERAL360\n\n📋 Funeraria: '+nombre+'\n👤 Contacto: '+contacto+'\n📱 WhatsApp: '+wa+'\n📧 Email: '+email+'\n📍 Ciudad: '+ciudad+'\n\n💼 Plan: Suite Funeral360 ($500 setup + $99/mes + $149/página)';
+  aviso.className='aviso-modal aviso-exito';aviso.textContent='✓ Solicitud recibida. Te contactamos para activar tu cuenta.';
+  setTimeout(()=>window.open('https://wa.me/'+TU_WA+'?text='+encodeURIComponent(msg),'_blank'),800);
 }
+
+// Smooth scroll para #modulos y #precios
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+  });
+});
 </script>
+
 </body>
 </html>
