@@ -1,14 +1,25 @@
 {
-  "name": "PC Master",
-  "short_name": "PC Master",
-  "description": "Panel maestro de administración",
+  "name": "Funeral360 Master",
+  "short_name": "F360 Master",
+  "description": "Panel maestro de administración Funeral360",
   "start_url": "/Paginas/master.html",
+  "scope": "/Paginas/",
   "display": "standalone",
-  "background_color": "#FAF6F0",
-  "theme_color": "#5E3A2D",
+  "background_color": "#111E35",
+  "theme_color": "#111E35",
   "orientation": "portrait",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icons/funeral360-icono.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
