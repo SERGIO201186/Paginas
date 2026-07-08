@@ -517,8 +517,12 @@ async function cargarServicio() {
   servicio = resp.servicio;
   pintarHero(servicio);
   pintarInfo(servicio);
-  pintarVLBannerInfo();
   cargarRecuerdos();
+  cargarVeladoras();
+  cargarTienda();
+  cargarVideollamada();
+  pintarVLBannerInfo();
+  if (usuario) actualizarSaldo();
   cargarVeladoras();
   cargarTienda();
   cargarVideollamada();
@@ -1025,21 +1029,21 @@ function abrirFotoFinado(tipo) {
 
 function pintarVLBannerInfo() {
   const wrap = document.getElementById('vlBannerInfo');
-  if (!wrap) return;
-  // Solo mostrar si la videollamada no fue ya comprada
+  if (!wrap || !servicio) return;
   const yaPago = usuario && localStorage.getItem('vl_' + servicio.id + '_' + usuario.email);
-  if (yaPago) {
-    wrap.innerHTML = '';
-    return;
-  }
-  wrap.innerHTML = '<div class="vl-banner-info" onclick="document.querySelector('[data-tab=\"llamada\"]').click()">' +
+  if (yaPago) { wrap.innerHTML = ''; return; }
+  const div = document.createElement('div');
+  div.className = 'vl-banner-info';
+  div.onclick = () => document.querySelector('[data-tab="llamada"]').click();
+  div.innerHTML =
     '<div class="vl-banner-ico">📹</div>' +
     '<div>' +
-      '<div class="vl-banner-titulo">Videollamada conmemorativa disponible</div>' +
-      '<div class="vl-banner-desc">¿No pudiste estar presente? Conéctate con la familia desde donde estés. Video y audio completos para todos.</div>' +
-      '<button class="vl-banner-btn">Ver más → $299 MXN</button>' +
-    '</div>' +
-  '</div>';
+      '<div class="vl-banner-titulo">Videollamada conmemorativa</div>' +
+      '<div class="vl-banner-desc">¿No pudiste estar presente? Conéctate con la familia. Video y audio completos para todos los participantes.</div>' +
+      '<button class="vl-banner-btn">Solicitar · $299 MXN</button>' +
+    '</div>';
+  wrap.innerHTML = '';
+  wrap.appendChild(div);
 }
 
 function abrirLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('activo');}
