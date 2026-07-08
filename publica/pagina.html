@@ -231,6 +231,99 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .vl-banner-btn{display:inline-block;background:var(--dorado);color:var(--marino-osc);
   padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;border:none;cursor:pointer;}
 footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
+
+/* ===== LEGAL ===== */
+/* Modal de términos */
+.legal-overlay{
+  position:fixed;inset:0;
+  background:rgba(17,30,53,0.92);
+  z-index:500;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.legal-overlay.oculto{display:none;}
+.legal-box{
+  background:var(--blanco);
+  border-radius:18px 18px 0 0;
+  padding:24px 20px 36px;
+  width:100%;max-width:520px;
+  max-height:88vh;
+  overflow-y:auto;
+  animation:slideUp 0.35s ease;
+}
+.legal-titulo{
+  font-family:'Fraunces',serif;
+  font-size:20px;color:var(--marino);
+  margin-bottom:4px;
+}
+.legal-sub{
+  font-size:12.5px;color:var(--carbon-suave);
+  margin-bottom:16px;line-height:1.5;
+}
+.legal-tabs{
+  display:flex;gap:0;
+  border:1px solid var(--borde);
+  border-radius:8px;overflow:hidden;
+  margin-bottom:16px;
+}
+.legal-tab-btn{
+  flex:1;padding:9px;background:var(--gris-claro);
+  border:none;font-size:12.5px;font-weight:600;
+  color:var(--carbon-suave);cursor:pointer;
+}
+.legal-tab-btn.activo{background:var(--marino);color:var(--blanco);}
+.legal-content{
+  font-size:12.5px;color:var(--carbon-suave);
+  line-height:1.7;max-height:280px;overflow-y:auto;
+  border:1px solid var(--borde);border-radius:8px;
+  padding:14px;margin-bottom:16px;
+  background:var(--gris-claro);
+}
+.legal-content h3{
+  font-size:13px;font-weight:700;
+  color:var(--marino);margin:12px 0 4px;
+}
+.legal-content h3:first-child{margin-top:0;}
+.legal-check{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:14px;font-size:13px;color:var(--carbon-suave);
+}
+.legal-check input[type=checkbox]{
+  width:18px;height:18px;flex-shrink:0;
+  accent-color:var(--marino);margin-top:1px;
+}
+.btn-legal{
+  width:100%;padding:13px;
+  background:var(--marino);color:var(--blanco);
+  border:none;border-radius:8px;
+  font-size:14.5px;font-weight:700;cursor:pointer;
+}
+.btn-legal:disabled{background:var(--gris-borde);cursor:not-allowed;}
+
+/* Banner cookies */
+.cookie-banner{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--marino-osc);color:var(--blanco);
+  padding:14px 18px;z-index:400;
+  display:flex;align-items:center;gap:12px;
+  flex-wrap:wrap;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.2);
+}
+.cookie-banner.oculto{display:none;}
+.cookie-txt{font-size:12.5px;flex:1;min-width:200px;line-height:1.5;opacity:0.9;}
+.cookie-txt a{color:var(--dorado-claro);text-decoration:underline;}
+.cookie-btns{display:flex;gap:8px;flex-shrink:0;}
+.btn-cookie-aceptar{padding:8px 16px;background:var(--dorado);color:var(--marino-osc);border:none;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.btn-cookie-rechazar{padding:8px 14px;background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:12.5px;cursor:pointer;}
+
+/* Aviso al subir contenido */
+.aviso-contenido{
+  background:var(--gris-claro);
+  border:1px solid var(--gris-borde);
+  border-left:3px solid var(--dorado);
+  border-radius:8px;padding:10px 12px;
+  font-size:12px;color:var(--carbon-suave);
+  margin-bottom:10px;line-height:1.5;
+}
 </style>
 </head>
 <body>
@@ -326,6 +419,9 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 <section class="tab-panel" id="panel-recuerdos">
   <div class="rec-wrap">
     <div class="form-rec">
+      <div class="aviso-contenido">
+        📋 <strong>Aviso:</strong> Al publicar fotos o mensajes confirmas que tienes los derechos sobre el contenido y aceptas nuestros <a href="#" onclick="abrirTerminos();return false;" style="color:var(--marino);font-weight:600;">Términos de uso</a>. Todo contenido es revisado antes de publicarse.
+      </div>
       <div class="campo">
         <label for="recMensaje">Tu mensaje</label>
         <textarea id="recMensaje" maxlength="500" rows="3" placeholder="Comparte un recuerdo o palabras de cariño..."></textarea>
@@ -391,6 +487,87 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
   <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- MODAL TÉRMINOS Y PRIVACIDAD -->
+<div class="legal-overlay" id="legalOverlay">
+  <div class="legal-box">
+    <div class="legal-titulo">Bienvenido a esta página conmemorativa</div>
+    <div class="legal-sub">Para continuar, por favor lee y acepta nuestros términos. Esto nos permite operar el servicio y proteger a todos los usuarios.</div>
+
+    <div class="legal-tabs">
+      <button class="legal-tab-btn activo" onclick="mostrarLegalTab('terminos',this)">Términos de uso</button>
+      <button class="legal-tab-btn" onclick="mostrarLegalTab('privacidad',this)">Privacidad</button>
+    </div>
+
+    <div class="legal-content" id="legalContenido">
+      <div id="tabTerminos">
+        <h3>1. Aceptación de los términos</h3>
+        Al acceder y usar esta página conmemorativa operada por Funeral360, aceptas quedar vinculado por estos Términos de Uso. Si no estás de acuerdo, no uses este servicio.
+
+        <h3>2. Propiedad del contenido subido</h3>
+        Al publicar fotos, mensajes, videos u otro contenido en esta página, <strong>otorgas a Funeral360 una licencia mundial, no exclusiva y libre de regalías</strong> para usar, reproducir, mostrar y distribuir dicho contenido exclusivamente dentro de esta plataforma y con el propósito de honrar la memoria del finado. Tú conservas la titularidad de tus derechos, pero reconoces que el contenido fue subido de forma voluntaria y libre.
+
+        <h3>3. Contenido prohibido</h3>
+        Queda estrictamente prohibido publicar contenido que: (a) sea difamatorio, obsceno o ilegal; (b) viole derechos de terceros; (c) contenga información falsa; (d) acose o intimide a otros usuarios. Funeral360 se reserva el derecho de eliminar cualquier contenido que viole estas normas sin previo aviso.
+
+        <h3>4. Moderación</h3>
+        Todo el contenido publicado está sujeto a revisión y aprobación por parte de la funeraria administradora antes de hacerse visible. Funeral360 no garantiza la publicación de ningún contenido.
+
+        <h3>5. Responsabilidad</h3>
+        El usuario es el único responsable del contenido que publica. Funeral360 no asume responsabilidad por el contenido generado por los usuarios. Al publicar, declaras que tienes los derechos necesarios sobre dicho contenido.
+
+        <h3>6. Pagos y reembolsos</h3>
+        Los pagos realizados por créditos, videollamadas o transferencia de página son finales y no reembolsables una vez que el servicio ha sido activado o el acceso otorgado.
+
+        <h3>7. Legislación aplicable</h3>
+        Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Cualquier controversia será sometida a los tribunales competentes de Xalapa, Veracruz, México.
+      </div>
+
+      <div id="tabPrivacidad" style="display:none;">
+        <h3>Responsable del tratamiento</h3>
+        Funeral360, con domicilio en Xalapa, Veracruz, México, es responsable del tratamiento de tus datos personales conforme a la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>.
+
+        <h3>Datos que recopilamos</h3>
+        Recopilamos: nombre, correo electrónico, fotografías y mensajes que publicas voluntariamente, datos de pago procesados por Stripe (no almacenamos datos de tarjetas), y datos de uso como dirección IP y cookies de sesión.
+
+        <h3>Finalidad del tratamiento</h3>
+        Tus datos se usan para: (a) operar y mostrar la página conmemorativa; (b) procesar pagos; (c) enviarte el link de videollamada si adquiriste el servicio; (d) mejorar nuestros servicios.
+
+        <h3>Transferencia de datos</h3>
+        No vendemos ni compartimos tus datos personales con terceros, excepto con Stripe para el procesamiento de pagos, bajo sus propias políticas de privacidad.
+
+        <h3>Cookies</h3>
+        Usamos cookies de sesión para mantener tu preferencia de idioma y evitar que se te muestren avisos repetidamente. No usamos cookies de rastreo publicitario.
+
+        <h3>Derechos ARCO</h3>
+        Tienes derecho de Acceso, Rectificación, Cancelación y Oposición al tratamiento de tus datos. Para ejercerlos escríbenos a: <strong>funeraleshuerta20@gmail.com</strong>
+
+        <h3>Retención de datos</h3>
+        Los datos y contenido de una página conmemorativa se conservan mientras la página esté activa. Al inactivarse o venderse a la familia, los datos pasan a ser responsabilidad de la familia propietaria.
+      </div>
+    </div>
+
+    <label class="legal-check">
+      <input type="checkbox" id="checkTerminos" onchange="verificarAceptacion()">
+      <span>He leído y acepto los <strong>Términos de Uso</strong> y el <strong>Aviso de Privacidad</strong> de Funeral360. Entiendo que el contenido que publique de forma voluntaria podrá ser mostrado en esta página.</span>
+    </label>
+
+    <button class="btn-legal" id="btnAceptarLegal" disabled onclick="aceptarTerminos()">
+      Acepto y continuar →
+    </button>
+  </div>
+</div>
+
+<!-- BANNER COOKIES -->
+<div class="cookie-banner" id="cookieBanner">
+  <div class="cookie-txt">
+    Usamos cookies esenciales para el funcionamiento de esta página. Al continuar navegando aceptas su uso conforme a nuestro <a href="#" onclick="abrirTerminos();return false;">Aviso de Privacidad</a>.
+  </div>
+  <div class="cookie-btns">
+    <button class="btn-cookie-rechazar" onclick="rechazarCookies()">Solo esenciales</button>
+    <button class="btn-cookie-aceptar" onclick="aceptarCookies()">Aceptar ✓</button>
+  </div>
 </div>
 
 <footer><img src="../icons/funeral360-logo.png" alt="Funeral360" style="height:22px;opacity:0.5;display:block;margin:0 auto 8px;"><span>Página conmemorativa · Funeral360</span></footer>
@@ -1049,6 +1226,61 @@ function pintarVLBannerInfo() {
 function abrirLightbox(url){document.getElementById('lightboxImg').src=url;document.getElementById('lightbox').classList.add('activo');}
 document.getElementById('lightbox').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('activo'));
 
+// ===== LEGAL =====
+function iniciarLegal() {
+  const aceptado = localStorage.getItem('legal_aceptado_v1');
+  const cookies = localStorage.getItem('cookies_decision');
+  if (!aceptado) {
+    document.getElementById('legalOverlay').classList.remove('oculto');
+  }
+  if (!cookies && aceptado) {
+    setTimeout(() => {
+      document.getElementById('cookieBanner').classList.remove('oculto');
+    }, 2000);
+  }
+}
+
+function mostrarLegalTab(tab, btn) {
+  document.getElementById('tabTerminos').style.display = tab === 'terminos' ? 'block' : 'none';
+  document.getElementById('tabPrivacidad').style.display = tab === 'privacidad' ? 'block' : 'none';
+  document.querySelectorAll('.legal-tab-btn').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+}
+
+function verificarAceptacion() {
+  const check = document.getElementById('checkTerminos').checked;
+  document.getElementById('btnAceptarLegal').disabled = !check;
+}
+
+function aceptarTerminos() {
+  localStorage.setItem('legal_aceptado_v1', Date.now().toString());
+  document.getElementById('legalOverlay').classList.add('oculto');
+  // Mostrar banner cookies después de aceptar términos
+  setTimeout(() => {
+    if (!localStorage.getItem('cookies_decision')) {
+      document.getElementById('cookieBanner').classList.remove('oculto');
+    }
+  }, 1500);
+}
+
+function abrirTerminos() {
+  document.getElementById('checkTerminos').checked = false;
+  document.getElementById('btnAceptarLegal').disabled = true;
+  document.getElementById('legalOverlay').classList.remove('oculto');
+}
+
+function aceptarCookies() {
+  localStorage.setItem('cookies_decision', 'aceptado');
+  document.getElementById('cookieBanner').classList.add('oculto');
+}
+
+function rechazarCookies() {
+  localStorage.setItem('cookies_decision', 'esenciales');
+  document.getElementById('cookieBanner').classList.add('oculto');
+}
+
+// Iniciar
+iniciarLegal();
 cargarServicio();
 </script>
 </body>
