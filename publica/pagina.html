@@ -450,14 +450,16 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
   <div class="tienda-wrap">
     <div class="creditos-saldo">
       <div class="creditos-saldo-num" id="saldoNum">0</div>
-      <div class="creditos-saldo-txt">Créditos Huerta disponibles</div>
+      <div class="creditos-saldo-txt">FuneralCredits (FC) disponibles</div>
       <div class="creditos-saldo-email" id="saldoEmail"></div>
     </div>
-    <div class="seccion-titulo">Comprar créditos</div>
+    <div class="seccion-titulo">💳 Comprar FuneralCredits</div>
     <div class="paquetes" id="listaPaquetes"></div>
-    <button class="btn-comprar" id="btnComprar" disabled onclick="comprarCreditos()">Selecciona un paquete</button>
+    <div style="font-size:12px;color:var(--carbon-suave);text-align:center;margin-top:4px;margin-bottom:4px;">
+      Toca un paquete para ir directo al pago seguro con tarjeta 🔒
+    </div>
     <div class="aviso" id="avisoPago"></div>
-    <div class="seccion-titulo">Enviar un gesto de cariño</div>
+    <div class="seccion-titulo">🌹 Enviar un gesto con FuneralCredits</div>
     <div class="gestos-grid" id="listaGestos"></div>
   </div>
 </section>
@@ -518,7 +520,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
         El usuario es el único responsable del contenido que publica. Funeral360 no asume responsabilidad por el contenido generado por los usuarios. Al publicar, declaras que tienes los derechos necesarios sobre dicho contenido.
 
         <h3>6. Pagos y reembolsos</h3>
-        Los pagos realizados por créditos, videollamadas o transferencia de página son finales y no reembolsables una vez que el servicio ha sido activado o el acceso otorgado.
+        Los pagos realizados por FuneralCredits, videollamadas o transferencia de página son finales y no reembolsables una vez que el servicio ha sido activado o el acceso otorgado.
 
         <h3>7. Legislación aplicable</h3>
         Estos términos se rigen por las leyes de los Estados Unidos Mexicanos. Cualquier controversia será sometida a los tribunales competentes de Xalapa, Veracruz, México.
@@ -666,12 +668,12 @@ document.getElementById('btnRegistro').addEventListener('click', async () => {
   localStorage.setItem('usuario_pc', JSON.stringify(usuario));
   document.getElementById('overlayRegistro').classList.add('oculto');
 
-  // Dar créditos gratis si es primera vez en esta página
+  // Dar FuneralCredits gratis si es primera vez en esta página
   if (servicio && !localStorage.getItem('cg_'+servicio.id+'_'+email)) {
     const resp = await api('darCreditosGratis', {email, servicioId: servicio.id}, 'POST');
     if (resp.ok && resp.cantidad > 0) {
       localStorage.setItem('cg_'+servicio.id+'_'+email, '1');
-      setTimeout(()=>alert('🎁 ¡Te regalamos '+resp.cantidad+' créditos Huerta!\nÚsalos para enviar flores o encender una vela.'), 600);
+      setTimeout(()=>alert('🎁 ¡Tienes '+resp.cantidad+' FuneralCredits!\nÚsalos para enviar flores o encender una vela.'), 600);
     }
   }
   actualizarSaldo();
@@ -695,6 +697,7 @@ async function cargarServicio() {
   pintarHero(servicio);
   pintarInfo(servicio);
   cargarRecuerdos();
+  window.dispatchEvent(new Event('servicioListo'));
   cargarVeladoras();
   cargarTienda();
   cargarVideollamada();
@@ -975,7 +978,7 @@ async function cargarTienda() {
   listaPaq.innerHTML = paquetesSistema.map(p=>`
     <div class="paquete" data-id="${p.id}" data-creditos="${p.creditos}" data-precio="${p.precio}" onclick="selPaquete(this)">
       <div class="paquete-cred">${p.creditos}</div>
-      <div class="paquete-txt">créditos</div>
+      <div class="paquete-txt">FuneralCredits</div>
       <div class="paquete-precio">$${p.precio}</div>
       ${p.etiqueta ? `<div style="font-size:9px;color:var(--marino);font-weight:700;margin-top:2px;">${esc(p.etiqueta)}</div>` : ''}
     </div>`).join('');
@@ -1010,7 +1013,7 @@ async function cargarTienda() {
     card.innerHTML = `<div class="gesto-emoji">${a.emoji||'🌹'}</div>
       <div class="gesto-nombre">${esc(a.nombre)}</div>
       <div class="gesto-desc">${esc(a.descripcion)}</div>
-      <div class="gesto-precio">${a.creditos} créditos</div>`;
+      <div class="gesto-precio">${a.creditos} FuneralCredits</div>`;
     card.onclick = () => accionRegistrada(() =>
       enviarGesto(a.id, (a.emoji||'') + ' ' + a.nombre, a.tipo, a.creditos, a.emoji||'', a.descripcion||'')
     );
@@ -1030,43 +1033,66 @@ async function actualizarSaldo() {
   }
 }
 
-function selPaquete(el) {
-  document.querySelectorAll('.paquete').forEach(p=>p.classList.remove('sel'));
-  el.classList.add('sel');
-  paqueteSeleccionado={creditos:+el.dataset.creditos, precio:+el.dataset.precio};
-  const btn=document.getElementById('btnComprar');
-  btn.disabled=false;
-  btn.textContent=`Comprar ${paqueteSeleccionado.creditos} créditos por $${paqueteSeleccionado.precio}`;
-}
+async function selPaquete(el) {
+  // Verificar registro primero
+  if (!usuario) {
+    document.getElementById('overlayRegistro').classList.remove('oculto');
+    return;
+  }
 
-async function comprarCreditos() {
-  if(!paqueteSeleccionado) return;
-  if(!usuario){document.getElementById('overlayRegistro').classList.remove('oculto');return;}
-  const aviso=document.getElementById('avisoPago');
-  const btn=document.getElementById('btnComprar');
-  btn.disabled=true; btn.textContent='Generando pago...';
-  const resp=await api('crearSesionCreditos',{
-    email:usuario.email, servicioId:servicio.id,
-    creditos:paqueteSeleccionado.creditos, precio:paqueteSeleccionado.precio,
-    urlExito:window.location.href+'&creditosOk=1', urlCancelado:window.location.href
-  },'POST');
-  if(resp.ok){ window.location.href=resp.urlPago; }
-  else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al generar pago.'; btn.disabled=false; btn.textContent='Reintentar'; }
+  // Marcar visualmente
+  document.querySelectorAll('.paquete').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  el.style.opacity = '0.7';
+  el.innerHTML = el.innerHTML.replace('FuneralCredits', 'FuneralCredits') +
+    '<div style="font-size:11px;color:var(--dorado-osc);margin-top:4px;">Procesando...</div>';
+
+  const creditos = +el.dataset.creditos;
+  const precio = +el.dataset.precio;
+
+  const resp = await api('crearSesionCreditos', {
+    email: usuario.email,
+    servicioId: servicio.id,
+    creditos,
+    precio,
+    urlExito: window.location.origin + window.location.pathname + '?p=' + slug + '&creditosOk=1',
+    urlCancelado: window.location.origin + window.location.pathname + '?p=' + slug + '&creditosOk=0'
+  }, 'POST');
+
+  if (resp.ok && resp.urlPago) {
+    window.location.href = resp.urlPago;
+  } else {
+    el.classList.remove('sel');
+    el.style.opacity = '';
+    mostrarToast('Error al generar el pago: ' + (resp.error || 'intenta de nuevo'));
+    cargarTienda(); // recargar para limpiar estado visual
+  }
 }
 
 if(params.get('creditosOk')==='1'){
-  setTimeout(()=>{ document.querySelector('[data-tab="tienda"]').click(); actualizarSaldo(); },800);
+  window.history.replaceState({}, '', window.location.origin + window.location.pathname + '?p=' + (params.get('p')||slug));
+  // Esperar que cargue el servicio para actualizar saldo
+  window.addEventListener('servicioListo', () => {
+    document.querySelector('[data-tab="tienda"]').click();
+    actualizarSaldo();
+    mostrarToast('🎉 ¡FuneralCredits agregados! Ya puedes enviar gestos de cariño.', 5000);
+  });
+} else if(params.get('creditosOk')==='0'){
+  window.history.replaceState({}, '', window.location.origin + window.location.pathname + '?p=' + (params.get('p')||slug));
+  window.addEventListener('servicioListo', () => {
+    mostrarToast('El pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.');
+  });
 }
 
 function enviarGesto(artId, nombre, tipo, creditos, emoji, descripcion) {
   if(saldoUsuario < creditos){
     document.querySelector('[data-tab="tienda"]').click();
-    alert('Necesitas '+creditos+' créditos. Tu saldo actual es '+saldoUsuario+'.\nCompra un paquete para continuar.');
+    alert('Necesitas '+creditos+' FuneralCredits. Tu saldo actual es '+saldoUsuario+'.\nCompra un paquete para continuar.');
     return;
   }
   gestoActual={artId, nombre, tipo, creditos, emoji, descripcion};
   document.getElementById('modalTitulo').textContent=nombre;
-  document.getElementById('modalSub').textContent='Costo: '+creditos+' créditos · Tu saldo: '+saldoUsuario;
+  document.getElementById('modalSub').textContent='Costo: '+creditos+' FuneralCredits · Tu saldo: '+saldoUsuario;
   document.getElementById('campoDireccion').style.display=tipo==='fisico'?'block':'none';
   document.getElementById('avisoGesto').style.display='none';
   document.getElementById('modalGesto').classList.add('activo');
@@ -1135,9 +1161,16 @@ async function cargarVideollamada() {
   // Si ya pagó pero aún no hay link
   } else if (yaPago && !llamadaActiva) {
     html += `<div class="llamada-activa">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dorado);letter-spacing:0.04em;margin-bottom:8px;">⏳ Pago confirmado</div>
-      <div style="font-size:14px;font-weight:600;color:var(--carbon);margin-bottom:6px;">Tu acceso está reservado</div>
-      <div style="font-size:13px;color:var(--carbon-suave);line-height:1.5;">La funeraria está coordinando la videollamada. Recibirás el link de conexión en tu correo <strong>${esc(usuario ? usuario.email : '')}</strong> en cuanto esté lista.</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--dorado);letter-spacing:0.04em;margin-bottom:8px;">⏳ Pago confirmado · En preparación</div>
+      <div style="font-size:15px;font-weight:600;color:var(--carbon);margin-bottom:8px;">Tu acceso está reservado</div>
+      <div style="font-size:13px;color:var(--carbon-suave);line-height:1.6;margin-bottom:12px;">
+        La funeraria está coordinando la videollamada.<br>
+        El link de conexión llegará a:<br>
+        <strong style="color:var(--marino);">${esc(usuario ? usuario.email : '')}</strong>
+      </div>
+      <div style="background:var(--gris-claro);border-radius:8px;padding:12px;font-size:12.5px;color:var(--carbon-suave);">
+        💡 Si no ves el correo en tu bandeja principal, revisa la carpeta de <strong>Spam</strong> o <strong>Promociones</strong>.
+      </div>
     </div>`;
 
   // Si ya solicitó pero no ha pagado (raro, pero por si acaso)
@@ -1156,8 +1189,8 @@ async function cargarVideollamada() {
         <div class="llamada-promo-precio" style="margin-bottom:0;">$299 <span>MXN</span></div>
       </div>
       <div style="font-size:12px;opacity:0.8;margin-bottom:16px;">Pago único · hasta 100 personas · sin límite de tiempo</div>
-      <button class="btn-solicitar" onclick="accionRegistrada(solicitarVideollamada)">
-        Solicitar videollamada → 
+      <button class="btn-solicitar" id="btnSolicitarVL" onclick="accionRegistrada(solicitarVideollamada)">
+        Solicitar videollamada →
       </button>
       <div style="font-size:11.5px;opacity:0.75;margin-top:10px;">Recibirás el link por correo cuando la funeraria lo confirme</div>
     </div>`;
@@ -1167,31 +1200,58 @@ async function cargarVideollamada() {
 }
 
 async function solicitarVideollamada() {
+  if (!usuario) { document.getElementById('overlayRegistro').classList.remove('oculto'); return; }
+
+  const btn = document.querySelector('.btn-solicitar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando pago...'; }
+
+  // Construir URL de éxito correctamente (sin duplicar ? o &)
+  const baseUrl = window.location.origin + window.location.pathname;
+  const urlExito = baseUrl + '?p=' + slug + '&vlOk=1';
+  const urlCancelado = baseUrl + '?p=' + slug;
+
   const resp = await api('crearSesionVideollamada', {
     email: usuario.email,
     nombre: usuario.nombre,
     servicioId: servicio.id,
     precio: 299,
-    urlExito: window.location.href + '&vlOk=1',
-    urlCancelado: window.location.href
+    urlExito,
+    urlCancelado
   }, 'POST');
 
-  if (resp.ok) {
+  if (resp.ok && resp.urlPago) {
     window.location.href = resp.urlPago;
   } else {
+    if (btn) { btn.disabled = false; btn.textContent = 'Solicitar videollamada → '; }
     alert(resp.error || 'Error al generar el pago. Intenta de nuevo.');
   }
 }
 
-// Al regresar de pago exitoso de videollamada
-if (params.get('vlOk') === '1' && usuario) {
-  setTimeout(() => {
+// Al regresar de Stripe con pago exitoso de videollamada
+if (params.get('vlOk') === '1') {
+  // Limpiar la URL sin recargar
+  const urlLimpia = window.location.origin + window.location.pathname + '?p=' + (params.get('p') || slug);
+  window.history.replaceState({}, '', urlLimpia);
+  // Mostrar tab de videollamada cuando cargue el servicio
+  window.addEventListener('servicioListo', () => {
     document.querySelector('[data-tab="llamada"]').click();
     cargarVideollamada();
-  }, 1000);
+    // Mostrar mensaje de confirmación
+    setTimeout(() => {
+      mostrarToast('✓ Pago confirmado. Recibirás el link por correo cuando la videollamada esté lista.');
+    }, 800);
+  });
 }
 
 // ===== LIGHTBOX =====
+function mostrarToast(msg, duracion) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--marino);color:white;padding:12px 20px;border-radius:30px;font-size:13.5px;font-weight:600;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,0.3);max-width:320px;text-align:center;animation:fadeIn 0.3s ease;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), duracion || 4000);
+}
+
 function abrirFotoFinado(tipo) {
   let url = '';
   if (tipo === 'portada') {
