@@ -11,9 +11,31 @@
 <link rel="apple-touch-icon" href="icons/funeral360-icono.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,300;9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--hueso:#FAF6F0;--hueso-osc:#F1E9DD;--terracota:#7A4A3A;--terracota-osc:#5E3A2D;--dorado:#C9A24B;--carbon:#2B2723;--carbon-suave:#56504A;--sauce:#5C6B57;--sauce-osc:#43503F;--borde:#E3D9C8;--blanco:#FFFFFF;--rojo:#A8453A;}
+:root{
+  --marino:#1B2A4A;
+  --marino-osc:#111E35;
+  --marino-med:#243760;
+  --dorado:#B8964E;
+  --dorado-osc:#9A7A3A;
+  --dorado-claro:#D4B06A;
+  --gris-claro:#F4F6FA;
+  --gris-med:#E8ECF4;
+  --gris-borde:#D1D8E8;
+  --carbon:#1A1F2E;
+  --carbon-suave:#4A5568;
+  --blanco:#FFFFFF;
+  --rojo:#9B2C2C;
+  /* aliases para CSS existente */
+  --hueso:#F4F6FA;
+  --hueso-osc:#E8ECF4;
+  --borde:#D1D8E8;
+  --terracota:#1B2A4A;
+  --terracota-osc:#111E35;
+  --sauce:#2D6A4F;
+  --sauce-osc:#1A4D38;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
 
 .topbar{background:var(--marino-osc);color:var(--blanco);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
 .topbar-titulo{font-family:'Fraunces',serif;font-size:16px;}
@@ -22,16 +44,16 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .vista{display:none;} .vista.activa{display:block;}
 
 /* LOGIN MAESTRO */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,var(--marino-osc) 0%,var(--marino) 60%,var(--marino-med) 100%);}
 .card{background:var(--blanco);border:1px solid var(--borde);border-radius:14px;padding:32px 26px;max-width:360px;width:100%;box-shadow:0 12px 32px rgba(43,39,35,0.08);}
-.card h1{font-family:'Fraunces',serif;font-size:20px;color:var(--terracota-osc);margin-bottom:6px;}
+.card h1{font-family:'Fraunces',serif;font-size:20px;color:var(--marino);margin-bottom:6px;}
 .card p{font-size:13px;color:var(--carbon-suave);margin-bottom:22px;}
 
 /* TABS NAV */
 .tabs-nav{display:flex;background:var(--blanco);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
 .tabs-nav::-webkit-scrollbar{display:none;}
 .tab-btn{flex:1 0 auto;padding:14px 16px;background:none;border:none;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--carbon-suave);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.tab-btn.activo{color:var(--terracota-osc);border-bottom-color:var(--marino);}
+.tab-btn.activo{color:var(--marino);border-bottom-color:var(--marino);}
 .tab-panel{display:none;} .tab-panel.activo{display:block;}
 
 .contenedor{max-width:680px;margin:0 auto;padding:20px 16px 80px;}
@@ -42,7 +64,7 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .campo{margin-bottom:13px;}
 .campo label{display:block;font-size:11.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.03em;}
 .campo input,.campo textarea,.campo select{width:100%;padding:10px 12px;border:1px solid var(--borde);border-radius:7px;font-family:'Inter',sans-serif;font-size:14px;color:var(--carbon);background:var(--hueso);}
-.campo input:focus,.campo textarea:focus{outline:2px solid var(--terracota);outline-offset:1px;}
+.campo input:focus,.campo textarea:focus{outline:2px solid var(--marino);outline-offset:1px;}
 .campo-grupo{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
 /* BOTONES */
@@ -56,7 +78,7 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 
 .aviso{margin-top:10px;font-size:13px;padding:9px 12px;border-radius:7px;display:none;}
 .aviso.exito{display:block;background:#EEF3EC;color:#1A4D38;}
-.aviso.error{display:block;background:#F7E9E6;color:var(--terracota-osc);}
+.aviso.error{display:block;background:#FEF2F2;color:var(--rojo);}
 
 /* TARJETAS */
 .card-item{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:10px;}
@@ -77,7 +99,7 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 /* ESTADÍSTICAS */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
 .stat{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:16px;text-align:center;}
-.stat-num{font-family:'Fraunces',serif;font-size:32px;color:var(--terracota-osc);}
+.stat-num{font-family:'Fraunces',serif;font-size:32px;color:var(--marino);}
 .stat-txt{font-size:12px;color:var(--carbon-suave);margin-top:2px;}
 
 .vacio{text-align:center;padding:28px;color:var(--carbon-suave);font-size:13.5px;}
@@ -87,13 +109,13 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 
 <!-- LOGIN MAESTRO -->
 <div class="vista activa" id="vistaLogin">
-  <div class="login-wrap" style="background:linear-gradient(160deg,var(--marino-osc) 0%,var(--marino) 100%);">
+  <div class="login-wrap">
     <div style="text-align:center;margin-bottom:28px;">
-      <img src="icons/funeral360-logo.png" alt="Funeral360" style="height:44px;filter:brightness(0) invert(1);">
-      <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;">Panel Maestro</div>
+      <img src="icons/funeral360-logo.png" alt="Funeral360" style="height:44px;filter:brightness(0) invert(1);display:block;margin:0 auto 10px;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Panel Maestro</div>
     </div>
     <div class="card">
-      <h1 style="color:var(--marino);">Acceso administrativo</h1>
+      <h1>Acceso administrativo</h1>
       <p>Solo para el administrador del sistema Funeral360.</p>
       <div class="campo">
         <label for="masterKey">Clave maestra</label>
@@ -108,7 +130,10 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 <!-- PANEL MAESTRO -->
 <div class="vista" id="vistaMaster">
   <div class="topbar">
-    <div style="display:flex;align-items:center;gap:10px;"><img src="icons/funeral360-logo.png" alt="Funeral360" style="height:26px;filter:brightness(0) invert(1);"><span style="font-size:11px;color:var(--dorado);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Panel Maestro</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+  <img src="icons/funeral360-logo.png" alt="Funeral360" style="height:26px;filter:brightness(0) invert(1);display:block;">
+  <span style="font-size:10.5px;color:var(--dorado);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Master</span>
+</div>
     <button class="btn-salir" id="btnSalir">Salir</button>
   </div>
 
