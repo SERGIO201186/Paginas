@@ -121,7 +121,7 @@ body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-s
         <label for="masterKey">Clave maestra</label>
         <input type="password" id="masterKey" placeholder="••••••••">
       </div>
-      <button class="btn btn-primario btn-full" id="btnLoginMaster">Ingresar</button>
+      <button class="btn btn-primario btn-full" id="btnLoginMaster" onclick="intentarLogin()">Ingresar →</button>
       <div class="aviso" id="avisoLogin"></div>
     </div>
   </div>
@@ -398,41 +398,59 @@ function mostrarVista(id) {
 }
 
 // LOGIN MAESTRO
-document.getElementById('masterKey').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btnLoginMaster').click();
-});
-
-document.getElementById('btnLoginMaster').addEventListener('click', async () => {
-  const key = document.getElementById('masterKey').value.trim();
+async function intentarLogin() {
+  const key = (document.getElementById('masterKey').value || '').trim();
   const aviso = document.getElementById('avisoLogin');
   const btn = document.getElementById('btnLoginMaster');
-
   if (!key) {
-    aviso.className = 'aviso error';
-    aviso.textContent = 'Ingresa la clave maestra.';
+    aviso.style.display='block';
+    aviso.style.background='#FEF2F2';
+    aviso.style.color='#9B2C2C';
+    aviso.style.padding='10px';
+    aviso.style.borderRadius='7px';
+    aviso.style.marginTop='10px';
+    aviso.textContent='Ingresa la clave maestra.';
     return;
   }
-
   btn.disabled = true;
   btn.textContent = 'Verificando...';
-
+  aviso.style.display='none';
   try {
-    const resp = await api('verificarMasterKey', {masterKey: key}, 'GET');
-    if (resp.ok === true) {
+    const url = API_URL + '?accion=verificarMasterKey&masterKey=' + encodeURIComponent(key);
+    const r = await fetch(url);
+    const data = await r.json();
+    if (data && data.ok === true) {
       masterKey = key;
-      mostrarVista('vistaMaster');
+      document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+      document.getElementById('vistaMaster').classList.add('activa');
       cargarTodo();
     } else {
-      aviso.className = 'aviso error';
-      aviso.textContent = 'Clave incorrecta. Verifica e intenta de nuevo.';
+      aviso.style.display='block';
+      aviso.style.background='#FEF2F2';
+      aviso.style.color='#9B2C2C';
+      aviso.style.padding='10px';
+      aviso.style.borderRadius='7px';
+      aviso.style.marginTop='10px';
+      aviso.textContent='Clave incorrecta. Tu clave es de 6 caracteres.';
+      btn.disabled=false;
+      btn.textContent='Ingresar →';
     }
   } catch(err) {
-    aviso.className = 'aviso error';
-    aviso.textContent = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+    aviso.style.display='block';
+    aviso.style.background='#FEF2F2';
+    aviso.style.color='#9B2C2C';
+    aviso.style.padding='10px';
+    aviso.style.borderRadius='7px';
+    aviso.style.marginTop='10px';
+    aviso.textContent='Error de conexión: ' + err.message;
+    btn.disabled=false;
+    btn.textContent='Ingresar →';
   }
+}
 
-  btn.disabled = false;
-  btn.textContent = 'Ingresar';
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('masterKey');
+  if (inp) inp.addEventListener('keydown', e => { if(e.key==='Enter') intentarLogin(); });
 });
 
 document.getElementById('btnSalir').addEventListener('click', () => {
