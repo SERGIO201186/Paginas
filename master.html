@@ -882,6 +882,14 @@ if ('serviceWorker' in navigator) {
       </div>`).join('');
   }
 
+  function mostrarToastMaster(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--marino);color:white;padding:12px 22px;border-radius:30px;font-size:13.5px;font-weight:600;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
   // Cargar selects de funerarias al entrar a cobros
   document.querySelector('[data-tab="cobros"]').addEventListener('click', () => {
     cargarSelectFunerarias();
