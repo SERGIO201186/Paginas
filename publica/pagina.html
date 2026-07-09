@@ -430,6 +430,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
         <div class="foto-zona-txt">📷 Agregar foto (opcional)</div>
         <input type="file" id="inputFoto" accept="image/*">
       </label>
+      <div id="fotoBadgeOptimizacion" style="display:none;font-size:11.5px;color:var(--sauce);background:#EEF7F1;border-radius:6px;padding:6px 10px;margin-bottom:8px;"></div>
       <div id="fotoPreviewWrap" style="display:none;" class="foto-preview-wrap">
         <img id="fotoPreviewImg" src="" alt="">
         <button class="btn-qfoto" onclick="quitarFoto()">✕ Quitar foto</button>
@@ -492,7 +493,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 </div>
 
 <!-- MODAL TÉRMINOS Y PRIVACIDAD -->
-<div class="legal-overlay" id="legalOverlay">
+<div class="legal-overlay oculto" id="legalOverlay">
   <div class="legal-box">
     <div class="legal-titulo">Bienvenido a esta página conmemorativa</div>
     <div class="legal-sub">Para continuar, por favor lee y acepta nuestros términos. Esto nos permite operar el servicio y proteger a todos los usuarios.</div>
@@ -562,7 +563,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 </div>
 
 <!-- BANNER COOKIES -->
-<div class="cookie-banner" id="cookieBanner">
+<div class="cookie-banner oculto" id="cookieBanner">
   <div class="cookie-txt">
     Usamos cookies esenciales para el funcionamiento de esta página. Al continuar navegando aceptas su uso conforme a nuestro <a href="#" onclick="abrirTerminos();return false;">Aviso de Privacidad</a>.
   </div>
@@ -789,17 +790,66 @@ async function toggleVeladora() {
 }
 
 // ===== RECUERDOS =====
-document.getElementById('inputFoto').addEventListener('change', e=>{
-  const a=e.target.files[0]; if(!a) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    fotoBase64=ev.target.result;
-    document.getElementById('fotoPreviewImg').src=fotoBase64;
-    document.getElementById('fotoPreviewWrap').style.display='block';
-    document.getElementById('fotoZona').style.display='none';
+// Event delegation para manejar el input de foto
+document.querySelector('.rec-wrap').addEventListener('change', function(e) {
+  if (e.target.id !== 'inputFoto') return;
+  procesarFoto(e.target.files[0]);
+});
+
+function procesarFoto(a) {
+  if (!a) return;
+
+  // Mostrar progreso
+  document.getElementById('fotoZona').querySelector('.foto-zona-txt').textContent = '⏳ Optimizando imagen...';
+
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      // Calcular nuevo tamaño manteniendo proporción
+      // Máximo 1200px en el lado más largo — suficiente para ver bien en móvil
+      const MAX = 1200;
+      let w = img.width;
+      let h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+
+      // Dibujar en canvas con nuevo tamaño
+      const canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // Comprimir: calidad 0.65 = ~70% menos peso, se ve bien en pantalla
+      // Para fotos del velorio 0.65 es más que suficiente
+      fotoBase64 = canvas.toDataURL('image/jpeg', 0.65);
+
+      // Calcular cuánto bajó el peso
+      const pesoOriginal = Math.round(a.size / 1024);
+      const pesoNuevo    = Math.round((fotoBase64.length * 0.75) / 1024);
+      const porcentaje   = Math.round((1 - pesoNuevo / pesoOriginal) * 100);
+
+      document.getElementById('fotoPreviewImg').src = fotoBase64;
+      document.getElementById('fotoPreviewWrap').style.display = 'block';
+
+      // Restaurar zona y mostrar info de compresión
+      document.getElementById('fotoZona').querySelector('.foto-zona-txt').textContent = '📷 Cambiar foto';
+      document.getElementById('fotoZona').style.display = 'none';
+
+      // Mostrar badge de optimización
+      const badge = document.getElementById('fotoBadgeOptimizacion');
+      if (badge) {
+        badge.textContent = '✓ Imagen optimizada · ' + pesoOriginal + 'KB → ' + pesoNuevo + 'KB (' + porcentaje + '% menos)';
+        badge.style.display = 'block';
+      }
+    };
+    img.src = ev.target.result;
   };
   r.readAsDataURL(a);
-});
+}
 
 function quitarFoto(){
   fotoBase64=null;
@@ -1288,15 +1338,26 @@ document.getElementById('lightbox').addEventListener('click',()=>document.getEle
 
 // ===== LEGAL =====
 function iniciarLegal() {
-  const aceptado = localStorage.getItem('legal_aceptado_v1');
-  const cookies = localStorage.getItem('cookies_decision');
-  if (!aceptado) {
-    document.getElementById('legalOverlay').classList.remove('oculto');
-  }
-  if (!cookies && aceptado) {
-    setTimeout(() => {
-      document.getElementById('cookieBanner').classList.remove('oculto');
-    }, 2000);
+  try {
+    const aceptado = localStorage.getItem('legal_aceptado_v1');
+    const cookies  = localStorage.getItem('cookies_decision');
+
+    if (!aceptado) {
+      // Primera visita — mostrar términos
+      document.getElementById('legalOverlay').classList.remove('oculto');
+    } else {
+      // Ya aceptó — mantener oculto
+      document.getElementById('legalOverlay').classList.add('oculto');
+      // Mostrar banner de cookies si aún no decidió
+      if (!cookies) {
+        setTimeout(() => {
+          document.getElementById('cookieBanner').classList.remove('oculto');
+        }, 2500);
+      }
+    }
+  } catch(e) {
+    // Si localStorage no está disponible (modo privado extremo), ocultar todo
+    document.getElementById('legalOverlay').classList.add('oculto');
   }
 }
 
@@ -1313,14 +1374,18 @@ function verificarAceptacion() {
 }
 
 function aceptarTerminos() {
-  localStorage.setItem('legal_aceptado_v1', Date.now().toString());
+  try {
+    localStorage.setItem('legal_aceptado_v1', Date.now().toString());
+  } catch(e) {}
   document.getElementById('legalOverlay').classList.add('oculto');
-  // Mostrar banner cookies después de aceptar términos
+  // Mostrar banner cookies 2 segundos después
   setTimeout(() => {
-    if (!localStorage.getItem('cookies_decision')) {
-      document.getElementById('cookieBanner').classList.remove('oculto');
-    }
-  }, 1500);
+    try {
+      if (!localStorage.getItem('cookies_decision')) {
+        document.getElementById('cookieBanner').classList.remove('oculto');
+      }
+    } catch(e) {}
+  }, 2000);
 }
 
 function abrirTerminos() {
@@ -1330,12 +1395,12 @@ function abrirTerminos() {
 }
 
 function aceptarCookies() {
-  localStorage.setItem('cookies_decision', 'aceptado');
+  try { localStorage.setItem('cookies_decision', 'aceptado'); } catch(e) {}
   document.getElementById('cookieBanner').classList.add('oculto');
 }
 
 function rechazarCookies() {
-  localStorage.setItem('cookies_decision', 'esenciales');
+  try { localStorage.setItem('cookies_decision', 'esenciales'); } catch(e) {}
   document.getElementById('cookieBanner').classList.add('oculto');
 }
 
