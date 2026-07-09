@@ -398,18 +398,41 @@ function mostrarVista(id) {
 }
 
 // LOGIN MAESTRO
+document.getElementById('masterKey').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnLoginMaster').click();
+});
+
 document.getElementById('btnLoginMaster').addEventListener('click', async () => {
   const key = document.getElementById('masterKey').value.trim();
   const aviso = document.getElementById('avisoLogin');
-  const resp = await api('verificarMasterKey', {masterKey: key}, 'GET');
-  if (resp.ok) {
-    masterKey = key;
-    mostrarVista('vistaMaster');
-    cargarTodo();
-  } else {
-    aviso.className='aviso error';
-    aviso.textContent='Clave incorrecta.';
+  const btn = document.getElementById('btnLoginMaster');
+
+  if (!key) {
+    aviso.className = 'aviso error';
+    aviso.textContent = 'Ingresa la clave maestra.';
+    return;
   }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    const resp = await api('verificarMasterKey', {masterKey: key}, 'GET');
+    if (resp.ok === true) {
+      masterKey = key;
+      mostrarVista('vistaMaster');
+      cargarTodo();
+    } else {
+      aviso.className = 'aviso error';
+      aviso.textContent = 'Clave incorrecta. Verifica e intenta de nuevo.';
+    }
+  } catch(err) {
+    aviso.className = 'aviso error';
+    aviso.textContent = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Ingresar';
 });
 
 document.getElementById('btnSalir').addEventListener('click', () => {
