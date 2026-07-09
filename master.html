@@ -482,46 +482,40 @@ async function cargarServicios() {
   const resp = await api('obtenerTodosServicios', {masterKey});
   const lista = document.getElementById('listaServicios');
   if (!resp.ok || !resp.servicios || !resp.servicios.length) {
-    lista.innerHTML = '<div class="vacio">No hay servicios registrados aún.</div>';
+    lista.innerHTML = '<div class="vacio">No hay servicios registrados aun.</div>';
     return;
   }
-  lista.innerHTML = resp.servicios.map(s => {
-    const estadoClass = 'estado-' + (s.estado || 'en_curso');
-    const estadoLabel = {
-      'en_curso': 'En curso',
-      'transferido': 'Transferido',
-      'inactivo': 'Inactivo',
-      'vendido': 'Vendido'
-    }[s.estado] || s.estado;
-    return `
-      <div class="card-item">
-        <div class="card-item-top">
-          <div>
-            <div class="card-item-nombre">${s.nombreFinado || '—'}</div>
-            <div class="card-item-meta">${s.funerariaId || ''} · ${s.creadoEn ? new Date(s.creadoEn).toLocaleDateString('es-MX') : ''}</div>
-          </div>
-          <span class="badge-activo ${estadoClass}" style="border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:700;">${estadoLabel}</span>
-        </div>
-        <div class="estado-btns">
-          ${s.estado !== 'inactivo' && s.estado !== 'vendido' ? `<button class="btn-estado btn-inactivar" onclick="cambiarEstadoServicio('${s.id}','inactivo')">Inactivar</button>` : ''}
-          ${s.estado !== 'vendido' ? `<button class="btn-estado btn-vendido" onclick="cambiarEstadoServicio('${s.id}','vendido')">Marcar vendida</button>` : ''}
-          ${s.estado === 'inactivo' || s.estado === 'vendido' ? `<button class="btn-estado btn-reactivar" onclick="cambiarEstadoServicio('${s.id}','en_curso')">Reactivar</button>` : ''}
-        </div>
-      </div>
-    `;
+  const labels = {'en_curso':'En curso','transferido':'Transferido','inactivo':'Inactivo','vendido':'Vendido'};
+  lista.innerHTML = resp.servicios.map(function(s) {
+    const estado = s.estado || 'en_curso';
+    const label = labels[estado] || estado;
+    const fecha = s.creadoEn ? new Date(s.creadoEn).toLocaleDateString('es-MX') : '';
+    let btns = '';
+    if (estado !== 'inactivo' && estado !== 'vendido')
+      btns += '<button class="btn-estado btn-inactivar" onclick="cambiarEstadoServicio('' + s.id + '','inactivo')">Inactivar</button> ';
+    if (estado !== 'vendido')
+      btns += '<button class="btn-estado btn-vendido" onclick="cambiarEstadoServicio('' + s.id + '','vendido')">Vendida</button> ';
+    if (estado === 'inactivo' || estado === 'vendido')
+      btns += '<button class="btn-estado btn-reactivar" onclick="cambiarEstadoServicio('' + s.id + '','en_curso')">Reactivar</button>';
+    return '<div class="card-item">' +
+      '<div class="card-item-top">' +
+        '<div>' +
+          '<div class="card-item-nombre">' + (s.nombreFinado||'—') + '</div>' +
+          '<div class="card-item-meta">' + fecha + '</div>' +
+        '</div>' +
+        '<span class="badge-activo estado-' + estado + '" style="border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:700;">' + label + '</span>' +
+      '</div>' +
+      '<div class="estado-btns">' + btns + '</div>' +
+    '</div>';
   }).join('');
 }
 
 window.cambiarEstadoServicio = async function(id, nuevoEstado) {
   const labels = {inactivo:'inactivar', vendido:'marcar como vendida', en_curso:'reactivar'};
-  if (!confirm('¿Deseas ' + (labels[nuevoEstado]||nuevoEstado) + ' esta página?')) return;
+  if (!confirm('Deseas ' + (labels[nuevoEstado]||nuevoEstado) + ' esta pagina?')) return;
   const resp = await api('toggleEstadoServicio', {masterKey, id, nuevoEstado}, 'POST');
-  if (resp.ok) {
-    cargarServicios();
-    cargarStats();
-  } else {
-    alert(resp.error || 'Error al cambiar estado.');
-  }
+  if (resp.ok) { cargarServicios(); cargarStats(); }
+  else { alert(resp.error || 'Error al cambiar estado.'); }
 };
 
 // ESTADÍSTICAS Y DESGLOSE DE INGRESOS
@@ -549,19 +543,14 @@ async function cargarStats() {
   // Desglose por funeraria
   const desglose = document.getElementById('desglosePorFuneraria');
   if (resp.comisionesPorFuneraria && resp.comisionesPorFuneraria.length > 0) {
-    desglose.innerHTML = resp.comisionesPorFuneraria.map(f => `
-      <div class="card-item">
-        <div class="card-item-top">
-          <div>
-            <div class="card-item-nombre">${f.nombre}</div>
-            <div class="card-item-meta">${f.totalGestos} gestos · ${f.totalCreditos} créditos vendidos</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--marino);">$${(f.comisionPendiente||0).toLocaleString('es-MX')}</div>
-            <div style="font-size:10.5px;color:var(--carbon-suave);">pendiente</div>
-          </div>
-        </div>
-      </div>`).join('');
+    desglose.innerHTML = resp.comisionesPorFuneraria.map(function(f) {
+      return '<div class="card-item"><div class="card-item-top"><div>' +
+        '<div class="card-item-nombre">' + (f.nombre||'') + '</div>' +
+        '<div class="card-item-meta">' + (f.totalGestos||0) + ' gestos</div></div>' +
+        '<div style="text-align:right;"><div style="font-size:15px;font-weight:700;color:var(--marino);">$' + (f.comisionPendiente||0) + '</div>' +
+        '<div style="font-size:10.5px;color:var(--carbon-suave);">pendiente</div></div></div></div>';
+    }).join('');
+
   } else {
     desglose.innerHTML = '<div class="vacio">Sin comisiones pendientes ✓</div>';
   }
@@ -571,11 +560,12 @@ async function cargarStats() {
   if (!resp.pedidosFloresPendientes || resp.pedidosFloresPendientes.length===0) {
     lista.innerHTML='<div class="vacio">Sin pedidos pendientes ✓</div>';
   } else {
-    lista.innerHTML = resp.pedidosFloresPendientes.map(p=>`
-      <div class="card-item">
-        <div class="card-item-nombre">🌺 ${p.nombre}</div>
-        <div class="card-item-meta">${p.direccion} · ${p.email}</div>
-      </div>`).join('');
+    lista.innerHTML = resp.pedidosFloresPendientes.map(function(p) {
+      return '<div class="card-item">' +
+        '<div class="card-item-nombre">🌺 ' + (p.nombre||'') + '</div>' +
+        '<div class="card-item-meta">' + (p.direccion||'') + ' · ' + (p.email||'') + '</div>' +
+      '</div>';
+    }).join('');
   }
 }
 
@@ -625,7 +615,7 @@ document.getElementById('btnCrearFuneraria').addEventListener('click', async () 
   const resp = await api('crearFuneraria', {masterKey, nombre, whatsapp, email}, 'POST');
   if (resp.ok) {
     aviso.className='aviso exito';
-    aviso.textContent=`✓ Funeraria creada. Código de acceso: ${resp.codigoAcceso}`;
+    aviso.textContent='✓ Funeraria creada. Código: ' + resp.codigoAcceso;
     document.getElementById('fNombre').value='';
     document.getElementById('fWhatsapp').value='';
     document.getElementById('fEmail').value='';
@@ -662,18 +652,12 @@ async function cargarArticulos() {
   if (!resp.ok || !resp.articulos.length) {
     lista.innerHTML='<div class="vacio">No hay artículos. Agrega el primero abajo.</div>'; return;
   }
-  lista.innerHTML = resp.articulos.map(a=>`
-    <div class="art-card">
-      <div class="art-emoji">${a.emoji}</div>
-      <div class="art-info">
-        <div class="art-nombre">${a.nombre}</div>
-        <div class="art-precio">${a.creditos} créditos · ${a.tipo}</div>
-      </div>
-      <div class="art-acciones">
-        <button class="btn btn-danger btn-pequeno" onclick="eliminarArticulo('${a.id}')">✕</button>
-      </div>
-    </div>
-  `).join('');
+  lista.innerHTML = resp.articulos.map(function(a) {
+    return '<div class="art-card"><div class="art-emoji">' + (a.emoji||'') + '</div>' +
+      '<div class="art-info"><div class="art-nombre">' + (a.nombre||'') + '</div>' +
+      '<div class="art-precio">' + (a.creditos||0) + ' FC · ' + (a.tipo||'') + '</div></div>' +
+      '<div class="art-acciones"><button class="btn btn-danger btn-pequeno" onclick="eliminarArticulo(\'' + a.id + '\')">✕</button></div></div>';
+  }).join('');
 }
 
 document.getElementById('btnAgregarArticulo').addEventListener('click', async () => {
@@ -710,17 +694,12 @@ async function cargarPaquetes() {
   if (!resp.ok || !resp.paquetes.length) {
     lista.innerHTML='<div class="vacio">No hay paquetes. Agrega el primero abajo.</div>'; return;
   }
-  lista.innerHTML = resp.paquetes.map(p=>`
-    <div class="card-item">
-      <div class="card-item-top">
-        <div>
-          <div class="card-item-nombre">${p.creditos} créditos · $${p.precio} MXN</div>
-          ${p.etiqueta?`<div class="card-item-meta">${p.etiqueta}</div>`:''}
-        </div>
-        <button class="btn btn-danger btn-pequeno" onclick="eliminarPaquete('${p.id}')">✕</button>
-      </div>
-    </div>
-  `).join('');
+  lista.innerHTML = resp.paquetes.map(function(p) {
+    return '<div class="card-item"><div class="card-item-top"><div>' +
+      '<div class="card-item-nombre">' + (p.creditos||0) + ' FC · $' + (p.precio||0) + ' MXN</div>' +
+      (p.etiqueta ? '<div class="card-item-meta">' + p.etiqueta + '</div>' : '') +
+      '</div><button class="btn btn-danger btn-pequeno" onclick="eliminarPaquete(\'' + p.id + '\')">✕</button></div></div>';
+  }).join('');
 }
 
 document.getElementById('btnAgregarPaquete').addEventListener('click', async () => {
