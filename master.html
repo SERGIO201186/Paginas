@@ -545,26 +545,34 @@ async function cargarFunerarias() {
   if (!resp.ok || !resp.funerarias.length) {
     lista.innerHTML='<div class="vacio">No hay funerarias registradas.</div>'; return;
   }
-  lista.innerHTML = resp.funerarias.map(f=>`
-    <div class="card-item">
-      <div class="card-item-top">
-        <div>
-          <div class="card-item-nombre">${f.nombre}</div>
-          <div class="card-item-meta">Código: <strong>${f.codigoAcceso}</strong></div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          <span class="${f.activo==='TRUE'||f.activo===true?'badge-activo':'badge-inactivo'}">${f.activo==='TRUE'||f.activo===true?'Activa':'Inactiva'}</span>
-          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${f.plan==='pro'?'#C9A24B':'#E3D9C8'};color:${f.plan==='pro'?'#2B2723':'#56504A'};">${f.plan==='pro'?'⭐ Pro':'Demo'}</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px;">
-        <button class="btn btn-pequeno ${f.activo==='TRUE'||f.activo===true?'btn-danger':'btn-sauce'}"
-          onclick="toggleFuneraria('${f.id}', ${f.activo==='TRUE'||f.activo===true})">
-          ${f.activo==='TRUE'||f.activo===true?'Desactivar':'Activar'}
-        </button>
-      </div>
-    </div>
-  `).join('');
+  lista.innerHTML = resp.funerarias.map(f => {
+    const activo = f.activo === true || String(f.activo).toUpperCase() === 'TRUE';
+    const plan = f.plan || 'gratis';
+    return '<div class="card-item">' +
+      '<div class="card-item-top">' +
+        '<div>' +
+          '<div class="card-item-nombre">' + (f.nombre||'') + '</div>' +
+          '<div class="card-item-meta">Código: <strong>' + (f.codigoAcceso||'') + '</strong></div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
+          '<span class="' + (activo?'badge-activo':'badge-inactivo') + '">' + (activo?'Activa':'Inactiva') + '</span>' +
+          '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:' + (plan==='pro'?'#B8964E':'#E8ECF4') + ';color:' + (plan==='pro'?'#111E35':'#4A5568') + ';">' + (plan==='pro'?'⭐ Pro':'Demo') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap;">' +
+        '<select onchange="asignarPlan('' + f.id + '', this.value)" style="padding:7px 10px;border:1px solid var(--borde);border-radius:6px;font-size:12.5px;background:var(--hueso);flex:1;">' +
+          '<option value="gratis"' + (plan!=='pro'?' selected':'') + '>Plan Demo (Gratis)</option>' +
+          '<option value="pro"' + (plan==='pro'?' selected':'') + '>Plan Pro</option>' +
+        '</select>' +
+        '<button class="btn btn-pequeno ' + (activo?'btn-danger':'btn-sauce') + '" onclick="toggleFuneraria('' + f.id + '', ' + activo + ')">' +
+          (activo?'Desactivar':'Activar') +
+        '</button>' +
+        '<button class="btn btn-pequeno" style="background:#FEF2F2;color:#9B2C2C;border:1px solid #FECACA;" onclick="eliminarFuneraria('' + f.id + '', '' + (f.nombre||'').replace(/'/g,'') + '', '' + (f.codigoAcceso||'') + '')">' +
+          '🗑' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 document.getElementById('btnCrearFuneraria').addEventListener('click', async () => {
@@ -585,6 +593,21 @@ document.getElementById('btnCrearFuneraria').addEventListener('click', async () 
     aviso.className='aviso error'; aviso.textContent=resp.error||'Error al crear.';
   }
 });
+
+window.asignarPlan = async function(funerariaId, plan) {
+  const resp = await api('asignarPlan', {masterKey, funerariaId, plan}, 'POST');
+  if (resp.ok) {
+    mostrarToastMaster(plan === 'pro' ? '⭐ Plan Pro activado' : 'Cambiado a Demo');
+    cargarFunerarias();
+  } else { alert(resp.error || 'Error al cambiar plan.'); }
+};
+
+window.eliminarFuneraria = async function(id, nombre, codigo) {
+  if (!confirm('¿Eliminar "' + nombre + '" (código: ' + codigo + ')? Esta acción no se puede deshacer.')) return;
+  const resp = await api('eliminarFuneraria', {masterKey, id}, 'POST');
+  if (resp.ok) { mostrarToastMaster('✓ Funeraria eliminada.'); cargarFunerarias(); }
+  else { alert(resp.error || 'Error al eliminar.'); }
+};
 
 window.toggleFuneraria = async function(id, activo) {
   await api('toggleFuneraria', {masterKey, id, activo: !activo}, 'POST');
