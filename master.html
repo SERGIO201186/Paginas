@@ -144,6 +144,7 @@ body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-s
     <button class="tab-btn" data-tab="tienda">Tienda</button>
     <button class="tab-btn" data-tab="creditos">Créditos</button>
     <button class="tab-btn" data-tab="cobros">Cobros</button>
+    <button class="tab-btn" data-tab="pagos">Pagos</button>
     <button class="tab-btn" data-tab="config">Configuración</button>
   </nav>
 
@@ -351,6 +352,15 @@ body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-s
       <div class="seccion-titulo" style="margin-top:24px;">Historial de suscripciones</div>
       <div id="listaSuscripciones"><div class="vacio">Cargando...</div></div>
 
+    </div>
+  </div>
+
+  <!-- PAGOS -->
+  <div class="tab-panel" id="panel-pagos">
+    <div class="contenedor">
+      <div class="seccion-titulo">Historial de pagos (Stripe)</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:14px;">Créditos, videollamadas y transferencias de página. Se actualiza cuando Stripe confirma cada pago.</p>
+      <div id="listaPagos"><div class="vacio">Cargando...</div></div>
     </div>
   </div>
 
@@ -925,6 +935,26 @@ if ('serviceWorker' in navigator) {
       </div>`).join('');
   }
 
+  async function cargarPagos() {
+    const resp = await api('obtenerPagos', {masterKey});
+    const lista = document.getElementById('listaPagos');
+    if (!resp.ok || !resp.pagos.length) {
+      lista.innerHTML = '<div class="vacio">Sin pagos registrados todavía.</div>'; return;
+    }
+    const etiquetas = {creditos: '🕯 FuneralCredits', videollamada: '📹 Videollamada', transferencia: '🏠 Transferencia de página'};
+    lista.innerHTML = resp.pagos.map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--borde);border-radius:9px;margin-bottom:8px;background:var(--hueso);">
+        <div>
+          <div style="font-size:13.5px;font-weight:600;">${etiquetas[p.tipo] || p.tipo || 'Pago'} ${p.tipo==='creditos' && p.creditos ? '· ' + p.creditos + ' créditos' : ''}</div>
+          <div style="font-size:11.5px;color:var(--carbon-suave);">${p.email || p.servicioId || ''} · ${p.creadoEn ? new Date(p.creadoEn).toLocaleString('es-MX') : ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;font-size:14px;">$${parseFloat(p.monto||0).toFixed(2)}</div>
+          <span style="font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;${p.estado==='completado'?'background:#EEF3EC;color:#1A4D38;':'background:#FEF7E8;color:#8A6414;'}">${p.estado}</span>
+        </div>
+      </div>`).join('');
+  }
+
   function mostrarToastMaster(msg) {
     const t = document.createElement('div');
     t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--marino);color:white;padding:12px 22px;border-radius:30px;font-size:13.5px;font-weight:600;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
@@ -939,6 +969,8 @@ if ('serviceWorker' in navigator) {
     cargarSuscripciones();
     cargarSolicitudesVLMaster();
   });
+
+  document.querySelector('[data-tab="pagos"]').addEventListener('click', cargarPagos);
 
 </script>
 </body>
