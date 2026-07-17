@@ -461,6 +461,16 @@ async function intentarLogin() {
 document.addEventListener('DOMContentLoaded', () => {
   const inp = document.getElementById('masterKey');
   if (inp) inp.addEventListener('keydown', e => { if(e.key==='Enter') intentarLogin(); });
+
+  // Acceso directo cuando esta página se abre embebida desde el Control
+  // Maestro de Omnia, que ya pidió su propio login y manda la clave por URL.
+  // Si se abre este archivo suelto, sin ese parámetro, se queda el login normal.
+  const mk = new URLSearchParams(location.search).get('mk');
+  if (mk) {
+    masterKey = mk;
+    mostrarVista('vistaMaster');
+    cargarTodo();
+  }
 });
 
 document.getElementById('btnSalir').addEventListener('click', () => {
