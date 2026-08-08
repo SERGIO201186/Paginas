@@ -813,6 +813,8 @@ if ('serviceWorker' in navigator) {
     if (!resp.ok) return;
     const sel1 = document.getElementById('cobroFunerariaId');
     const sel2 = document.getElementById('comisionFunerariaId');
+    sel1.length = 1;
+    sel2.length = 1;
     resp.funerarias.forEach(f => {
       const opt1 = new Option(f.nombre + ' (' + f.codigoAcceso + ')', f.id);
       const opt2 = new Option(f.nombre + ' (' + f.codigoAcceso + ')', f.id);
@@ -820,13 +822,13 @@ if ('serviceWorker' in navigator) {
       sel2.appendChild(opt2);
     });
     // Autocompletar email y nombre al seleccionar
-    sel1.addEventListener('change', () => {
+    sel1.onchange = () => {
       const f = resp.funerarias.find(x => x.id === sel1.value);
       if (f) {
         document.getElementById('cobroEmail').value = f.email || '';
         document.getElementById('cobroNombre').value = f.nombre || '';
       }
-    });
+    };
   }
 
   async function generarCobro(tipo) {

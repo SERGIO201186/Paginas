@@ -860,33 +860,6 @@
     `).join('');
   }
 
-  // ===== COBRO / TRANSFERENCIA =====
-  document.getElementById('btnGenerarCobro').addEventListener('click', async () => {
-    const aviso = document.getElementById('avisoCobro');
-    const emailFamilia = document.getElementById('emailFamilia').value.trim();
-
-    if (!emailFamilia) {
-      aviso.className = 'aviso-estado error';
-      aviso.textContent = 'Ingresa el correo de la familia.';
-      return;
-    }
-
-    const resp = await llamarAPI('crearSesionPago', {
-      servicioId: servicioActualId,
-      emailFamilia,
-      urlExito: window.location.href,
-      urlCancelado: window.location.href
-    }, 'POST');
-
-    if (resp.ok) {
-      aviso.className = 'aviso-estado exito';
-      aviso.innerHTML = `Cobro generado. Comparte este link de pago con la familia:<br><br><a href="${resp.urlPago}" target="_blank">${resp.urlPago}</a>`;
-    } else {
-      aviso.className = 'aviso-estado error';
-      aviso.textContent = resp.error || 'No se pudo generar el cobro.';
-    }
-  });
-
   // ===== PEDIDOS DE FLORES FÍSICAS =====
   async function cargarPedidosFlores() {
     const resp = await llamarAPI('obtenerPedidosFlores', {
