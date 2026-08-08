@@ -1,4 +1,4 @@
-const CACHE = 'pc-v1';
+const CACHE = 'pc-v2';
 const ASSETS = [
   '/Paginas/login.html',
   '/Paginas/master.html',
