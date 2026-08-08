@@ -968,7 +968,7 @@ function crearBurbuja(r) {
   inner.appendChild(hora);
 
   div.appendChild(inner);
-  return div.outerHTML;
+  return div;
 }
 
 async function cargarRecuerdos() {
@@ -977,22 +977,35 @@ async function cargarRecuerdos() {
   if(!resp.ok||!resp.recuerdos||resp.recuerdos.length===0){
     lista.innerHTML='<div class="vacio">Sé el primero en compartir un recuerdo 🕊</div>'; return;
   }
-  lista.innerHTML = resp.recuerdos.map(r=>{
-    if(r.tipo==='vela_premium') return `
+  lista.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  resp.recuerdos.forEach(r=>{
+    if(r.tipo==='vela_premium'){
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
       <div class="vela-premium-wrap">
         <div class="vela-premium-nombre">${esc(r.nombre)} encendió una vela premium</div>
         <div class="vela-premium-flama"></div>
         <div class="vela-premium-cuerpo"></div>
         <div class="vela-premium-txt">"Que su luz brille eternamente"</div>
       </div>`;
-    if(r.tipo==='gesto') return `
+      frag.appendChild(wrap.firstElementChild);
+      return;
+    }
+    if(r.tipo==='gesto'){
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
       <div class="burbuja-gesto">
         <div class="gesto-emisor">${esc(r.nombre)} envió:</div>
         <div class="gesto-contenido">${esc(r.emoji||'💐')}</div>
         <div class="gesto-tipo">${esc(r.descripcion||'')}</div>
       </div>`;
-    return crearBurbuja(r);
-  }).join('');
+      frag.appendChild(wrap.firstElementChild);
+      return;
+    }
+    frag.appendChild(crearBurbuja(r));
+  });
+  lista.appendChild(frag);
 }
 
 async function reaccionar(recuerdoId, tipo, btn, btnOpuesto) {
