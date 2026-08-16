@@ -972,8 +972,8 @@ if ('serviceWorker' in navigator) {
     lista.innerHTML = resp.pagos.map(p => `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--borde);border-radius:9px;margin-bottom:8px;background:var(--hueso);">
         <div>
-          <div style="font-size:13.5px;font-weight:600;">${etiquetas[p.tipo] || p.tipo || 'Pago'} ${p.tipo==='creditos' && p.creditos ? '· ' + p.creditos + ' créditos' : ''}</div>
-          <div style="font-size:11.5px;color:var(--carbon-suave);">${p.email || p.servicioId || ''} · ${p.creadoEn ? new Date(p.creadoEn).toLocaleString('es-MX') : ''}</div>
+          <div style="font-size:13.5px;font-weight:600;">${esc(etiquetas[p.tipo] || p.tipo || 'Pago')} ${p.tipo==='creditos' && p.creditos ? '· ' + esc(p.creditos) + ' créditos' : ''}</div>
+          <div style="font-size:11.5px;color:var(--carbon-suave);">${esc(p.email || p.servicioId || '')} · ${p.creadoEn ? new Date(p.creadoEn).toLocaleString('es-MX') : ''}</div>
         </div>
         <div style="text-align:right;">
           <div style="font-weight:700;font-size:14px;">$${parseFloat(p.monto||0).toFixed(2)}</div>

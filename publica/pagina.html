@@ -1397,14 +1397,14 @@ async function selPaquete(el) {
   el.innerHTML = el.innerHTML.replace('FuneralCredits', 'FuneralCredits') +
     '<div style="font-size:11px;color:var(--dorado-osc);margin-top:4px;">Procesando...</div>';
 
-  const creditos = +el.dataset.creditos;
-  const precio = +el.dataset.precio;
-
   const resp = await api('crearSesionCreditos', {
     email: usuario.email,
     servicioId: servicio.id,
-    creditos,
-    precio,
+    paqueteId: el.dataset.id,
+    // creditos/precio se mandan solo como referencia; el backend valida
+    // siempre contra el paquete real y nunca confía en estos valores.
+    creditos: +el.dataset.creditos,
+    precio: +el.dataset.precio,
     urlExito: window.location.origin + window.location.pathname + '?p=' + slug + '&creditosOk=1',
     urlCancelado: window.location.origin + window.location.pathname + '?p=' + slug + '&creditosOk=0'
   }, 'POST');
@@ -1458,8 +1458,11 @@ async function confirmarGesto() {
   btn.disabled=true; btn.textContent='Enviando...';
   const resp=await api('enviarGesto',{
     servicioId:servicio.id, email:usuario.email, nombre:usuario.nombre,
-    tipoGesto:gestoActual.tipo==='fisico'?'flores_fisicas':gestoActual.tipo==='premium'?'vela_premium':gestoActual.artId,
-    creditos:gestoActual.creditos, direccion, emoji:gestoActual.emoji, descripcion:gestoActual.descripcion
+    // Se manda siempre el id real del artículo elegido (antes se colapsaba
+    // a "flores_fisicas"/"vela_premium" y se perdía cuál tamaño/artículo
+    // específico era); el backend calcula el costo real a partir de este id.
+    tipoGesto:gestoActual.artId,
+    direccion, emoji:gestoActual.emoji, descripcion:gestoActual.descripcion
   },'POST');
   if(resp.ok){
     aviso.className='aviso exito'; aviso.textContent='✓ ¡Gesto enviado!';

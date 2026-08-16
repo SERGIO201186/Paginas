@@ -1136,24 +1136,64 @@ function actualizarSaldo_(email, delta) {
   return nuevo;
 }
 
+// Busca el precio/créditos REAL de un paquete en la hoja PaquetesCreditos
+// (o en el catálogo por defecto si la hoja está vacía). Nunca hay que
+// confiar en los valores de creditos/precio que manda el cliente: por eso
+// esta función es la única fuente de verdad para crearSesionCreditos_.
+function buscarPaqueteCreditos_(datos) {
+  const sheet = getSheet_("PaquetesCreditos");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const credIdx = enc.indexOf("creditos");
+  const precioIdx = enc.indexOf("precio");
+  const activoIdx = enc.indexOf("activo");
+
+  const catalogo = [];
+  for (let i = 1; i < filas.length; i++) {
+    if (activoIdx >= 0 && filas[i][activoIdx] === false) continue;
+    catalogo.push({
+      id: filas[i][idIdx],
+      creditos: Number(filas[i][credIdx]) || 0,
+      precio: Number(filas[i][precioIdx]) || 0
+    });
+  }
+  const fuente = catalogo.length ? catalogo : PAQUETES_DEFAULT;
+
+  if (datos.paqueteId) {
+    const porId = fuente.find(p => String(p.id) === String(datos.paqueteId));
+    if (porId) return porId;
+  }
+  // Compatibilidad con clientes que aún no tienen el frontend actualizado y
+  // solo mandan creditos+precio (sin paqueteId): solo se acepta si coincide
+  // EXACTO con un paquete real y activo — nunca se inventa un precio nuevo.
+  return fuente.find(p =>
+    Number(p.creditos) === Number(datos.creditos) && Number(p.precio) === Number(datos.precio)
+  ) || null;
+}
+
 function crearSesionCreditos_(datos) {
-  if (!datos.email || !datos.creditos || !datos.precio) {
+  if (!datos.email) {
     return { error: "Faltan datos requeridos." };
+  }
+  const paquete = buscarPaqueteCreditos_(datos);
+  if (!paquete || !paquete.creditos || !paquete.precio) {
+    return { error: "Paquete no válido." };
   }
   const stripeKey = getConfig_("STRIPE_SECRET_KEY");
   const payload = {
     "mode": "payment",
     "payment_method_types[]": "card",
     "line_items[0][price_data][currency]": "mxn",
-    "line_items[0][price_data][product_data][name]": datos.creditos + " FuneralCredits",
-    "line_items[0][price_data][unit_amount]": (parseFloat(datos.precio) * 100).toString(),
+    "line_items[0][price_data][product_data][name]": paquete.creditos + " FuneralCredits",
+    "line_items[0][price_data][unit_amount]": Math.round(paquete.precio * 100).toString(),
     "line_items[0][quantity]": "1",
     "customer_email": datos.email,
     "success_url": datos.urlExito,
     "cancel_url": datos.urlCancelado,
     "metadata[tipo]": "creditos",
     "metadata[email]": datos.email,
-    "metadata[creditos]": String(datos.creditos),
+    "metadata[creditos]": String(paquete.creditos),
     "metadata[servicioId]": datos.servicioId || ""
   };
   const opciones = {
@@ -1169,7 +1209,7 @@ function crearSesionCreditos_(datos) {
   // Registrar el intento de pago como "pendiente" (antes esto no se guardaba)
   const sheetPagos = getSheet_("Pagos");
   const idPago = generarId_();
-  sheetPagos.appendRow([idPago, datos.servicioId || "", datos.precio, "mxn", resultado.id, "", "pendiente", new Date().toISOString(), "", "creditos", datos.email, datos.creditos]);
+  sheetPagos.appendRow([idPago, datos.servicioId || "", paquete.precio, "mxn", resultado.id, "", "pendiente", new Date().toISOString(), "", "creditos", datos.email, paquete.creditos]);
 
   return { ok: true, urlPago: resultado.url };
 }
@@ -1178,48 +1218,77 @@ function crearSesionCreditos_(datos) {
 // GESTOS
 // ============================================================
 
-const EMOJIS_GESTOS = {
-  rosas: "🌹",
-  girasoles: "🌻",
-  paloma: "🕊",
-  corazon: "💛",
-  arreglo_virtual: "💐",
-  vela_premium: "🕯",
-  flores_fisicas: "🌺"
+// Alias heredados: navegadores con el frontend viejo en caché todavía pueden
+// mandar estos nombres genéricos de categoría en vez del id real del
+// artículo. Se mantienen aquí solo por compatibilidad hacia atrás.
+const ALIAS_GESTOS_LEGACY = {
+  rosas:        { creditos: 10,  tipo: "virtual", emoji: "🌹", nombre: "Rosa virtual" },
+  paloma:       { creditos: 10,  tipo: "virtual", emoji: "🕊️", nombre: "Paloma de paz" },
+  abrazo:       { creditos: 10,  tipo: "virtual", emoji: "💛", nombre: "Abrazo de luz" },
+  corazon:      { creditos: 10,  tipo: "virtual", emoji: "💛", nombre: "Abrazo de luz" },
+  arreglo_v:    { creditos: 30,  tipo: "virtual", emoji: "💐", nombre: "Arreglo virtual" },
+  arreglo_virtual: { creditos: 30, tipo: "virtual", emoji: "💐", nombre: "Arreglo virtual" },
+  vela_p:       { creditos: 25,  tipo: "premium", emoji: "🕯", nombre: "Vela premium" },
+  vela_premium: { creditos: 25,  tipo: "premium", emoji: "🕯", nombre: "Vela premium" },
+  flores_ch:    { creditos: 250, tipo: "fisico",  emoji: "🌺", nombre: "Arreglo físico chico" },
+  flores_med:   { creditos: 400, tipo: "fisico",  emoji: "💐", nombre: "Arreglo físico mediano" },
+  flores_gr:    { creditos: 600, tipo: "fisico",  emoji: "🌸", nombre: "Arreglo físico grande" },
+  flores_fisicas: { creditos: 250, tipo: "fisico", emoji: "🌺", nombre: "Arreglo físico" }
 };
 
-const DESC_GESTOS = {
-  rosas: "Rosas rojas",
-  girasoles: "Girasoles",
-  paloma: "Paloma de paz",
-  corazon: "Abrazo de luz",
-  arreglo_virtual: "Arreglo floral virtual",
-  vela_premium: "Vela premium",
-  flores_fisicas: "Arreglo floral físico"
-};
+// Fuente de verdad del costo real de un gesto: busca primero en la hoja
+// ArticulosTienda (lo que configura el master y lo que ve el visitante en la
+// tienda) y solo si no lo encuentra ahí recurre a los alias heredados. Nunca
+// hay que confiar en los créditos que manda el cliente.
+function buscarArticuloGesto_(tipoGesto) {
+  const sheet = getSheet_("ArticulosTienda");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][idIdx]) === String(tipoGesto)) {
+      const obj = {};
+      enc.forEach((h, idx) => obj[h] = filas[i][idx]);
+      return {
+        creditos: Number(obj.creditos) || 0,
+        tipo: obj.tipo || "virtual",
+        emoji: obj.emoji || "💐",
+        nombre: obj.nombre || "",
+        descripcion: obj.descripcion || obj.nombre || ""
+      };
+    }
+  }
+  return ALIAS_GESTOS_LEGACY[tipoGesto] || null;
+}
 
 function enviarGesto_(datos) {
-  if (!datos.email || !datos.nombre || !datos.tipoGesto || !datos.creditos) {
+  if (!datos.email || !datos.nombre || !datos.tipoGesto) {
     return { error: "Faltan datos requeridos." };
   }
+  const articulo = buscarArticuloGesto_(datos.tipoGesto);
+  if (!articulo || !articulo.creditos) {
+    return { error: "Artículo no válido." };
+  }
+  const costo = articulo.creditos; // nunca datos.creditos — ese lo manda el cliente
+
   const saldoActual = obtenerSaldo_(datos.email, datos.servicioId).saldo;
-  if (saldoActual < datos.creditos) {
+  if (saldoActual < costo) {
     return { error: "Saldo insuficiente. Tienes " + saldoActual + " créditos." };
   }
   // Descontar créditos
-  const nuevoSaldo = actualizarSaldo_(datos.email, -datos.creditos);
+  const nuevoSaldo = actualizarSaldo_(datos.email, -costo);
 
   // Registrar gesto en hoja Gestos
   const sheetG = getSheet_("Gestos");
   const id = generarId_();
   sheetG.appendRow([
     id, datos.servicioId, datos.email, datos.nombre,
-    datos.tipoGesto, datos.creditos, datos.direccion || "",
+    datos.tipoGesto, costo, datos.direccion || "",
     new Date().toISOString()
   ]);
 
-  // Si es flores físicas, registrar también en PedidosFlores y notificar
-  if (datos.tipoGesto === "flores_fisicas") {
+  // Si es un artículo físico, registrar también en PedidosFlores y notificar
+  if (articulo.tipo === "fisico") {
     const sheetP = getSheet_("PedidosFlores");
     sheetP.appendRow([
       generarId_(), datos.servicioId, datos.email, datos.nombre,
@@ -1237,10 +1306,10 @@ function enviarGesto_(datos) {
 
   // Registrar como entrada en Recuerdos para que aparezca en el feed
   const sheetR = getSheet_("Recuerdos");
-  const tipoPublico = datos.tipoGesto === "vela_premium" ? "vela_premium" : "gesto";
+  const tipoPublico = articulo.tipo === "premium" ? "vela_premium" : "gesto";
   sheetR.appendRow([
     generarId_(), datos.servicioId, datos.nombre,
-    DESC_GESTOS[datos.tipoGesto] || datos.tipoGesto,
+    articulo.descripcion || articulo.nombre || datos.tipoGesto,
     "", "", "",
     "aprobado", // los gestos se aprueban automáticamente
     new Date().toISOString()
@@ -1255,10 +1324,10 @@ function enviarGesto_(datos) {
   const pieFotoIdx = enc.indexOf("pieFoto");
   const driveFileIdIdx = enc.indexOf("driveFileId");
   if (pieFotoIdx >= 0) sheetR.getRange(lastRow, pieFotoIdx + 1).setValue(tipoPublico);
-  if (driveFileIdIdx >= 0) sheetR.getRange(lastRow, driveFileIdIdx + 1).setValue(EMOJIS_GESTOS[datos.tipoGesto] || "💐");
+  if (driveFileIdIdx >= 0) sheetR.getRange(lastRow, driveFileIdIdx + 1).setValue(articulo.emoji || "💐");
 
   // Registrar comision del 25% para la funeraria
-  registrarComisionInterna_(datos.servicioId, datos.creditos, datos.tipoGesto);
+  registrarComisionInterna_(datos.servicioId, costo, datos.tipoGesto);
 
   return { ok: true, nuevoSaldo };
 }
@@ -1568,9 +1637,20 @@ function darCreditosGratis_(email, servicioId) {
   // Solo dar créditos una vez por email+servicio
   const ya = getConfigMaestro_(clave);
   if (ya) return 0;
+
+  // Tope de seguridad: no hay verificación de correo ni forma de limitar por
+  // IP (Apps Script no expone la IP del visitante), así que sin este tope
+  // alguien podría generar correos falsos sin límite para acumular créditos
+  // gratis y canjearlos por gestos reales (incluyendo flores físicas).
+  const claveContador = "cgTotal_" + servicioId;
+  const totalRepartido = parseInt(getConfigMaestro_(claveContador) || "0");
+  const topeMaximo = parseInt(getConfigMaestro_("topeCreditosGratisPorPagina") || "500");
+  if (totalRepartido >= topeMaximo) return 0;
+
   const cantidad = parseInt(getConfigMaestro_("creditosGratis") || "10");
   actualizarSaldo_(email, cantidad);
   setConfigMaestro_(clave, "1");
+  setConfigMaestro_(claveContador, String(totalRepartido + cantidad));
   return cantidad;
 }
 
@@ -1882,16 +1962,19 @@ function darCreditosGratisPublico_(datos) {
 // ============================================================
 
 function crearSesionVideollamada_(datos) {
-  if (!datos.email || !datos.servicioId || !datos.precio) {
+  if (!datos.email || !datos.servicioId) {
     return { error: "Faltan datos requeridos." };
   }
+  // Precio fijo del lado del servidor — nunca confiar en datos.precio, que
+  // viene del cliente y podría venir alterado.
+  const precio = PRECIOS.videollamada;
   const stripeKey = getConfig_("STRIPE_SECRET_KEY");
   const payload = {
     "mode": "payment",
     "payment_method_types[]": "card",
     "line_items[0][price_data][currency]": "mxn",
     "line_items[0][price_data][product_data][name]": "Videollamada conmemorativa - Acceso completo",
-    "line_items[0][price_data][unit_amount]": (parseFloat(datos.precio) * 100).toString(),
+    "line_items[0][price_data][unit_amount]": Math.round(precio * 100).toString(),
     "line_items[0][quantity]": "1",
     "customer_email": datos.email,
     "success_url": datos.urlExito,
@@ -1900,7 +1983,7 @@ function crearSesionVideollamada_(datos) {
     "metadata[email]": datos.email,
     "metadata[nombre]": datos.nombre || "",
     "metadata[servicioId]": datos.servicioId,
-    "metadata[precio]": String(datos.precio)
+    "metadata[precio]": String(precio)
   };
   const opciones = {
     method: "post",
@@ -1915,7 +1998,7 @@ function crearSesionVideollamada_(datos) {
   // Registrar solicitud pendiente
   const sheet = getSheet_("SolicitudesVL");
   const id = generarId_();
-  sheet.appendRow([id, datos.servicioId, datos.email, datos.nombre||"", datos.precio, resultado.id, "pendiente", new Date().toISOString()]);
+  sheet.appendRow([id, datos.servicioId, datos.email, datos.nombre||"", precio, resultado.id, "pendiente", new Date().toISOString()]);
 
   return { ok: true, urlPago: resultado.url };
 }
@@ -2079,6 +2162,7 @@ var PRECIOS = {
   setup: 500,
   mensualidad: 99,
   pagina: 149,
+  videollamada: 299,
   comisionFuneraria: 0.25  // 25% para la funeraria
 };
 
