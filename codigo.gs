@@ -1478,6 +1478,10 @@ function darCreditosGratis_(email, servicioId) {
 // A partir de cuántos dislikes se alerta a la funeraria para que revise un recuerdo.
 const UMBRAL_DISLIKES_ALERTA = 3;
 
+// Correo que siempre recibe la alerta de recuerdo reportado, sin depender de que
+// el email de la funeraria o el de ConfigMaestro estén configurados.
+const EMAIL_ALERTA_RESPALDO = "Ventas@omnia-technology.com";
+
 function reaccionarRecuerdo_(datos) {
   if (!datos.recuerdoId || !datos.tipo || !datos.nombre) {
     return { error: "Faltan datos." };
@@ -1561,7 +1565,9 @@ function alertarRecuerdoReportado_(recuerdoId, servicioId, totalDislikes) {
       "De: " + (nombreAutor || "Anónimo") + "\n" +
       "Recibió " + totalDislikes + " \"no me gusta\". Revísalo en tu panel (Recuerdos reportados) y decide si lo retiras.";
 
-    const destinatariosEmail = [emailFuneraria, getConfigMaestro_("email")].filter(Boolean);
+    const destinatariosEmail = [emailFuneraria, getConfigMaestro_("email"), EMAIL_ALERTA_RESPALDO]
+      .filter(Boolean)
+      .filter((v, i, arr) => arr.indexOf(v) === i); // sin duplicados si coincide con algún otro correo
     destinatariosEmail.forEach(function(destino) {
       try {
         MailApp.sendEmail({ to: destino, subject: "Funeral360 · Recuerdo reportado - revisar", body: msg });
