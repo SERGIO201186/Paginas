@@ -433,7 +433,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
   <div class="rec-wrap">
     <div class="form-rec">
       <div class="aviso-contenido">
-        📋 <strong>Aviso:</strong> Al publicar fotos o mensajes confirmas que tienes los derechos sobre el contenido y aceptas nuestros <a href="#" onclick="abrirTerminos();return false;" style="color:var(--marino);font-weight:600;">Términos de uso</a>. Todo contenido es revisado antes de publicarse.
+        📋 <strong>Aviso:</strong> Al publicar fotos o mensajes confirmas que tienes los derechos sobre el contenido y aceptas nuestros <a href="#" onclick="abrirTerminos();return false;" style="color:var(--marino);font-weight:600;">Términos de uso</a>. Tu publicación aparece de inmediato; si varias personas la marcan como "no me gusta", la funeraria la revisará y podrá retirarla.
       </div>
       <div class="campo">
         <label for="recMensaje">Tu mensaje</label>
@@ -528,7 +528,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
         Queda estrictamente prohibido publicar contenido que: (a) sea difamatorio, obsceno o ilegal; (b) viole derechos de terceros; (c) contenga información falsa; (d) acose o intimide a otros usuarios. Funeral360 se reserva el derecho de eliminar cualquier contenido que viole estas normas sin previo aviso.
 
         <h3>4. Moderación</h3>
-        Todo el contenido publicado está sujeto a revisión y aprobación por parte de la funeraria administradora antes de hacerse visible. Funeral360 no garantiza la publicación de ningún contenido.
+        El contenido se publica de forma inmediata, sin revisión previa. Si un contenido acumula suficientes reportes ("no me gusta") de otros usuarios, será revisado por la funeraria administradora, que podrá retirarlo en cualquier momento sin previo aviso si viola estas normas.
 
         <h3>5. Responsabilidad</h3>
         El usuario es el único responsable del contenido que publica. Funeral360 no asume responsabilidad por el contenido generado por los usuarios. Al publicar, declaras que tienes los derechos necesarios sobre dicho contenido.
@@ -893,10 +893,11 @@ async function enviarRecuerdo() {
     const resp=await api('publicarRecuerdo',{servicioId:servicio.id,nombre:usuario.nombre,mensaje,pieFoto,imagenBase64:fotoBase64||null,tipoMime:'image/jpeg'},'POST');
     if(resp.ok){
       aviso.className='aviso exito';
-      aviso.textContent='✓ Tu recuerdo fue enviado. Aparecerá tras ser revisado.';
+      aviso.textContent='✓ ¡Tu recuerdo ya está publicado!';
       document.getElementById('recMensaje').value='';
       document.getElementById('recPieFoto').value='';
       quitarFoto();
+      cargarRecuerdos();
     } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al enviar.'; }
   } catch(e){ aviso.className='aviso error'; aviso.textContent='Sin conexión.'; }
   btn.disabled=false; btn.textContent='Publicar recuerdo';
