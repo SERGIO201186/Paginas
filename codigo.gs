@@ -361,14 +361,29 @@ function responderJSON_(obj) {
 // ============================================================
 
 function crearFuneraria_(datos) {
-  const masterKey = getConfig_("ADMIN_MASTER_KEY");
-  if (datos.masterKey !== masterKey) {
+  if (!validarMaster_(datos.masterKey)) {
     return { error: "No autorizado." };
   }
   const sheet = getSheet_("Funerarias");
   const id = generarId_();
   const codigoAcceso = Math.random().toString(36).substring(2, 8).toUpperCase();
-  sheet.appendRow([id, datos.nombre, codigoAcceso, true, new Date().toISOString()]);
+  // Escribe por nombre de columna (no por posición fija) para no depender del
+  // orden exacto del encabezado y no perder whatsapp/email como pasaba antes.
+  const enc = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const fila = new Array(enc.length).fill("");
+  const setCampo = (nombreCol, valor) => {
+    const idx = enc.indexOf(nombreCol);
+    if (idx >= 0) fila[idx] = valor;
+  };
+  setCampo("id", id);
+  setCampo("nombre", datos.nombre || "");
+  setCampo("codigoAcceso", codigoAcceso);
+  setCampo("activo", true);
+  setCampo("creadoEn", new Date().toISOString());
+  setCampo("plan", "gratis");
+  setCampo("whatsapp", datos.whatsapp || "");
+  setCampo("email", datos.email || "");
+  sheet.appendRow(fila);
   return { ok: true, id, codigoAcceso };
 }
 
@@ -1411,28 +1426,18 @@ function actualizarFuneraria_(datos) {
   const idIdx = enc.indexOf("id");
   for (let i = 1; i < filas.length; i++) {
     if (filas[i][idIdx] === datos.id) {
+      // obtenerOCrearColumna_ agrega la columna si la hoja es de antes de que
+      // existiera (por eso antes se guardaba "bien" pero nunca aparecía).
       ["nombre", "whatsapp", "email"].forEach(campo => {
         if (datos[campo] !== undefined) {
-          const colIdx = enc.indexOf(campo);
-          if (colIdx >= 0) sheet.getRange(i + 1, colIdx + 1).setValue(datos[campo]);
+          const colIdx = obtenerOCrearColumna_(sheet, campo);
+          sheet.getRange(i + 1, colIdx + 1).setValue(datos[campo]);
         }
       });
       return { ok: true };
     }
   }
   return { error: "Funeraria no encontrada." };
-}
-
-// Actualizar crearFuneraria para aceptar whatsapp y email
-// (ya existe la función, la extendemos con campos extra)
-function crearFunerariaExtendida_(datos) {
-  if (!validarMaster_(datos.masterKey)) return { error: "No autorizado." };
-  const sheet = getSheet_("Funerarias");
-  const id = generarId_();
-  const codigoAcceso = Math.random().toString(36).substring(2, 8).toUpperCase();
-  sheet.appendRow([id, datos.nombre, codigoAcceso, true, new Date().toISOString(), datos.whatsapp||"", datos.email||""]);
-  // Dar créditos de bienvenida al nuevo código de acceso si aplica
-  return { ok: true, id, codigoAcceso };
 }
 
 // ============================================================
