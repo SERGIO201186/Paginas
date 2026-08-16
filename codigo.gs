@@ -48,7 +48,7 @@ function inicializarEncabezados_(sheet, nombre) {
     "VideoLlamadas": ["id", "servicioId", "titulo", "enlace", "fecha", "hora", "creadoEn", "linkActivo", "compradores"],
     "Pagos": ["id", "servicioId", "monto", "moneda", "stripeSessionId", "stripePaymentIntentId", "estado", "creadoEn", "completadoEn", "tipo", "email", "creditos"],
     "Funerarias": ["id", "nombre", "codigoAcceso", "activo", "creadoEn", "plan", "whatsapp", "email", "suscripcionActiva", "venceSuscripcion"],
-    "Recuerdos": ["id", "servicioId", "nombre", "mensaje", "pieFoto", "driveFileId", "urlFoto", "estadoModeracion", "creadoEn"],
+    "Recuerdos": ["id", "servicioId", "nombre", "mensaje", "pieFoto", "driveFileId", "urlFoto", "estadoModeracion", "creadoEn", "reporteRevisado"],
     "Veladoras": ["id", "servicioId", "nombre", "creadoEn"],
     "Creditos": ["email", "servicioId", "saldo", "actualizadoEn"],
     "Gestos": ["id", "servicioId", "email", "nombre", "tipoGesto", "creditos", "direccion", "creadoEn"],
@@ -70,6 +70,18 @@ function inicializarEncabezados_(sheet, nombre) {
 
 function generarId_() {
   return Utilities.getUuid();
+}
+
+// Devuelve el índice 0-based de una columna, agregándola al final de la hoja
+// si todavía no existe (para migrar hojas creadas antes de agregar el campo).
+function obtenerOCrearColumna_(sheet, nombreCol) {
+  const enc = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  let idx = enc.indexOf(nombreCol);
+  if (idx < 0) {
+    idx = enc.length;
+    sheet.getRange(1, idx + 1).setValue(nombreCol);
+  }
+  return idx;
 }
 
 function limpiarValor_(val) {
@@ -138,6 +150,9 @@ function doGet(e) {
         break;
       case "obtenerRecuerdosPendientes":
         resultado = obtenerRecuerdosPendientes_(e.parameter.servicioId);
+        break;
+      case "obtenerRecuerdosReportados":
+        resultado = obtenerRecuerdosReportados_(e.parameter.servicioId);
         break;
       case "obtenerSaldo":
         resultado = obtenerSaldo_(e.parameter.email, e.parameter.servicioId);
@@ -317,6 +332,9 @@ function doPost(e) {
         break;
       case "darCreditosGratis":
         resultado = darCreditosGratisPublico_(datos);
+        break;
+      case "verificarMasterKey":
+        resultado = { ok: datos.masterKey === getConfig_("ADMIN_MASTER_KEY") };
         break;
       default:
         resultado = { error: "Acción no reconocida: " + accion };
@@ -821,16 +839,23 @@ function publicarRecuerdo_(datos) {
 
   const sheet = getSheet_("Recuerdos");
   const id = generarId_();
+  // Se publica de inmediato, sin aprobación previa. Si otros visitantes lo
+  // reportan con suficientes dislikes, la funeraria podrá retirarlo después
+  // (ver reaccionarRecuerdo_ y obtenerRecuerdosReportados_).
   sheet.appendRow([
     id, datos.servicioId, datos.nombre,
     datos.mensaje || "", datos.pieFoto || "",
     driveFileId, urlFoto,
-    "pendiente", new Date().toISOString()
+    "aprobado", new Date().toISOString()
   ]);
 
-  return { ok: true, mensaje: "Tu recuerdo fue enviado y aparecerá tras ser revisado." };
+  return { ok: true, mensaje: "Tu recuerdo ya está publicado." };
 }
 
+// Los recuerdos se publican solos (ver publicarRecuerdo_), así que esta función
+// ya no "aprueba" contenido nuevo: se usa para resolver un reporte por dislikes.
+// aprobada:true  -> se descarta el reporte y el recuerdo se queda publicado.
+// aprobada:false -> se retira el recuerdo de la página pública.
 function moderarRecuerdo_(datos) {
   if (!validarFuneraria_(datos.funerariaId, datos.codigoAcceso)) {
     return { error: "No autorizado." };
@@ -841,14 +866,20 @@ function moderarRecuerdo_(datos) {
   const idIdx = enc.indexOf("id");
   const estadoIdx = enc.indexOf("estadoModeracion");
   const driveIdx = enc.indexOf("driveFileId");
+  const pieFotoIdx = enc.indexOf("pieFoto");
 
   for (let i = 1; i < filas.length; i++) {
     if (filas[i][idIdx] === datos.id) {
       if (datos.aprobada) {
         sheet.getRange(i + 1, estadoIdx + 1).setValue("aprobado");
+        const reporteIdx = obtenerOCrearColumna_(sheet, "reporteRevisado");
+        sheet.getRange(i + 1, reporteIdx + 1).setValue(true);
       } else {
         sheet.getRange(i + 1, estadoIdx + 1).setValue("rechazado");
-        if (filas[i][driveIdx]) {
+        // driveFileId guarda un emoji (no un archivo real) cuando la fila es un
+        // gesto/vela premium — solo intentar borrar de Drive para fotos/recuerdos.
+        const esGestoOVela = pieFotoIdx >= 0 && (filas[i][pieFotoIdx] === "gesto" || filas[i][pieFotoIdx] === "vela_premium");
+        if (!esGestoOVela && filas[i][driveIdx]) {
           try { DriveApp.getFileById(filas[i][driveIdx]).setTrashed(true); } catch(e) {}
         }
       }
@@ -905,6 +936,43 @@ function obtenerRecuerdosPendientes_(servicioId) {
       resultado.push(obj);
     }
   }
+  return { ok: true, recuerdos: resultado };
+}
+
+// Recuerdos ya publicados que acumularon suficientes dislikes (ver
+// UMBRAL_DISLIKES_ALERTA) como para que la funeraria los revise y decida si
+// los retira. Se excluyen los que la funeraria ya marcó como revisados.
+function obtenerRecuerdosReportados_(servicioId) {
+  const sheetReac = getSheet_("Reacciones");
+  const filasReac = sheetReac.getDataRange().getValues();
+  const encReac = filasReac[0];
+  const recIdIdxReac = encReac.indexOf("recuerdoId");
+  const tipoIdxReac = encReac.indexOf("tipo");
+  const dislikesPorRecuerdo = {};
+  for (let i = 1; i < filasReac.length; i++) {
+    if (filasReac[i][tipoIdxReac] === "dislike") {
+      const rid = filasReac[i][recIdIdxReac];
+      dislikesPorRecuerdo[rid] = (dislikesPorRecuerdo[rid] || 0) + 1;
+    }
+  }
+
+  const sheet = getSheet_("Recuerdos");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const reporteIdx = enc.indexOf("reporteRevisado");
+  const resultado = [];
+  for (let i = 1; i < filas.length; i++) {
+    const obj = {};
+    enc.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
+    if (obj.servicioId !== servicioId || obj.estadoModeracion !== "aprobado") continue;
+    const dislikes = dislikesPorRecuerdo[obj.id] || 0;
+    const yaRevisado = reporteIdx >= 0 && filas[i][reporteIdx] === true;
+    if (dislikes >= UMBRAL_DISLIKES_ALERTA && !yaRevisado) {
+      obj.dislikes = dislikes;
+      resultado.push(obj);
+    }
+  }
+  resultado.sort((a, b) => b.dislikes - a.dislikes);
   return { ok: true, recuerdos: resultado };
 }
 
@@ -1407,6 +1475,9 @@ function darCreditosGratis_(email, servicioId) {
 // REACCIONES (like / dislike) CON ALERTAS
 // ============================================================
 
+// A partir de cuántos dislikes se alerta a la funeraria para que revise un recuerdo.
+const UMBRAL_DISLIKES_ALERTA = 3;
+
 function reaccionarRecuerdo_(datos) {
   if (!datos.recuerdoId || !datos.tipo || !datos.nombre) {
     return { error: "Faltan datos." };
@@ -1417,6 +1488,7 @@ function reaccionarRecuerdo_(datos) {
   const enc = filas[0];
   const recIdIdx = enc.indexOf("recuerdoId");
   const nombreIdx = enc.indexOf("nombre");
+  const tipoIdx = enc.indexOf("tipo");
   for (let i = 1; i < filas.length; i++) {
     if (filas[i][recIdIdx] === datos.recuerdoId && filas[i][nombreIdx] === datos.nombre) {
       return { ok: true, yaExistia: true }; // ya reaccionó, no duplicar
@@ -1425,29 +1497,86 @@ function reaccionarRecuerdo_(datos) {
   const id = generarId_();
   sheet.appendRow([id, datos.servicioId, datos.recuerdoId, datos.tipo, datos.nombre, new Date().toISOString()]);
 
-  // Si es negativa, enviar alertas
+  // Al llegar exactamente al umbral, avisar una sola vez (no en cada dislike posterior)
   if (datos.tipo === "dislike") {
-    const wha = getConfigMaestro_("whatsapp");
-    const emailAlerta = getConfigMaestro_("email");
-    const msg = "Reaccion negativa en pagina " + datos.servicioId + " por " + datos.nombre;
-
-    if (emailAlerta) {
-      try {
-        MailApp.sendEmail({
-          to: emailAlerta,
-          subject: "Alerta: reaccion negativa en pagina conmemorativa",
-          body: msg + "\nRecuerdo ID: " + datos.recuerdoId
-        });
-      } catch(e) {}
+    let totalDislikes = 1; // cuenta la reacción que se acaba de agregar
+    for (let i = 1; i < filas.length; i++) {
+      if (filas[i][recIdIdx] === datos.recuerdoId && filas[i][tipoIdx] === "dislike") totalDislikes++;
     }
-    if (wha) {
-      try {
-        const urlWA = "https://api.whatsapp.com/send?phone=" + wha + "&text=" + encodeURIComponent(msg);
-        UrlFetchApp.fetch(urlWA, { muteHttpExceptions: true });
-      } catch(e) {}
+    if (totalDislikes === UMBRAL_DISLIKES_ALERTA) {
+      alertarRecuerdoReportado_(datos.recuerdoId, datos.servicioId, totalDislikes);
     }
   }
   return { ok: true };
+}
+
+// Notifica a la funeraria dueña de la página (y, para supervisión, al administrador
+// de la plataforma) que un recuerdo llegó al umbral de dislikes, para que decida si
+// lo retira desde "Recuerdos reportados" en su panel.
+function alertarRecuerdoReportado_(recuerdoId, servicioId, totalDislikes) {
+  try {
+    const sheetR = getSheet_("Recuerdos");
+    const filasR = sheetR.getDataRange().getValues();
+    const encR = filasR[0];
+    const idIdxR = encR.indexOf("id");
+    const nombreIdxR = encR.indexOf("nombre");
+    let nombreAutor = "";
+    for (let i = 1; i < filasR.length; i++) {
+      if (filasR[i][idIdxR] === recuerdoId) { nombreAutor = filasR[i][nombreIdxR]; break; }
+    }
+
+    const sheetS = getSheet_("Servicios");
+    const filasS = sheetS.getDataRange().getValues();
+    const encS = filasS[0];
+    const idIdxS = encS.indexOf("id");
+    const funerariaIdIdxS = encS.indexOf("funerariaId");
+    const nombreFinadoIdxS = encS.indexOf("nombreFinado");
+    let funerariaId = "", nombreFinado = "";
+    for (let i = 1; i < filasS.length; i++) {
+      if (filasS[i][idIdxS] === servicioId) {
+        funerariaId = filasS[i][funerariaIdIdxS];
+        nombreFinado = filasS[i][nombreFinadoIdxS];
+        break;
+      }
+    }
+
+    let whatsappFuneraria = "", emailFuneraria = "";
+    if (funerariaId) {
+      const sheetF = getSheet_("Funerarias");
+      const filasF = sheetF.getDataRange().getValues();
+      const encF = filasF[0];
+      const idIdxF = encF.indexOf("id");
+      const whaIdxF = encF.indexOf("whatsapp");
+      const emailIdxF = encF.indexOf("email");
+      for (let i = 1; i < filasF.length; i++) {
+        if (filasF[i][idIdxF] === funerariaId) {
+          whatsappFuneraria = whaIdxF >= 0 ? filasF[i][whaIdxF] : "";
+          emailFuneraria = emailIdxF >= 0 ? filasF[i][emailIdxF] : "";
+          break;
+        }
+      }
+    }
+
+    const msg = "⚠️ Recuerdo reportado en \"" + (nombreFinado || servicioId) + "\"\n" +
+      "De: " + (nombreAutor || "Anónimo") + "\n" +
+      "Recibió " + totalDislikes + " \"no me gusta\". Revísalo en tu panel (Recuerdos reportados) y decide si lo retiras.";
+
+    const destinatariosEmail = [emailFuneraria, getConfigMaestro_("email")].filter(Boolean);
+    destinatariosEmail.forEach(function(destino) {
+      try {
+        MailApp.sendEmail({ to: destino, subject: "Funeral360 · Recuerdo reportado - revisar", body: msg });
+      } catch(e) {}
+    });
+
+    const destinatariosWA = [whatsappFuneraria, getConfigMaestro_("whatsapp")].filter(Boolean);
+    destinatariosWA.forEach(function(numero) {
+      try {
+        UrlFetchApp.fetch("https://api.whatsapp.com/send?phone=" + numero + "&text=" + encodeURIComponent(msg), { muteHttpExceptions: true });
+      } catch(e) {}
+    });
+  } catch (e) {
+    // Nunca bloquear la reacción del visitante si falla el envío de alertas
+  }
 }
 
 // ============================================================
