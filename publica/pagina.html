@@ -273,11 +273,19 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 .sidebar-item-txt{font-size:12.5px;color:var(--carbon-suave);line-height:1.45;}
 .sidebar-item-nombre{font-weight:600;color:var(--marino-osc);}
 .sidebar-vacio{font-size:12.5px;color:var(--carbon-suave);text-align:center;padding:6px 0;}
-.sidebar-prevision{background:var(--hueso);border-style:dashed;}
-.sidebar-prevision-titulo{font-size:12.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:6px;}
-.sidebar-prevision-txt{font-size:12px;color:var(--carbon-suave);line-height:1.5;margin-bottom:10px;}
-.sidebar-prevision-btn{display:inline-block;font-size:12.5px;font-weight:600;color:var(--marino);text-decoration:none;}
-.sidebar-prevision-btn:hover{text-decoration:underline;}
+
+/* ===== BANNER PLANES A FUTURO ===== */
+/* Visible en cualquier tamaño de pantalla (a diferencia de los paneles
+   laterales, que solo aparecen en escritorio ancho) para que se vea
+   siempre, incluido en celular. */
+.banner-prevision{padding:14px 20px;background:var(--hueso-osc);border-bottom:1px solid var(--borde);}
+.banner-prevision-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.banner-prevision-ico{font-size:24px;flex-shrink:0;}
+.banner-prevision-texto{flex:1;min-width:180px;}
+.banner-prevision-titulo{font-size:12.5px;font-weight:700;color:var(--carbon);margin-bottom:2px;}
+.banner-prevision-desc{font-size:11.5px;color:var(--carbon-suave);line-height:1.4;}
+.banner-prevision-btn{flex-shrink:0;background:var(--marino);color:var(--blanco);text-decoration:none;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:20px;white-space:nowrap;}
+.banner-prevision-btn:hover{background:var(--marino-med);}
 
 /* ===== LEGAL ===== */
 /* Modal de términos */
@@ -402,11 +410,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
       <button class="btn-compartir" id="btnCompartirCopiar" onclick="copiarLinkPagina()">🔗 Copiar link</button>
     </div>
   </div>
-  <div class="sidebar-card sidebar-prevision" id="sidebarPrevision" style="display:none;">
-    <div class="sidebar-prevision-titulo">📋 Planes a futuro</div>
-    <div class="sidebar-prevision-txt">Muchas familias prefieren organizar estos detalles con tiempo, sin prisas. Si te interesa conocer opciones, con gusto te orientamos.</div>
-    <a href="#" id="btnPrevision" target="_blank" rel="noopener noreferrer" class="sidebar-prevision-btn">Más información →</a>
-  </div>
+
 </aside>
 <aside class="sidebar sidebar-der" id="sidebarDer">
   <div class="sidebar-card">
@@ -475,6 +479,18 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
     <span id="textoVeladora">Encender veladora</span>
   </button>
   <div class="veladoras-info" id="veladoras-info"></div>
+</div>
+
+<!-- BANNER PLANES A FUTURO -->
+<div class="banner-prevision" id="bannerPrevision" style="display:none;">
+  <div class="banner-prevision-inner">
+    <div class="banner-prevision-ico">📋</div>
+    <div class="banner-prevision-texto">
+      <div class="banner-prevision-titulo">Planes a futuro</div>
+      <div class="banner-prevision-desc">Organiza estos detalles con tiempo, sin prisas. Con gusto te orientamos.</div>
+    </div>
+    <a href="#" id="btnPrevision" target="_blank" rel="noopener noreferrer" class="banner-prevision-btn">Más info →</a>
+  </div>
 </div>
 
 <!-- TABS -->
@@ -960,12 +976,11 @@ function configurarCompartir_(s) {
 // Aviso discreto de planes funerarios a futuro — solo se muestra si la
 // funeraria tiene un WhatsApp público configurado (si no, se omite).
 function configurarPrevision_(s) {
-  const tarjeta = document.getElementById('sidebarPrevision');
-  if (!tarjeta || !s.funerariaWhatsapp) return;
-  const nombreFuneraria = s.funerariaNombre || 'la funeraria';
+  const banner = document.getElementById('bannerPrevision');
+  if (!banner || !s.funerariaWhatsapp) return;
   const msg = 'Hola, vi la página conmemorativa de ' + s.nombreFinado + ' y me gustaría conocer más sobre sus planes a futuro.';
   document.getElementById('btnPrevision').href = 'https://wa.me/' + s.funerariaWhatsapp + '?text=' + encodeURIComponent(msg);
-  tarjeta.style.display = 'block';
+  banner.style.display = 'block';
 }
 
 function copiarLinkPagina() {
