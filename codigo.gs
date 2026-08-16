@@ -59,6 +59,7 @@ function inicializarEncabezados_(sheet, nombre) {
     "PaquetesCreditos": ["id", "creditos", "precio", "etiqueta", "activo", "creadoEn"],
     "ConfigMaestro": ["clave", "valor"],
     "Reacciones": ["id", "servicioId", "recuerdoId", "tipo", "nombre", "creadoEn"],
+    "Comentarios": ["id", "servicioId", "recuerdoId", "nombre", "texto", "creadoEn"],
     "SolicitudesVL": ["id", "servicioId", "email", "nombre", "precio", "stripeSessionId", "estado", "creadoEn"],
     "ComisionesFuneraria": ["id", "funerariaId", "servicioId", "concepto", "montoTotal", "comision25", "estado", "creadoEn"],
     "SuscripcionesFuneraria": ["id", "funerariaId", "tipo", "monto", "stripeSessionId", "estado", "creadoEn", "venceEn"]
@@ -149,6 +150,9 @@ function doGet(e) {
         break;
       case "obtenerVeladoras":
         resultado = obtenerVeladoras_(e.parameter.servicioId);
+        break;
+      case "obtenerComentarios":
+        resultado = obtenerComentarios_(e.parameter.recuerdoId);
         break;
       case "obtenerRecuerdosPendientes":
         resultado = obtenerRecuerdosPendientes_(e.parameter.servicioId);
@@ -334,6 +338,9 @@ function doPost(e) {
         break;
       case "reaccionarRecuerdo":
         resultado = reaccionarRecuerdo_(datos);
+        break;
+      case "comentarRecuerdo":
+        resultado = comentarRecuerdo_(datos);
         break;
       case "darCreditosGratis":
         resultado = darCreditosGratisPublico_(datos);
@@ -985,6 +992,32 @@ function obtenerRecuerdos_(servicioId) {
   const resultado = [];
   const pieFotoIdx = enc.indexOf("pieFoto");
   const driveFileIdIdx = enc.indexOf("driveFileId");
+
+  // Contar likes/dislikes por recuerdo en un solo recorrido de la hoja Reacciones
+  const conteoReacciones = {};
+  const sheetReac = getSheet_("Reacciones");
+  const filasReac = sheetReac.getDataRange().getValues();
+  const encReac = filasReac[0];
+  const recIdIdxReac = encReac.indexOf("recuerdoId");
+  const tipoIdxReac = encReac.indexOf("tipo");
+  for (let i = 1; i < filasReac.length; i++) {
+    const rid = filasReac[i][recIdIdxReac];
+    if (!conteoReacciones[rid]) conteoReacciones[rid] = { likes: 0, dislikes: 0 };
+    if (filasReac[i][tipoIdxReac] === "like") conteoReacciones[rid].likes++;
+    else if (filasReac[i][tipoIdxReac] === "dislike") conteoReacciones[rid].dislikes++;
+  }
+
+  // Contar comentarios por recuerdo
+  const conteoComentarios = {};
+  const sheetCom = getSheet_("Comentarios");
+  const filasCom = sheetCom.getDataRange().getValues();
+  const encCom = filasCom[0];
+  const recIdIdxCom = encCom.indexOf("recuerdoId");
+  for (let i = 1; i < filasCom.length; i++) {
+    const rid = filasCom[i][recIdIdxCom];
+    conteoComentarios[rid] = (conteoComentarios[rid] || 0) + 1;
+  }
+
   for (let i = 1; i < filas.length; i++) {
     const obj = {};
     enc.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
@@ -1005,11 +1038,45 @@ function obtenerRecuerdos_(servicioId) {
           if (m) obj.urlFoto = "https://lh3.googleusercontent.com/d/" + m[0];
         }
       }
+      obj.likes = (conteoReacciones[obj.id] && conteoReacciones[obj.id].likes) || 0;
+      obj.dislikes = (conteoReacciones[obj.id] && conteoReacciones[obj.id].dislikes) || 0;
+      obj.comentarios = conteoComentarios[obj.id] || 0;
       resultado.push(obj);
     }
   }
   resultado.sort((a, b) => new Date(b.creadoEn) - new Date(a.creadoEn));
   return { ok: true, recuerdos: resultado };
+}
+
+// Comentarios de un recuerdo (o de una foto de portada/perfil, usando el mismo
+// esquema de id sintético "foto_portada:<servicioId>" / "foto_perfil:<servicioId>"
+// que ya usa reaccionarRecuerdo_ para los likes de esas fotos).
+function obtenerComentarios_(recuerdoId) {
+  if (!recuerdoId) return { error: "Falta recuerdoId." };
+  const sheet = getSheet_("Comentarios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const comentarios = [];
+  for (let i = 1; i < filas.length; i++) {
+    const limpio = {};
+    enc.forEach((h, idx) => limpio[h] = limpiarValor_(filas[i][idx]));
+    if (limpio.recuerdoId === recuerdoId) comentarios.push(limpio);
+  }
+  comentarios.sort((a, b) => new Date(a.creadoEn) - new Date(b.creadoEn));
+  return { ok: true, comentarios: comentarios };
+}
+
+function comentarRecuerdo_(datos) {
+  if (!datos.recuerdoId || !datos.nombre || !datos.texto) {
+    return { error: "Faltan datos." };
+  }
+  const texto = String(datos.texto).trim().slice(0, 500);
+  if (!texto) return { error: "El comentario no puede estar vacío." };
+  const sheet = getSheet_("Comentarios");
+  const id = generarId_();
+  const creadoEn = new Date().toISOString();
+  sheet.appendRow([id, datos.servicioId || "", datos.recuerdoId, datos.nombre, texto, creadoEn]);
+  return { ok: true, id: id, nombre: datos.nombre, texto: texto, creadoEn: creadoEn };
 }
 
 // Listar recuerdos pendientes para el panel admin
