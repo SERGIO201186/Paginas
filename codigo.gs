@@ -13,7 +13,9 @@
  *
  * CONFIGURACIÓN REQUERIDA (Apps Script > Configuración > Propiedades del script):
  *  - STRIPE_SECRET_KEY     -> sk_live_... o sk_test_...
- *  - STRIPE_WEBHOOK_SECRET -> whsec_...
+ *  - STRIPE_WEBHOOK_SECRET -> token propio (no el de Stripe) para proteger la
+ *                             URL del webhook; ver manejarWebhookStripe_ para
+ *                             cómo generarlo y dónde configurarlo en Stripe
  *  - DRIVE_FOLDER_ID       -> ID de la carpeta de Drive raíz donde se guardan fotos
  *  - PRECIO_TRANSFERENCIA  -> monto en MXN, ej. "499"
  *  - ADMIN_MASTER_KEY      -> clave maestra para que TÚ (el desarrollador) administres todo
@@ -778,11 +780,33 @@ function crearSesionPagoStripe_(datos) {
 
 /**
  * Webhook de Stripe: confirma el pago y transfiere la propiedad de la página.
- * Configura esta URL en el dashboard de Stripe:
- * https://tu-script-url/exec?accion=stripeWebhook
+ *
+ * IMPORTANTE — Apps Script no expone las cabeceras HTTP de la petición
+ * entrante (no hay forma de leer "Stripe-Signature"), así que no es posible
+ * validar la firma criptográfica que Stripe genera para cada webhook. Como
+ * protección, esta URL exige un token secreto como parámetro — sin él,
+ * cualquiera que adivine la URL podría simular un "pago completado" sin
+ * pagar nada.
+ *
+ * Configuración necesaria:
+ * 1. En Apps Script > Configuración > Propiedades del script, define
+ *    STRIPE_WEBHOOK_SECRET con un valor largo y aleatorio (no tiene que ser
+ *    el "Signing secret" de Stripe, es un token propio).
+ * 2. En el dashboard de Stripe, configura la URL del webhook con ese mismo
+ *    valor como parámetro "secreto":
+ *    https://tu-script-url/exec?accion=stripeWebhook&secreto=TU_VALOR
+ *
+ * Si STRIPE_WEBHOOK_SECRET no está configurado, se acepta cualquier
+ * petición (igual que antes) para no romper pagos existentes — pero eso
+ * deja la vulnerabilidad abierta, así que se recomienda configurarlo.
  */
 function manejarWebhookStripe_(e) {
   try {
+    const secretoEsperado = getConfig_("STRIPE_WEBHOOK_SECRET");
+    if (secretoEsperado && e.parameter.secreto !== secretoEsperado) {
+      return responderJSON_({ error: "No autorizado." });
+    }
+
     const evento = JSON.parse(e.postData.contents);
 
     if (evento.type === "checkout.session.completed") {
