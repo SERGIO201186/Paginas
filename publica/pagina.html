@@ -232,6 +232,41 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
   padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:700;border:none;cursor:pointer;}
 footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-suave);border-top:1px solid var(--borde);}
 
+/* ===== PANELES LATERALES (solo pantallas anchas) ===== */
+/* En móvil el contenido central ya ocupa todo el ancho; en pantallas anchas
+   sobra espacio a los costados, así que ahí mostramos widgets con datos
+   reales de la página (horarios, veladoras, recuerdos, compartir). */
+.sidebar{display:none;}
+@media (min-width:1300px){
+  .sidebar{
+    display:block;
+    position:fixed;
+    top:24px; /* se recalcula por JS para no tapar la portada/perfil, ver posicionarSidebars_() */
+    width:300px;
+    max-height:calc(100vh - 48px);
+    overflow-y:auto;
+    scrollbar-width:thin;
+    z-index:5;
+  }
+  .sidebar-izq{left:calc(50% - 640px);}
+  .sidebar-der{right:calc(50% - 640px);}
+}
+.sidebar-card{background:var(--blanco);border:1px solid var(--borde);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(43,39,35,0.05);}
+.sidebar-card-titulo{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--dorado-osc);margin-bottom:12px;}
+.sidebar-evento{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--hueso-osc);}
+.sidebar-evento:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.sidebar-evento-tipo{font-size:10.5px;font-weight:700;color:var(--marino-osc);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:3px;}
+.sidebar-evento-datos{font-size:12.5px;color:var(--carbon-suave);line-height:1.55;}
+.sidebar-compartir{display:flex;flex-direction:column;gap:8px;}
+.btn-compartir{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--borde);color:var(--carbon);background:var(--hueso);cursor:pointer;text-align:left;font-family:'Inter',sans-serif;width:100%;}
+.btn-compartir:hover{background:var(--hueso-osc);}
+.sidebar-veladora-item,.sidebar-recuerdo-item{display:flex;gap:9px;align-items:flex-start;margin-bottom:12px;}
+.sidebar-veladora-item:last-child,.sidebar-recuerdo-item:last-child{margin-bottom:0;}
+.sidebar-item-ico{font-size:18px;flex-shrink:0;line-height:1.3;}
+.sidebar-item-txt{font-size:12.5px;color:var(--carbon-suave);line-height:1.45;}
+.sidebar-item-nombre{font-weight:600;color:var(--marino-osc);}
+.sidebar-vacio{font-size:12.5px;color:var(--carbon-suave);text-align:center;padding:6px 0;}
+
 /* ===== LEGAL ===== */
 /* Modal de términos */
 .legal-overlay{
@@ -340,6 +375,32 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 </style>
 </head>
 <body>
+
+<!-- PANELES LATERALES (solo visibles en pantallas anchas) -->
+<aside class="sidebar sidebar-izq" id="sidebarIzq">
+  <div class="sidebar-card">
+    <div class="sidebar-card-titulo">📅 Cuándo y dónde</div>
+    <div id="sidebarEventos"><div class="sidebar-vacio">Cargando...</div></div>
+  </div>
+  <div class="sidebar-card">
+    <div class="sidebar-card-titulo">📤 Comparte esta página</div>
+    <div class="sidebar-compartir">
+      <a href="#" id="btnCompartirWA" target="_blank" rel="noopener noreferrer" class="btn-compartir">💬 WhatsApp</a>
+      <a href="#" id="btnCompartirFB" target="_blank" rel="noopener noreferrer" class="btn-compartir">📘 Facebook</a>
+      <button class="btn-compartir" id="btnCompartirCopiar" onclick="copiarLinkPagina()">🔗 Copiar link</button>
+    </div>
+  </div>
+</aside>
+<aside class="sidebar sidebar-der" id="sidebarDer">
+  <div class="sidebar-card">
+    <div class="sidebar-card-titulo">🕯 Veladoras encendidas</div>
+    <div id="sidebarVeladoras"><div class="sidebar-vacio">Aún no hay veladoras encendidas.</div></div>
+  </div>
+  <div class="sidebar-card">
+    <div class="sidebar-card-titulo">💬 Últimos recuerdos</div>
+    <div id="sidebarRecuerdos"><div class="sidebar-vacio">Sé el primero en dejar un recuerdo.</div></div>
+  </div>
+</aside>
 
 <!-- MODAL REGISTRO (se muestra al entrar) -->
 <div class="overlay" id="overlayRegistro">
@@ -725,6 +786,8 @@ async function cargarServicio() {
   window.planServicio = (respPlan && respPlan.plan) ? respPlan.plan : 'gratis';
   pintarHero(servicio);
   pintarInfo(servicio);
+  pintarSidebarEventos_(servicio);
+  configurarCompartir_(servicio);
   cargarRecuerdos();
   window.dispatchEvent(new Event('servicioListo'));
   cargarVeladoras();
@@ -751,7 +814,24 @@ function pintarHero(s) {
   const def = formatFecha(s.fechaDefuncion);
   document.getElementById('heroFechas').innerHTML = `${nac}<span class="sep">·</span>${def}`;
   if (s.biografia){const b=document.getElementById('heroBio');b.textContent=s.biografia;b.style.display='block';}
+  posicionarSidebars_();
 }
+
+// Los paneles laterales usan position:fixed; su altura de portada/nombre/bio
+// varía por finado, así que se recalcula dónde empiezan para no taparlos
+// (deben quedar justo debajo de la barra de pestañas, que es sticky con z-index propio).
+function posicionarSidebars_() {
+  const tabsNav = document.querySelector('.tabs-nav');
+  const sidebars = document.querySelectorAll('.sidebar');
+  if (!tabsNav || !sidebars.length) return;
+  const top = Math.max(24, Math.round(tabsNav.getBoundingClientRect().bottom + 16));
+  sidebars.forEach(el => {
+    el.style.top = top + 'px';
+    el.style.maxHeight = 'calc(100vh - ' + (top + 24) + 'px)';
+  });
+}
+window.addEventListener('load', posicionarSidebars_);
+window.addEventListener('resize', posicionarSidebars_);
 
 function generarMapa(direccion) {
   if (!direccion || direccion.trim() === '') return '';
@@ -785,14 +865,74 @@ function pintarInfo(s) {
   if(s.reglasPublicacion){const av=document.getElementById('reglasAviso');av.textContent=s.reglasPublicacion;av.style.display='block';}
 }
 
+// ===== PANEL LATERAL: eventos =====
+function pintarSidebarEventos_(s) {
+  const cont = document.getElementById('sidebarEventos');
+  if (!cont) return;
+  const eventos = [
+    {p:'Cepelio', fecha:s.fechaCepelio, hora:s.horaCepelio, ubic:s.ubicacionCepelio},
+    {p:'Misa', fecha:s.fechaMisa, hora:s.horaMisa, ubic:s.ubicacionMisa},
+    {p:'Salida', fecha:s.fechaSalida, hora:s.horaSalida, ubic:s.ubicacionSalida}
+  ].filter(e => e.fecha || e.hora || e.ubic);
+
+  if (eventos.length === 0) {
+    cont.innerHTML = '<div class="sidebar-vacio">Aún no hay horarios publicados.</div>';
+    return;
+  }
+  cont.innerHTML = eventos.map(e => `
+    <div class="sidebar-evento">
+      <div class="sidebar-evento-tipo">${esc(e.p)}</div>
+      <div class="sidebar-evento-datos">
+        ${formatFecha(e.fecha)} · ${formatHora(e.hora)}
+        ${e.ubic ? '<br>' + esc(e.ubic) : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== PANEL LATERAL: compartir =====
+function configurarCompartir_(s) {
+  const url = window.location.href;
+  const mensaje = 'Te comparto la página conmemorativa de ' + s.nombreFinado + ': ' + url;
+  const btnWA = document.getElementById('btnCompartirWA');
+  const btnFB = document.getElementById('btnCompartirFB');
+  if (btnWA) btnWA.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje);
+  if (btnFB) btnFB.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+}
+
+function copiarLinkPagina() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    mostrarToast('🔗 Link copiado');
+  }).catch(() => {
+    mostrarToast('No se pudo copiar el link');
+  });
+}
+
 // ===== VELADORAS =====
+function pintarVeladoras_(resp) {
+  if (resp.total > 0) {
+    const n = resp.nombres.slice(0,3).join(', ') + (resp.nombres.length>3 ? ' y ' + (resp.nombres.length-3) + ' más' : '');
+    document.getElementById('veladoras-info').textContent = '🕯 ' + resp.total + ' · ' + n;
+  }
+  const sidebar = document.getElementById('sidebarVeladoras');
+  if (sidebar) {
+    if (resp.total > 0) {
+      sidebar.innerHTML = resp.nombres.slice(0,6).map(nombre => `
+        <div class="sidebar-veladora-item">
+          <span class="sidebar-item-ico">🕯</span>
+          <span class="sidebar-item-txt"><span class="sidebar-item-nombre">${esc(nombre)}</span> encendió una veladora</span>
+        </div>
+      `).join('');
+    } else {
+      sidebar.innerHTML = '<div class="sidebar-vacio">Aún no hay veladoras encendidas.</div>';
+    }
+  }
+}
+
 async function cargarVeladoras() {
   const resp = await api('obtenerVeladoras',{servicioId:servicio.id});
   if(!resp.ok) return;
-  if(resp.total>0){
-    const n=resp.nombres.slice(0,3).join(', ')+(resp.nombres.length>3?' y '+(resp.nombres.length-3)+' más':'');
-    document.getElementById('veladoras-info').textContent='🕯 '+resp.total+' · '+n;
-  }
+  pintarVeladoras_(resp);
   if(localStorage.getItem('veladora_'+servicio.id)){
     document.getElementById('btnVeladora').classList.add('encendida');
     document.getElementById('textoVeladora').textContent='Veladora encendida';
@@ -806,10 +946,7 @@ async function toggleVeladora() {
     localStorage.setItem('veladora_'+servicio.id,'1');
     document.getElementById('btnVeladora').classList.add('encendida');
     document.getElementById('textoVeladora').textContent='Veladora encendida';
-    if(resp.total>0){
-      const n=resp.nombres.slice(0,3).join(', ')+(resp.nombres.length>3?' y '+(resp.nombres.length-3)+' más':'');
-      document.getElementById('veladoras-info').textContent='🕯 '+resp.total+' · '+n;
-    }
+    pintarVeladoras_(resp);
   }
 }
 
@@ -977,9 +1114,35 @@ function crearBurbuja(r) {
   return div;
 }
 
+// ===== PANEL LATERAL: últimos recuerdos =====
+function pintarSidebarRecuerdos_(recuerdos) {
+  const cont = document.getElementById('sidebarRecuerdos');
+  if (!cont) return;
+  if (!recuerdos || recuerdos.length === 0) {
+    cont.innerHTML = '<div class="sidebar-vacio">Sé el primero en dejar un recuerdo.</div>';
+    return;
+  }
+  cont.innerHTML = recuerdos.slice(0, 5).map(r => {
+    let texto;
+    if (r.tipo === 'vela_premium') texto = 'encendió una vela premium 🕯';
+    else if (r.tipo === 'gesto') texto = 'envió ' + esc(r.emoji || '💐');
+    else {
+      const msg = (r.mensaje || '').slice(0, 70);
+      texto = esc(msg) + (r.mensaje && r.mensaje.length > 70 ? '…' : '');
+    }
+    return `
+      <div class="sidebar-recuerdo-item">
+        <span class="sidebar-item-ico">💬</span>
+        <span class="sidebar-item-txt"><span class="sidebar-item-nombre">${esc(r.nombre)}</span> ${texto}</span>
+      </div>
+    `;
+  }).join('');
+}
+
 async function cargarRecuerdos() {
   const resp = await api('obtenerRecuerdos',{servicioId:servicio.id});
   const lista = document.getElementById('listaRecuerdos');
+  pintarSidebarRecuerdos_(resp.ok ? resp.recuerdos : []);
   if(!resp.ok||!resp.recuerdos||resp.recuerdos.length===0){
     lista.innerHTML='<div class="vacio">Sé el primero en compartir un recuerdo 🕊</div>'; return;
   }
