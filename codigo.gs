@@ -288,6 +288,9 @@ function doPost(e) {
       case "toggleFuneraria":
         resultado = toggleFuneraria_(datos);
         break;
+      case "actualizarFuneraria":
+        resultado = actualizarFuneraria_(datos);
+        break;
       case "asignarPlan":
         resultado = asignarPlan_(datos);
         break;
@@ -1394,6 +1397,30 @@ function toggleFuneraria_(datos) {
     }
   }
   return { error: "No encontrada." };
+}
+
+// Edita nombre/whatsapp/email de una funeraria ya creada. Solo actualiza los
+// campos que vengan definidos en datos, así se puede llamar para cambiar
+// nada más el WhatsApp sin tocar el resto.
+function actualizarFuneraria_(datos) {
+  if (!validarMaster_(datos.masterKey)) return { error: "No autorizado." };
+  if (!datos.id) return { error: "Falta el id de la funeraria." };
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === datos.id) {
+      ["nombre", "whatsapp", "email"].forEach(campo => {
+        if (datos[campo] !== undefined) {
+          const colIdx = enc.indexOf(campo);
+          if (colIdx >= 0) sheet.getRange(i + 1, colIdx + 1).setValue(datos[campo]);
+        }
+      });
+      return { ok: true };
+    }
+  }
+  return { error: "Funeraria no encontrada." };
 }
 
 // Actualizar crearFuneraria para aceptar whatsapp y email
