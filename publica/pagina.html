@@ -1374,13 +1374,27 @@ async function cargarTienda() {
 }
 
 async function actualizarSaldo() {
-  if(!usuario||!servicio) return;
+  if(!usuario||!servicio) return null;
   const resp = await api('obtenerSaldo',{email:usuario.email,servicioId:servicio.id});
   if(resp.ok){
     saldoUsuario=resp.saldo;
     document.getElementById('saldoNum').textContent=saldoUsuario;
     document.getElementById('saldoEmail').textContent=usuario.email;
+    return resp.saldo;
   }
+  return null;
+}
+
+// El webhook de Stripe que acredita el saldo corre por separado del regreso
+// del usuario a la página, así que puede tardar unos segundos. Reintenta
+// unas cuantas veces antes de asumir que el saldo no cambió.
+async function esperarSaldoTrasCompra(saldoAntes) {
+  for (let intento = 0; intento < 6; intento++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const saldo = await actualizarSaldo();
+    if (saldo !== null && saldo > saldoAntes) return true;
+  }
+  return false;
 }
 
 async function selPaquete(el) {
@@ -1422,10 +1436,16 @@ async function selPaquete(el) {
 if(params.get('creditosOk')==='1'){
   window.history.replaceState({}, '', window.location.origin + window.location.pathname + '?p=' + (params.get('p')||slug));
   // Esperar que cargue el servicio para actualizar saldo
-  window.addEventListener('servicioListo', () => {
+  window.addEventListener('servicioListo', async () => {
     document.querySelector('[data-tab="tienda"]').click();
-    actualizarSaldo();
-    mostrarToast('🎉 ¡FuneralCredits agregados! Ya puedes enviar gestos de cariño.', 5000);
+    const saldoAntes = (await actualizarSaldo()) || 0;
+    mostrarToast('Confirmando tu pago…', 3000);
+    const acreditado = await esperarSaldoTrasCompra(saldoAntes);
+    if (acreditado) {
+      mostrarToast('🎉 ¡FuneralCredits agregados! Ya puedes enviar gestos de cariño.', 5000);
+    } else {
+      mostrarToast('Tu pago se está procesando. Si en unos minutos no ves tus créditos, recarga la página.', 7000);
+    }
   });
 } else if(params.get('creditosOk')==='0'){
   window.history.replaceState({}, '', window.location.origin + window.location.pathname + '?p=' + (params.get('p')||slug));
