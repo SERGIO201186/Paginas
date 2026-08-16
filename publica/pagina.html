@@ -601,7 +601,7 @@ let paqueteSeleccionado = null;
 const VIDEOLLAMADA_DISPONIBLE = false; // Función en construcción — pendiente de activar
 
 // ===== UTILIDADES =====
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // Detecta un ID interno (UUID) devuelto por error en vez de un texto legible
 function pareceIdInterno(s){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s).trim());}
@@ -1119,7 +1119,7 @@ async function cargarTienda() {
       banner.innerHTML =
         '<div class="banner-pro-titulo">🔒 Función exclusiva Plan Pro</div>' +
         '<div class="banner-pro-desc">La tienda de FuneralCredits, gestos y flores está disponible en el Plan Pro de Funeral360.</div>' +
-        '<a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" class="banner-pro-btn">Ver Plan Pro →</a>';
+        '<a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" rel="noopener noreferrer" class="banner-pro-btn">Ver Plan Pro →</a>';
       wrap.innerHTML = '';
       wrap.appendChild(banner);
     }

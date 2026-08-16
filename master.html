@@ -393,6 +393,10 @@ body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-s
 const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
 let masterKey = '';
 
+// Escapa texto antes de insertarlo con innerHTML — varios listados incluyen
+// nombres/correos que escribe cualquier visitante anónimo de una página pública.
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 async function api(accion, datos={}, metodo='GET') {
   if (metodo==='GET') {
     const r = await fetch(API_URL+'?'+new URLSearchParams({accion,...datos}));
@@ -426,8 +430,7 @@ async function intentarLogin() {
   btn.textContent = 'Verificando...';
   aviso.style.display='none';
   try {
-    const url = API_URL + '?accion=verificarMasterKey&masterKey=' + encodeURIComponent(key);
-    const r = await fetch(url);
+    const r = await fetch(API_URL, {method:'POST', body:JSON.stringify({accion:'verificarMasterKey', masterKey:key})});
     const data = await r.json();
     if (data && data.ok === true) {
       masterKey = key;
@@ -520,7 +523,7 @@ async function cargarServicios() {
     return '<div class="card-item">' +
       '<div class="card-item-top">' +
         '<div>' +
-          '<div class="card-item-nombre">' + (s.nombreFinado||'—') + '</div>' +
+          '<div class="card-item-nombre">' + esc(s.nombreFinado||'—') + '</div>' +
           '<div class="card-item-meta">' + fecha + '</div>' +
         '</div>' +
         '<span class="badge-activo estado-' + estado + '" style="border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:700;">' + label + '</span>' +
@@ -582,8 +585,8 @@ async function cargarStats() {
   } else {
     lista.innerHTML = resp.pedidosFloresPendientes.map(function(p) {
       return '<div class="card-item">' +
-        '<div class="card-item-nombre">🌺 ' + (p.nombre||'') + '</div>' +
-        '<div class="card-item-meta">' + (p.direccion||'') + ' · ' + (p.email||'') + '</div>' +
+        '<div class="card-item-nombre">🌺 ' + esc(p.nombre) + '</div>' +
+        '<div class="card-item-meta">' + esc(p.direccion) + ' · ' + esc(p.email) + '</div>' +
       '</div>';
     }).join('');
   }
@@ -602,8 +605,8 @@ async function cargarFunerarias() {
     return '<div class="card-item">' +
       '<div class="card-item-top">' +
         '<div>' +
-          '<div class="card-item-nombre">' + (f.nombre||'') + '</div>' +
-          '<div class="card-item-meta">Código: <strong>' + (f.codigoAcceso||'') + '</strong></div>' +
+          '<div class="card-item-nombre">' + esc(f.nombre) + '</div>' +
+          '<div class="card-item-meta">Código: <strong>' + esc(f.codigoAcceso) + '</strong></div>' +
         '</div>' +
         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">' +
           '<span class="' + (activo?'badge-activo':'badge-inactivo') + '">' + (activo?'Activa':'Inactiva') + '</span>' +
@@ -673,9 +676,9 @@ async function cargarArticulos() {
     lista.innerHTML='<div class="vacio">No hay artículos. Agrega el primero abajo.</div>'; return;
   }
   lista.innerHTML = resp.articulos.map(function(a) {
-    return '<div class="art-card"><div class="art-emoji">' + (a.emoji||'') + '</div>' +
-      '<div class="art-info"><div class="art-nombre">' + (a.nombre||'') + '</div>' +
-      '<div class="art-precio">' + (a.creditos||0) + ' FC · ' + (a.tipo||'') + '</div></div>' +
+    return '<div class="art-card"><div class="art-emoji">' + esc(a.emoji) + '</div>' +
+      '<div class="art-info"><div class="art-nombre">' + esc(a.nombre) + '</div>' +
+      '<div class="art-precio">' + (a.creditos||0) + ' FC · ' + esc(a.tipo) + '</div></div>' +
       '<div class="art-acciones"><button class="btn btn-danger btn-pequeno" onclick="eliminarArticulo(\'' + a.id + '\')">✕</button></div></div>';
   }).join('');
 }
@@ -717,7 +720,7 @@ async function cargarPaquetes() {
   lista.innerHTML = resp.paquetes.map(function(p) {
     return '<div class="card-item"><div class="card-item-top"><div>' +
       '<div class="card-item-nombre">' + (p.creditos||0) + ' FC · $' + (p.precio||0) + ' MXN</div>' +
-      (p.etiqueta ? '<div class="card-item-meta">' + p.etiqueta + '</div>' : '') +
+      (p.etiqueta ? '<div class="card-item-meta">' + esc(p.etiqueta) + '</div>' : '') +
       '</div><button class="btn btn-danger btn-pequeno" onclick="eliminarPaquete(\'' + p.id + '\')">✕</button></div></div>';
   }).join('');
 }
@@ -894,8 +897,8 @@ if ('serviceWorker' in navigator) {
     }
     lista.innerHTML = pendientes.map(s => `
       <div class="card-item">
-        <div class="card-item-nombre">${s.nombre || s.email}</div>
-        <div class="card-item-meta">${s.email} · Servicio: ${s.servicioId ? s.servicioId.substring(0,8) : ''}...</div>
+        <div class="card-item-nombre">${esc(s.nombre || s.email)}</div>
+        <div class="card-item-meta">${esc(s.email)} · Servicio: ${esc(s.servicioId ? s.servicioId.substring(0,8) : '')}...</div>
         <div class="card-item-meta">${new Date(s.creadoEn).toLocaleDateString('es-MX')} · $${s.precio} MXN</div>
         <button class="btn btn-pequeno btn-sauce" style="margin-top:8px;"
           onclick="document.getElementById('vlServicioId').value='${s.servicioId}';document.getElementById('vlServicioId').scrollIntoView({behavior:'smooth'});">
