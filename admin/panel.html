@@ -198,6 +198,7 @@
   }
   .estado-en_curso{ background:#EBF4FF; color:#1B2A4A; }
   .estado-transferido{ background:#EEF3EC; color:#1A4D38; }
+  .estado-pendiente_pago{ background:#FEF7E8; color:#8A6414; }
 
   .servicio-meta{
     font-family:'JetBrains Mono',monospace;
@@ -396,6 +397,11 @@
       Esta página ya fue transferida a la familia y no puede editarse.
     </div>
 
+    <div id="bannerPagoPendiente" style="display:none; background:#FEF7E8; color:#8A6414; padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px;">
+      <div style="margin-bottom:8px;">⚠️ Esta página no está publicada todavía: falta completar el pago de activación ($149 MXN). Los datos que capturaste ya quedaron guardados.</div>
+      <button class="btn btn-primario btn-full" id="btnPagarActivacion" onclick="pagarActivacionPendiente()">💳 Completar pago de activación</button>
+    </div>
+
     <div class="seccion-titulo">Datos del finado</div>
     <div class="campo">
       <label for="fNombre">Nombre completo</label>
@@ -542,6 +548,28 @@
     cargarPlan();
   }
 
+  // ===== REGRESO DESDE STRIPE (activación de página) =====
+  (function manejarRegresoPagoPagina() {
+    const params = new URLSearchParams(window.location.search);
+    const resultado = params.get('pagoPaginaOk');
+    if (!resultado) return;
+    window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+    if (!sesion) return;
+    if (resultado === '0') {
+      setTimeout(() => alert('El pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.'), 300);
+      return;
+    }
+    // El webhook de Stripe corre en paralelo y puede tardar unos segundos en
+    // activar la página; se reintenta la carga de la lista varias veces.
+    let intentos = 0;
+    const reintentar = setInterval(async () => {
+      intentos++;
+      await cargarListaServicios();
+      if (intentos >= 5) clearInterval(reintentar);
+    }, 2000);
+    setTimeout(() => alert('✓ Pago confirmado. Tu página se está activando (puede tardar unos segundos en aparecer como "En curso").'), 300);
+  })();
+
   async function cargarPlan() {
     if (!sesion) return;
     const resp = await llamarAPI('obtenerPlanFuneraria', {
@@ -657,11 +685,12 @@
       return;
     }
 
+    const etiquetasEstado = { transferido: 'Transferida', pendiente_pago: 'Pago pendiente', en_curso: 'En curso' };
     lista.innerHTML = resp.servicios.map(s => `
       <div class="servicio-card" onclick="abrirServicio('${s.id}')">
         <div class="servicio-card-top">
           <span class="servicio-nombre">${esc(s.nombreFinado)}</span>
-          <span class="estado-pill estado-${s.estado}">${s.estado === 'transferido' ? 'Transferida' : 'En curso'}</span>
+          <span class="estado-pill estado-${s.estado}">${etiquetasEstado[s.estado] || 'En curso'}</span>
         </div>
         <div class="servicio-meta">Creada el ${new Date(s.creadoEn).toLocaleDateString('es-MX')}</div>
       </div>
@@ -714,16 +743,21 @@
     document.getElementById('fReglas').value = s.reglasPublicacion || '';
 
     const transferido = s.estado === 'transferido';
+    const pendientePago = s.estado === 'pendiente_pago';
     document.getElementById('bannerTransferido').style.display = transferido ? 'block' : 'none';
+    document.getElementById('bannerPagoPendiente').style.display = pendientePago ? 'block' : 'none';
     document.querySelectorAll('#vistaFormulario input, #vistaFormulario textarea').forEach(el => el.disabled = transferido);
     document.getElementById('btnGuardarServicio').style.display = transferido ? 'none' : 'block';
 
-    document.getElementById('seccionPostCreacion').style.display = 'block';
+    // Compartir/QR/moderación/videollamada no aplican hasta que la página esté pagada y activa
+    document.getElementById('seccionPostCreacion').style.display = pendientePago ? 'none' : 'block';
     document.getElementById('linkPublico').textContent = `${URL_PAGINA_PUBLICA}?p=${s.slug}`;
 
-    cargarModeracion();
-    cargarLlamadasAdmin();
-    cargarPedidosFlores();
+    if (!pendientePago) {
+      cargarModeracion();
+      cargarLlamadasAdmin();
+      cargarPedidosFlores();
+    }
     mostrarSeccionTransferencia(id, s.estado);
     if (s.fotoPortadaUrl) document.getElementById("fFotoPortada").value = s.fotoPortadaUrl;
 
@@ -758,28 +792,64 @@
       return;
     }
 
-    let resp;
     if (servicioActualId) {
-      resp = await llamarAPI('actualizarServicio', { id: servicioActualId, ...datos }, 'POST');
-    } else {
-      resp = await llamarAPI('crearServicio', datos, 'POST');
+      // Edición de una página existente (incluye las que están pendiente_pago) — no genera cobro
+      const resp = await llamarAPI('actualizarServicio', { id: servicioActualId, ...datos }, 'POST');
+      if (resp.ok) {
+        aviso.className = 'aviso-estado exito';
+        aviso.textContent = 'Página guardada correctamente.';
+      } else {
+        aviso.className = 'aviso-estado error';
+        aviso.textContent = resp.error || 'Ocurrió un error al guardar.';
+      }
+      return;
     }
 
-    if (resp.ok) {
-      aviso.className = 'aviso-estado exito';
-      aviso.textContent = 'Página guardada correctamente.';
-      if (!servicioActualId) {
-        servicioActualId = resp.id;
-        document.getElementById('seccionPostCreacion').style.display = 'block';
-        document.getElementById('linkPublico').textContent = `${URL_PAGINA_PUBLICA}?p=${resp.slug}`;
-        cargarModeracion();
-        cargarLlamadasAdmin();
-      }
+    // Página nueva: se cobra la activación ($149 MXN) antes de publicarla.
+    // Los datos capturados se guardan de inmediato (estado pendiente_pago) y
+    // el visitante se redirige a Stripe para completar el pago.
+    const btn = document.getElementById('btnGuardarServicio');
+    btn.disabled = true;
+    aviso.className = 'aviso-estado exito';
+    aviso.textContent = 'Redirigiendo al pago seguro de activación...';
+
+    const urlBase = window.location.origin + window.location.pathname;
+    const resp = await llamarAPI('crearSesionActivacionPagina', {
+      ...datos,
+      urlExito: urlBase + '?pagoPaginaOk=1',
+      urlCancelado: urlBase + '?pagoPaginaOk=0'
+    }, 'POST');
+
+    if (resp.ok && resp.urlPago) {
+      window.location.href = resp.urlPago;
     } else {
+      btn.disabled = false;
       aviso.className = 'aviso-estado error';
-      aviso.textContent = resp.error || 'Ocurrió un error al guardar.';
+      aviso.textContent = resp.error || 'Ocurrió un error al generar el cobro.';
     }
   });
+
+  // ===== REINTENTAR PAGO DE UNA PÁGINA PENDIENTE =====
+  async function pagarActivacionPendiente() {
+    if (!servicioActualId) return;
+    const btn = document.getElementById('btnPagarActivacion');
+    btn.disabled = true;
+    btn.textContent = 'Redirigiendo al pago...';
+    const urlBase = window.location.origin + window.location.pathname;
+    const resp = await llamarAPI('reintentarPagoActivacion', {
+      servicioId: servicioActualId,
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso,
+      urlExito: urlBase + '?pagoPaginaOk=1',
+      urlCancelado: urlBase + '?pagoPaginaOk=0'
+    }, 'POST');
+    if (resp.ok && resp.urlPago) {
+      window.location.href = resp.urlPago;
+    } else {
+      btn.disabled = false;
+      btn.textContent = '💳 Completar pago de activación';
+      alert(resp.error || 'No se pudo generar el cobro. Intenta de nuevo.');
+    }
+  }
 
   document.getElementById('btnCopiarLink').addEventListener('click', () => {
     const texto = document.getElementById('linkPublico').textContent;
