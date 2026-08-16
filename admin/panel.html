@@ -460,12 +460,12 @@
       <button class="btn btn-secundario btn-full" id="btnCopiarLink">Copiar link</button>
 
       <div class="seccion-titulo">Código QR para imprimir</div>
-      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">Genera el QR y descárgalo para imprimir en tarjetas o carteles del velorio.</p>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">Genera el QR y descarga un cartel tamaño carta, a color, listo para imprimir y colocar en el velorio.</p>
       <button class="btn btn-sauce btn-full" id="btnGenerarQR" onclick="generarQR()">Generar código QR</button>
       <div class="qr-wrap" id="qrWrap" style="display:none;">
         <div id="qrCanvas"></div>
         <div class="qr-label" id="qrLabel"></div>
-        <button class="btn btn-secundario btn-full" style="margin-top:10px;" onclick="descargarQR()">⬇ Descargar QR</button>
+        <button class="btn btn-secundario btn-full" style="margin-top:10px;" onclick="descargarQR()">⬇ Descargar cartel (tamaño carta)</button>
       </div>
 
       <div class="seccion-titulo">⚠️ Recuerdos reportados <span class="badge" id="badgeReportados" style="display:none;">0</span></div>
@@ -975,43 +975,172 @@ if ('serviceWorker' in navigator) {
     });
   }
 
+  // Parte un texto en líneas que quepan en maxWidth (usa la fuente ya asignada a ctx)
+  function envolverTexto_(ctx, texto, maxWidth) {
+    const palabras = String(texto).split(' ');
+    let linea = '';
+    const lineas = [];
+    palabras.forEach(palabra => {
+      const prueba = linea ? linea + ' ' + palabra : palabra;
+      if (ctx.measureText(prueba).width > maxWidth && linea) {
+        lineas.push(linea);
+        linea = palabra;
+      } else {
+        linea = prueba;
+      }
+    });
+    if (linea) lineas.push(linea);
+    return lineas;
+  }
+
+  function dibujarLineas_(ctx, lineas, x, y, lineHeight, align) {
+    ctx.textAlign = align || 'left';
+    let cy = y;
+    lineas.forEach(l => { ctx.fillText(l, x, cy); cy += lineHeight; });
+    return cy;
+  }
+
+  function redondearRect_(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
   function descargarQR() {
-    const canvas = document.querySelector('#qrCanvas canvas');
-    if (!canvas) { alert('Primero genera el QR.'); return; }
+    if (!document.querySelector('#qrCanvas canvas')) { alert('Primero genera el QR.'); return; }
 
-    // Crear canvas con nombre del finado incluido
-    const nombre = document.getElementById('fNombre').value || 'Página conmemorativa';
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = 260;
-    finalCanvas.height = 300;
-    const ctx = finalCanvas.getContext('2d');
+    const link = document.getElementById('linkPublico').textContent.trim();
+    if (!link) { alert('Primero guarda la página para obtener el link.'); return; }
+    const nombreFinado = document.getElementById('fNombre').value || 'Página conmemorativa';
+    const nombreFuneraria = (sesion && sesion.nombre) || 'Funeral360';
 
-    // Fondo
+    // QR de alta resolución específico para impresión (independiente del preview en pantalla)
+    const qrTemp = document.createElement('div');
+    qrTemp.style.position = 'fixed';
+    qrTemp.style.left = '-9999px';
+    document.body.appendChild(qrTemp);
+    new QRCode(qrTemp, {
+      text: link, width: 560, height: 560,
+      colorDark: '#2B2723', colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    const qrGrande = qrTemp.querySelector('canvas');
+
+    // Hoja carta a color (8.5x11in a ~200dpi)
+    const W = 1700, H = 2200;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
     ctx.fillStyle = '#FAF6F0';
-    ctx.fillRect(0, 0, 260, 300);
+    ctx.fillRect(0, 0, W, H);
 
-    // QR centrado
-    ctx.drawImage(canvas, 30, 20, 200, 200);
-
-    // Nombre del finado
-    ctx.fillStyle = '#5E3A2D';
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(nombre, 130, 245);
-
-    // Texto secundario
-    ctx.fillStyle = '#56504A';
-    ctx.font = '11px Arial';
-    ctx.fillText('Escanea para ver su página de homenaje', 130, 265);
+    // ---- Encabezado: identidad de la funeraria ----
+    const headerH = 460;
+    const gradHeader = ctx.createLinearGradient(0, 0, W, headerH);
+    gradHeader.addColorStop(0, '#5E3A2D');
+    gradHeader.addColorStop(1, '#7A4A3A');
+    ctx.fillStyle = gradHeader;
+    ctx.fillRect(0, 0, W, headerH);
 
     ctx.fillStyle = '#C9A24B';
-    ctx.font = 'bold 10px Arial';
-    ctx.fillText('Páginas Conmemorativas', 130, 285);
+    ctx.font = 'bold 28px Arial';
+    dibujarLineas_(ctx, ['PÁGINA CONMEMORATIVA DIGITAL'], W / 2, 100, 0, 'center');
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 54px Georgia';
+    const lineasFuneraria = envolverTexto_(ctx, nombreFuneraria, W - 260).slice(0, 2);
+    const yTrasNombre = dibujarLineas_(ctx, lineasFuneraria, W / 2, 195, 62, 'center');
+
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '26px Arial';
+    dibujarLineas_(ctx, ['te invita a acompañar a la familia en este momento'], W / 2, yTrasNombre + 15, 0, 'center');
+
+    // ---- Tarjeta con el QR ----
+    const cardX = 150, cardY = 500, cardW = W - 300, cardH = 900;
+    ctx.fillStyle = '#FFFFFF';
+    redondearRect_(ctx, cardX, cardY, cardW, cardH, 28);
+    ctx.fill();
+    ctx.strokeStyle = '#E3D9C8';
+    ctx.lineWidth = 3;
+    redondearRect_(ctx, cardX, cardY, cardW, cardH, 28);
+    ctx.stroke();
+
+    ctx.fillStyle = '#56504A';
+    ctx.font = '30px Arial';
+    dibujarLineas_(ctx, ['Escanea este código con la cámara de tu celular'], W / 2, cardY + 65, 0, 'center');
+
+    ctx.fillStyle = '#5E3A2D';
+    ctx.font = 'bold 44px Georgia';
+    dibujarLineas_(ctx, envolverTexto_(ctx, 'En memoria de ' + nombreFinado, cardW - 100).slice(0, 2), W / 2, cardY + 135, 50, 'center');
+
+    const qrSize = 520, qrX = W / 2 - qrSize / 2, qrY = cardY + 260;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+    ctx.strokeStyle = '#F1E9DD';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+    if (qrGrande) ctx.drawImage(qrGrande, qrX, qrY, qrSize, qrSize);
+
+    ctx.fillStyle = '#8A8378';
+    ctx.font = '20px monospace';
+    dibujarLineas_(ctx, [link.replace(/^https?:\/\//, '')], W / 2, qrY + qrSize + 55, 0, 'center');
+
+    document.body.removeChild(qrTemp);
+
+    // ---- Qué pueden hacer los visitantes en la página ----
+    ctx.fillStyle = '#5E3A2D';
+    ctx.font = 'bold 38px Georgia';
+    dibujarLineas_(ctx, ['¿Qué puedes hacer en esta página?'], W / 2, 1470, 0, 'center');
+
+    const items = [
+      ['🕯', 'Encender una veladora', 'Enciende una veladora virtual en su memoria.'],
+      ['💬', 'Dejar un mensaje', 'Comparte condolencias y palabras de cariño para la familia.'],
+      ['📷', 'Compartir recuerdos', 'Sube fotos y momentos especiales que quieras recordar.'],
+      ['🌹', 'Enviar un gesto', 'Rosas, flores u otros detalles simbólicos de cariño.']
+    ];
+    const itemX = 230, filaAltura = 120;
+    let y = 1545;
+    items.forEach(([emoji, titulo, desc]) => {
+      ctx.beginPath();
+      ctx.arc(itemX, y + 30, 45, 0, Math.PI * 2);
+      ctx.fillStyle = '#F1E9DD';
+      ctx.fill();
+      ctx.font = '46px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#2B2723';
+      ctx.fillText(emoji, itemX, y + 46);
+
+      ctx.fillStyle = '#2B2723';
+      ctx.font = 'bold 30px Arial';
+      dibujarLineas_(ctx, [titulo], itemX + 80, y + 18, 0, 'left');
+
+      ctx.fillStyle = '#56504A';
+      ctx.font = '23px Arial';
+      dibujarLineas_(ctx, envolverTexto_(ctx, desc, W - itemX - 80 - 130), itemX + 80, y + 54, 30, 'left');
+
+      y += filaAltura;
+    });
+
+    // ---- Pie ----
+    const footerY = H - 130;
+    ctx.fillStyle = '#5E3A2D';
+    ctx.fillRect(0, footerY, W, 130);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 26px Arial';
+    dibujarLineas_(ctx, ['Funeral360 · Software para funerarias inteligentes'], W / 2, footerY + 58, 0, 'center');
+    ctx.fillStyle = '#C9A24B';
+    ctx.font = '20px Arial';
+    dibujarLineas_(ctx, ['Página conmemorativa digital'], W / 2, footerY + 92, 0, 'center');
 
     // Descargar
     const a = document.createElement('a');
-    a.download = 'QR_' + nombre.replace(/ /g, '_') + '.png';
-    a.href = finalCanvas.toDataURL('image/png');
+    a.download = 'Cartel_QR_' + nombreFinado.replace(/\s+/g, '_') + '.png';
+    a.href = canvas.toDataURL('image/png');
     a.click();
   }
 
