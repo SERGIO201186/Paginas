@@ -473,10 +473,57 @@ function obtenerServicioPublico_(slug) {
     if (filas[i][encabezados.indexOf("slug")] === slug) {
       const obj = {};
       encabezados.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
+      const likes = contarLikesFotos_(obj.id);
+      obj.likesPortada = likes.portada;
+      obj.likesPerfil = likes.perfil;
+      const funeraria = obtenerFunerariaPublica_(obj.funerariaId);
+      obj.funerariaNombre = funeraria.nombre;
+      obj.funerariaWhatsapp = funeraria.whatsapp;
       return { ok: true, servicio: obj };
     }
   }
   return { ok: false, error: "Página no encontrada." };
+}
+
+// Datos públicos y no sensibles de la funeraria (nombre y WhatsApp) para
+// mostrar en la página del finado — nunca el código de acceso.
+function obtenerFunerariaPublica_(funerariaId) {
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const nombreIdx = enc.indexOf("nombre");
+  const whaIdx = enc.indexOf("whatsapp");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === funerariaId) {
+      return {
+        nombre: filas[i][nombreIdx] || "",
+        whatsapp: whaIdx >= 0 ? (filas[i][whaIdx] || "") : ""
+      };
+    }
+  }
+  return { nombre: "", whatsapp: "" };
+}
+
+// Cuenta los "me gusta" de la foto de portada y de perfil de un servicio.
+// Se guardan en la hoja Reacciones (la misma que usan los recuerdos) con
+// recuerdoId sintético "foto_portada:<servicioId>" / "foto_perfil:<servicioId>",
+// así se reutiliza reaccionarRecuerdo_ sin tocar el esquema de datos.
+function contarLikesFotos_(servicioId) {
+  const sheet = getSheet_("Reacciones");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const recIdIdx = enc.indexOf("recuerdoId");
+  const tipoIdx = enc.indexOf("tipo");
+  const idPortada = "foto_portada:" + servicioId;
+  const idPerfil = "foto_perfil:" + servicioId;
+  let portada = 0, perfil = 0;
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][tipoIdx] !== "like") continue;
+    if (filas[i][recIdIdx] === idPortada) portada++;
+    else if (filas[i][recIdIdx] === idPerfil) perfil++;
+  }
+  return { portada, perfil };
 }
 
 // ============================================================

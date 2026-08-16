@@ -38,17 +38,24 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .aviso.exito{display:block;background:#EEF3EC;color:var(--sauce-osc);}
 
 /* ===== PORTADA ===== */
-.portada{position:relative;height:200px;background:linear-gradient(160deg,#0D1829 0%,#1B2A4A 60%,#B8964E 100%);overflow:hidden;}
+.portada{position:relative;height:260px;background:linear-gradient(160deg,#0D1829 0%,#1B2A4A 60%,#B8964E 100%);overflow:hidden;}
 .portada img{width:100%;height:100%;object-fit:cover;display:block;}
 .portada-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(43,39,35,0.65) 100%);}
-.perfil-wrap{padding:0 20px;margin-top:-52px;position:relative;z-index:2;}
-.perfil-foto-ring{width:104px;height:104px;border-radius:50%;border:4px solid var(--blanco);box-shadow:0 4px 16px rgba(43,39,35,0.2);overflow:hidden;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.portada-like{position:absolute;bottom:14px;right:16px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(17,30,53,0.55);color:var(--blanco);border:none;border-radius:20px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s;}
+.portada-like:hover{background:rgba(17,30,53,0.75);}
+.portada-like.activo{background:rgba(184,150,78,0.92);}
+.portada-like .corazon{font-size:15px;}
+.perfil-wrap{padding:0 20px;margin-top:-70px;position:relative;z-index:2;text-align:center;}
+.perfil-foto-contenedor{position:relative;display:inline-block;}
+.perfil-foto-ring{width:140px;height:140px;border-radius:50%;border:4px solid var(--blanco);box-shadow:0 4px 16px rgba(43,39,35,0.2);overflow:hidden;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:46px;}
 .perfil-foto-ring img{width:100%;height:100%;object-fit:cover;}
-.perfil-info{padding:10px 20px 0;}
+.perfil-like{position:absolute;bottom:-2px;right:-2px;display:flex;align-items:center;gap:3px;background:var(--blanco);border:2px solid var(--blanco);box-shadow:0 2px 6px rgba(43,39,35,0.2);border-radius:20px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--marino-osc);cursor:pointer;font-family:'Inter',sans-serif;}
+.perfil-like.activo{color:var(--rojo);}
+.perfil-info{padding:10px 20px 0;text-align:center;}
 .perfil-nombre{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,5.5vw,36px);color:var(--marino-osc);line-height:1.2;margin-bottom:5px;}
 .perfil-fechas{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon-suave);margin-bottom:8px;}
 .perfil-fechas .sep{color:var(--dorado);margin:0 8px;}
-.perfil-bio{font-size:14px;color:var(--carbon-suave);font-style:italic;max-width:520px;margin-bottom:14px;}
+.perfil-bio{font-size:14px;color:var(--carbon-suave);font-style:italic;max-width:520px;margin:0 auto 14px;}
 
 /* Vela deco */
 .vela-deco{display:inline-flex;align-items:flex-end;width:14px;height:24px;margin-left:6px;vertical-align:middle;}
@@ -266,6 +273,11 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 .sidebar-item-txt{font-size:12.5px;color:var(--carbon-suave);line-height:1.45;}
 .sidebar-item-nombre{font-weight:600;color:var(--marino-osc);}
 .sidebar-vacio{font-size:12.5px;color:var(--carbon-suave);text-align:center;padding:6px 0;}
+.sidebar-prevision{background:var(--hueso);border-style:dashed;}
+.sidebar-prevision-titulo{font-size:12.5px;font-weight:700;color:var(--carbon-suave);margin-bottom:6px;}
+.sidebar-prevision-txt{font-size:12px;color:var(--carbon-suave);line-height:1.5;margin-bottom:10px;}
+.sidebar-prevision-btn{display:inline-block;font-size:12.5px;font-weight:600;color:var(--marino);text-decoration:none;}
+.sidebar-prevision-btn:hover{text-decoration:underline;}
 
 /* ===== LEGAL ===== */
 /* Modal de términos */
@@ -390,6 +402,11 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
       <button class="btn-compartir" id="btnCompartirCopiar" onclick="copiarLinkPagina()">🔗 Copiar link</button>
     </div>
   </div>
+  <div class="sidebar-card sidebar-prevision" id="sidebarPrevision" style="display:none;">
+    <div class="sidebar-prevision-titulo">📋 Planes a futuro</div>
+    <div class="sidebar-prevision-txt">Muchas familias prefieren organizar estos detalles con tiempo, sin prisas. Si te interesa conocer opciones, con gusto te orientamos.</div>
+    <a href="#" id="btnPrevision" target="_blank" rel="noopener noreferrer" class="sidebar-prevision-btn">Más información →</a>
+  </div>
 </aside>
 <aside class="sidebar sidebar-der" id="sidebarDer">
   <div class="sidebar-card">
@@ -424,9 +441,17 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 <div class="portada" id="portadaWrap" style="cursor:pointer;" onclick="abrirFotoFinado('portada')">
   <img id="portadaImg" style="display:none;" alt="">
   <div class="portada-overlay"></div>
+  <button class="portada-like" id="btnLikePortada" onclick="event.stopPropagation();accionRegistrada(()=>toggleLikeFoto_('portada'))">
+    <span class="corazon">🤍</span><span id="likePortadaTexto">Me gusta</span>
+  </button>
 </div>
 <div class="perfil-wrap">
-  <div class="perfil-foto-ring" id="perfilFotoRing" style="cursor:pointer;" onclick="abrirFotoFinado('perfil')">🕊</div>
+  <div class="perfil-foto-contenedor">
+    <div class="perfil-foto-ring" id="perfilFotoRing" style="cursor:pointer;" onclick="abrirFotoFinado('perfil')">🕊</div>
+    <button class="perfil-like" id="btnLikePerfil" onclick="event.stopPropagation();accionRegistrada(()=>toggleLikeFoto_('perfil'))">
+      <span class="corazon">🤍</span><span id="likePerfilTexto">0</span>
+    </button>
+  </div>
 </div>
 <div class="perfil-info">
   <div class="perfil-nombre" id="heroNombre">
@@ -814,7 +839,38 @@ function pintarHero(s) {
   const def = formatFecha(s.fechaDefuncion);
   document.getElementById('heroFechas').innerHTML = `${nac}<span class="sep">·</span>${def}`;
   if (s.biografia){const b=document.getElementById('heroBio');b.textContent=s.biografia;b.style.display='block';}
+  contadorFotoLikes.portada = +s.likesPortada || 0;
+  contadorFotoLikes.perfil = +s.likesPerfil || 0;
+  pintarLikeFoto_('portada', !!localStorage.getItem('like_foto_portada_'+s.id), contadorFotoLikes.portada);
+  pintarLikeFoto_('perfil', !!localStorage.getItem('like_foto_perfil_'+s.id), contadorFotoLikes.perfil);
   posicionarSidebars_();
+}
+
+// ===== LIKES EN FOTO DE PORTADA Y DE PERFIL =====
+let contadorFotoLikes = { portada: 0, perfil: 0 };
+
+function pintarLikeFoto_(cual, activo, cantidad) {
+  contadorFotoLikes[cual] = cantidad;
+  const btn = document.getElementById(cual === 'portada' ? 'btnLikePortada' : 'btnLikePerfil');
+  if (!btn) return;
+  btn.classList.toggle('activo', !!activo);
+  btn.querySelector('.corazon').textContent = activo ? '❤️' : '🤍';
+  const texto = document.getElementById(cual === 'portada' ? 'likePortadaTexto' : 'likePerfilTexto');
+  if (cual === 'portada') texto.textContent = cantidad > 0 ? cantidad : 'Me gusta';
+  else texto.textContent = cantidad;
+}
+
+async function toggleLikeFoto_(cual) {
+  const clave = 'like_foto_' + cual + '_' + servicio.id;
+  if (localStorage.getItem(clave)) return;
+  const resp = await api('reaccionarRecuerdo', {
+    recuerdoId: 'foto_' + cual + ':' + servicio.id,
+    tipo: 'like', nombre: usuario.nombre, servicioId: servicio.id
+  }, 'POST');
+  if (resp.ok) {
+    localStorage.setItem(clave, '1');
+    pintarLikeFoto_(cual, true, contadorFotoLikes[cual] + (resp.yaExistia ? 0 : 1));
+  }
 }
 
 // Los paneles laterales usan position:fixed; su altura de portada/nombre/bio
@@ -898,6 +954,18 @@ function configurarCompartir_(s) {
   const btnFB = document.getElementById('btnCompartirFB');
   if (btnWA) btnWA.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje);
   if (btnFB) btnFB.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+  configurarPrevision_(s);
+}
+
+// Aviso discreto de planes funerarios a futuro — solo se muestra si la
+// funeraria tiene un WhatsApp público configurado (si no, se omite).
+function configurarPrevision_(s) {
+  const tarjeta = document.getElementById('sidebarPrevision');
+  if (!tarjeta || !s.funerariaWhatsapp) return;
+  const nombreFuneraria = s.funerariaNombre || 'la funeraria';
+  const msg = 'Hola, vi la página conmemorativa de ' + s.nombreFinado + ' y me gustaría conocer más sobre sus planes a futuro.';
+  document.getElementById('btnPrevision').href = 'https://wa.me/' + s.funerariaWhatsapp + '?text=' + encodeURIComponent(msg);
+  tarjeta.style.display = 'block';
 }
 
 function copiarLinkPagina() {

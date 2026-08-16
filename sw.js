@@ -1,4 +1,4 @@
-const CACHE = 'pc-v2';
+const CACHE = 'pc-v3';
 const ASSETS = [
   '/Paginas/login.html',
   '/Paginas/master.html',
@@ -25,7 +25,14 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   // Solo cachear recursos locales, no el API de Apps Script
   if (e.request.url.includes('script.google.com')) return;
+  // Red primero: así cada cambio publicado se ve de inmediato la próxima vez
+  // que haya conexión. El cache queda solo como respaldo para cuando el
+  // panel se abre sin internet (uso como PWA offline).
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
+    fetch(e.request).then(resp => {
+      const copia = resp.clone();
+      caches.open(CACHE).then(c => c.put(e.request, copia)).catch(()=>{});
+      return resp;
+    }).catch(() => caches.match(e.request))
   );
 });
