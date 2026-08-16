@@ -603,6 +603,9 @@ const VIDEOLLAMADA_DISPONIBLE = false; // Función en construcción — pendient
 // ===== UTILIDADES =====
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 
+// Detecta un ID interno (UUID) devuelto por error en vez de un texto legible
+function pareceIdInterno(s){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s).trim());}
+
 function driveUrl(url) {
   if (!url) return '';
   const m = String(url).match(/[-\w]{25,}/);
@@ -996,11 +999,12 @@ async function cargarRecuerdos() {
     }
     if(r.tipo==='gesto'){
       const wrap = document.createElement('div');
+      const descripcionValida = r.descripcion && !pareceIdInterno(r.descripcion);
       wrap.innerHTML = `
       <div class="burbuja-gesto">
         <div class="gesto-emisor">${esc(r.nombre)} envió:</div>
         <div class="gesto-contenido">${esc(r.emoji||'💐')}</div>
-        <div class="gesto-tipo">${esc(r.descripcion||'')}</div>
+        ${descripcionValida ? `<div class="gesto-tipo">${esc(r.descripcion)}</div>` : ''}
       </div>`;
       frag.appendChild(wrap.firstElementChild);
       return;
