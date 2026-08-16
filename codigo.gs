@@ -312,6 +312,12 @@ function doPost(e) {
       case "crearSesionPagina":
         resultado = crearSesionPagina_(datos);
         break;
+      case "crearSesionActivacionPagina":
+        resultado = crearSesionActivacionPagina_(datos);
+        break;
+      case "reintentarPagoActivacion":
+        resultado = reintentarPagoActivacion_(datos);
+        break;
       case "registrarComision":
         resultado = registrarComision_(datos);
         break;
@@ -500,6 +506,9 @@ function obtenerServicioPublico_(slug) {
     if (filas[i][encabezados.indexOf("slug")] === slug) {
       const obj = {};
       encabezados.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
+      if (obj.estado === "pendiente_pago") {
+        return { ok: false, error: "Esta página todavía no ha sido activada." };
+      }
       const likes = contarLikesFotos_(obj.id);
       obj.likesPortada = likes.portada;
       obj.likesPerfil = likes.perfil;
@@ -834,7 +843,17 @@ function manejarWebhookStripe_(e) {
         return responderJSON_({ ok: true });
       }
 
-      // Caso por defecto: transferencia de la página conmemorativa a la familia
+      if (tipo === "setup" || tipo === "mensualidad") {
+        marcarSuscripcionCompletada_(session);
+        return responderJSON_({ ok: true });
+      }
+
+      if (tipo === "activacionPagina" || tipo === "pagina") {
+        activarPaginaPagada_(session);
+        return responderJSON_({ ok: true });
+      }
+
+      // Caso por defecto (sin metadata[tipo]): transferencia de la página conmemorativa a la familia
       const servicioId = session.metadata.servicioId;
       marcarPagoCompletado_(session);
 
@@ -875,6 +894,78 @@ function marcarPagoCompletado_(session) {
       sheetPagos.getRange(i + 1, estadoIdx + 1).setValue("completado");
       sheetPagos.getRange(i + 1, completadoIdx + 1).setValue(new Date().toISOString());
       sheetPagos.getRange(i + 1, piIdx + 1).setValue(session.payment_intent);
+      break;
+    }
+  }
+}
+
+// Marca en SuscripcionesFuneraria el cobro (setup/mensualidad) como completado
+// y, si es mensualidad, refresca la vigencia de la funeraria un mes.
+function marcarSuscripcionCompletada_(session) {
+  const sheet = getSheet_("SuscripcionesFuneraria");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const sessionIdIdx = enc.indexOf("stripeSessionId");
+  const estadoIdx = enc.indexOf("estado");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][sessionIdIdx] === session.id) {
+      sheet.getRange(i + 1, estadoIdx + 1).setValue("completado");
+      break;
+    }
+  }
+
+  const tipo = session.metadata && session.metadata.tipo;
+  const funerariaId = session.metadata && session.metadata.funerariaId;
+  if (!funerariaId) return;
+
+  const sheetF = getSheet_("Funerarias");
+  const filasF = sheetF.getDataRange().getValues();
+  const encF = filasF[0];
+  const idIdxF = encF.indexOf("id");
+  const suscActIdx = obtenerOCrearColumna_(sheetF, "suscripcionActiva");
+  const venceIdx = obtenerOCrearColumna_(sheetF, "venceSuscripcion");
+  for (let i = 1; i < filasF.length; i++) {
+    if (String(filasF[i][idIdxF]) === String(funerariaId)) {
+      sheetF.getRange(i + 1, suscActIdx + 1).setValue(true);
+      if (tipo === "mensualidad") {
+        const vence = new Date();
+        vence.setMonth(vence.getMonth() + 1);
+        sheetF.getRange(i + 1, venceIdx + 1).setValue(vence.toISOString());
+      }
+      break;
+    }
+  }
+}
+
+// Activa la página que estaba "pendiente_pago" (creada desde el panel de la
+// funeraria) en cuanto Stripe confirma el pago de activación, y marca el
+// cobro correspondiente como completado en SuscripcionesFuneraria.
+function activarPaginaPagada_(session) {
+  const servicioId = session.metadata && session.metadata.servicioId;
+  if (servicioId) {
+    const sheetS = getSheet_("Servicios");
+    const filasS = sheetS.getDataRange().getValues();
+    const encS = filasS[0];
+    const idIdxS = encS.indexOf("id");
+    const estadoIdxS = encS.indexOf("estado");
+    for (let i = 1; i < filasS.length; i++) {
+      if (filasS[i][idIdxS] === servicioId) {
+        if (filasS[i][estadoIdxS] === "pendiente_pago") {
+          sheetS.getRange(i + 1, estadoIdxS + 1).setValue("en_curso");
+        }
+        break;
+      }
+    }
+  }
+
+  const sheetSusc = getSheet_("SuscripcionesFuneraria");
+  const filasSusc = sheetSusc.getDataRange().getValues();
+  const encSusc = filasSusc[0];
+  const sessionIdIdx = encSusc.indexOf("stripeSessionId");
+  const estadoIdx = encSusc.indexOf("estado");
+  for (let i = 1; i < filasSusc.length; i++) {
+    if (filasSusc[i][sessionIdIdx] === session.id) {
+      sheetSusc.getRange(i + 1, estadoIdx + 1).setValue("completado");
       break;
     }
   }
@@ -2331,7 +2422,9 @@ function crearSesionMensualidad_(datos) {
 }
 
 function crearSesionPagina_(datos) {
-  // Solo el master puede cobrar por página
+  // Cobro manual generado por el master (link para enviar aparte) — se mantiene
+  // por compatibilidad; el flujo normal es crearSesionActivacionPagina_, que la
+  // propia funeraria dispara desde su panel al crear una página nueva.
   if (!validarMaster_(datos.masterKey)) return { error: "No autorizado." };
   const r = crearSesionStripe_(
     "Activación de página conmemorativa",
@@ -2342,7 +2435,116 @@ function crearSesionPagina_(datos) {
     { tipo: "pagina", funerariaId: datos.funerariaId, servicioId: datos.servicioId || "" }
   );
   if (r.error) return { error: "Stripe: " + r.error.message };
+  registrarSuscripcionPendiente_(datos.funerariaId, "pagina", PRECIOS.pagina, r.id, datos.servicioId || "");
   return { ok: true, urlPago: r.url };
+}
+
+// Cobro automático de la activación de una página nueva, disparado por la
+// propia funeraria desde su panel (admin/panel.html) al guardar por primera
+// vez los datos del finado. La página se guarda de inmediato con estado
+// "pendiente_pago" para no perder lo capturado; el webhook de Stripe la pasa
+// a "en_curso" (visible al público) solo cuando el pago se confirma.
+function crearSesionActivacionPagina_(datos) {
+  if (!validarFuneraria_(datos.funerariaId, datos.codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  if (!datos.nombreFinado) {
+    return { error: "El nombre del finado es obligatorio." };
+  }
+
+  const sheet = getSheet_("Servicios");
+  const id = generarId_();
+  const slug = generarSlug_(datos.nombreFinado);
+  const ahora = new Date().toISOString();
+
+  sheet.appendRow([
+    id, datos.funerariaId, datos.nombreFinado, datos.fechaNacimiento || "", datos.fechaDefuncion || "",
+    datos.fotoUrl || "", datos.biografia || "",
+    datos.fechaCepelio || "", datos.horaCepelio || "", datos.ubicacionCepelio || "",
+    datos.fechaMisa || "", datos.horaMisa || "", datos.ubicacionMisa || "",
+    datos.fechaSalida || "", datos.horaSalida || "", datos.ubicacionSalida || "",
+    datos.reglasPublicacion || "", "pendiente_pago", slug, ahora, "", ""
+  ]);
+
+  const r = crearSesionStripe_(
+    "Activación de página conmemorativa - " + datos.nombreFinado,
+    PRECIOS.pagina,
+    emailFuneraria_(datos.funerariaId),
+    datos.urlExito || "",
+    datos.urlCancelado || "",
+    { tipo: "activacionPagina", funerariaId: datos.funerariaId, servicioId: id }
+  );
+  if (r.error) return { error: "Stripe: " + r.error.message };
+
+  registrarSuscripcionPendiente_(datos.funerariaId, "pagina", PRECIOS.pagina, r.id, id);
+  return { ok: true, id: id, slug: slug, urlPago: r.url };
+}
+
+// Reintentar el cobro de una página que quedó "pendiente_pago" (por ejemplo si
+// la funeraria cerró la ventana de Stripe sin terminar de pagar).
+function reintentarPagoActivacion_(datos) {
+  if (!validarFuneraria_(datos.funerariaId, datos.codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const funIdx = enc.indexOf("funerariaId");
+  const estadoIdx = enc.indexOf("estado");
+  const nombreIdx = enc.indexOf("nombreFinado");
+  let nombreFinado = "";
+  let encontrado = false;
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === datos.servicioId && String(filas[i][funIdx]) === String(datos.funerariaId)) {
+      encontrado = true;
+      nombreFinado = filas[i][nombreIdx];
+      if (filas[i][estadoIdx] !== "pendiente_pago") {
+        return { error: "Esta página ya está activa." };
+      }
+      break;
+    }
+  }
+  if (!encontrado) return { error: "Página no encontrada." };
+
+  const r = crearSesionStripe_(
+    "Activación de página conmemorativa - " + nombreFinado,
+    PRECIOS.pagina,
+    emailFuneraria_(datos.funerariaId),
+    datos.urlExito || "",
+    datos.urlCancelado || "",
+    { tipo: "activacionPagina", funerariaId: datos.funerariaId, servicioId: datos.servicioId }
+  );
+  if (r.error) return { error: "Stripe: " + r.error.message };
+
+  registrarSuscripcionPendiente_(datos.funerariaId, "pagina", PRECIOS.pagina, r.id, datos.servicioId);
+  return { ok: true, urlPago: r.url };
+}
+
+function emailFuneraria_(funerariaId) {
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const emailIdx = enc.indexOf("email");
+  if (emailIdx < 0) return "";
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][idIdx]) === String(funerariaId)) return filas[i][emailIdx] || "";
+  }
+  return "";
+}
+
+// Registra en SuscripcionesFuneraria el intento de cobro (queda "pendiente"
+// hasta que el webhook de Stripe confirme el pago). La columna servicioId se
+// agrega dinámicamente porque la hoja original no la tenía (cobros de
+// setup/mensualidad no están ligados a una página en particular).
+function registrarSuscripcionPendiente_(funerariaId, tipo, monto, stripeSessionId, servicioId) {
+  const sheet = getSheet_("SuscripcionesFuneraria");
+  const servicioIdIdx = obtenerOCrearColumna_(sheet, "servicioId");
+  sheet.appendRow([generarId_(), funerariaId, tipo, monto, stripeSessionId, "pendiente", new Date().toISOString(), ""]);
+  if (servicioId) {
+    sheet.getRange(sheet.getLastRow(), servicioIdIdx + 1).setValue(servicioId);
+  }
 }
 
 // ============================================================
