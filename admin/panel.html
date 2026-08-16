@@ -513,6 +513,10 @@
   let servicioActualId = null;
   let tabModeracionActiva = 'condolencias';
 
+  // Escapa texto antes de insertarlo con innerHTML — el contenido de recuerdos,
+  // pedidos y solicitudes lo escribe cualquier visitante anónimo de la página pública.
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
   async function llamarAPI(accion, datos, metodo) {
     if (metodo === 'GET') {
       const qs = new URLSearchParams({ accion, ...datos }).toString();
@@ -573,7 +577,7 @@
       cont.innerHTML = `<div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:14px;font-size:13.5px;color:var(--carbon-suave);">
         <strong style="color:var(--terracota-osc);">Función exclusiva del Plan Pro</strong><br>
         Para transferir páginas a las familias necesitas el Plan Pro.<br><br>
-        <a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank"
+        <a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" rel="noopener noreferrer"
            style="display:inline-block;padding:9px 18px;background:var(--terracota);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">
           Ver Plan Pro →
         </a>
@@ -608,7 +612,7 @@
     }, 'POST');
     if (resp.ok) {
       aviso.className = 'aviso-estado exito';
-      aviso.innerHTML = `Cobro generado. Comparte este link con la familia:<br><br><a href="${resp.urlPago}" target="_blank" style="word-break:break-all;">${resp.urlPago}</a>`;
+      aviso.innerHTML = `Cobro generado. Comparte este link con la familia:<br><br><a href="${esc(resp.urlPago)}" target="_blank" rel="noopener noreferrer" style="word-break:break-all;">${esc(resp.urlPago)}</a>`;
     } else {
       aviso.className = 'aviso-estado error'; aviso.textContent = resp.error || 'No se pudo generar el cobro.';
     }
@@ -656,7 +660,7 @@
     lista.innerHTML = resp.servicios.map(s => `
       <div class="servicio-card" onclick="abrirServicio('${s.id}')">
         <div class="servicio-card-top">
-          <span class="servicio-nombre">${s.nombreFinado}</span>
+          <span class="servicio-nombre">${esc(s.nombreFinado)}</span>
           <span class="estado-pill estado-${s.estado}">${s.estado === 'transferido' ? 'Transferida' : 'En curso'}</span>
         </div>
         <div class="servicio-meta">Creada el ${new Date(s.creadoEn).toLocaleDateString('es-MX')}</div>
@@ -798,10 +802,10 @@
     }
     zona.innerHTML = pendientes.map(r => `
       <div class="moderar-item">
-        <div class="moderar-nombre">${r.nombre}</div>
-        ${r.urlFoto ? `<img class="moderar-foto" src="${r.urlFoto}" alt="">` : ''}
-        ${r.pieFoto ? `<div style="font-size:12px;color:var(--carbon-suave);font-style:italic;margin-bottom:6px;">${r.pieFoto}</div>` : ''}
-        ${r.mensaje ? `<div class="moderar-texto">${r.mensaje}</div>` : ''}
+        <div class="moderar-nombre">${esc(r.nombre)}</div>
+        ${r.urlFoto ? `<img class="moderar-foto" src="${esc(r.urlFoto)}" alt="">` : ''}
+        ${r.pieFoto ? `<div style="font-size:12px;color:var(--carbon-suave);font-style:italic;margin-bottom:6px;">${esc(r.pieFoto)}</div>` : ''}
+        ${r.mensaje ? `<div class="moderar-texto">${esc(r.mensaje)}</div>` : ''}
         <div class="moderar-acciones">
           <button class="btn btn-aprobar btn-pequeno" onclick="moderarRecuerdo('${r.id}', true)">Aprobar</button>
           <button class="btn btn-rechazar btn-pequeno" onclick="moderarRecuerdo('${r.id}', false)">Rechazar</button>
@@ -854,8 +858,8 @@
     }
     lista.innerHTML = resp.videoLlamadas.map(v => `
       <div class="moderar-item">
-        <div class="moderar-nombre">${v.titulo}</div>
-        <div class="servicio-meta">${v.fecha} · ${v.hora} hrs</div>
+        <div class="moderar-nombre">${esc(v.titulo)}</div>
+        <div class="servicio-meta">${esc(v.fecha)} · ${esc(v.hora)} hrs</div>
       </div>
     `).join('');
   }
@@ -884,9 +888,9 @@
     lista.innerHTML = pedidos.map(p => `
       <div class="pedido-card">
         <span class="pedido-estado estado-${p.estado}">${p.estado === 'pendiente' ? '⏳ Pendiente' : '✓ Entregado'}</span>
-        <div class="pedido-dato"><strong>Cliente:</strong> ${p.nombre}</div>
-        <div class="pedido-dato"><strong>Email:</strong> ${p.email}</div>
-        <div class="pedido-dato"><strong>Dirección:</strong> ${p.direccion}</div>
+        <div class="pedido-dato"><strong>Cliente:</strong> ${esc(p.nombre)}</div>
+        <div class="pedido-dato"><strong>Email:</strong> ${esc(p.email)}</div>
+        <div class="pedido-dato"><strong>Dirección:</strong> ${esc(p.direccion)}</div>
         <div class="pedido-dato" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--carbon-suave);">${new Date(p.creadoEn).toLocaleString('es-MX')}</div>
         ${p.estado === 'pendiente' ? `<button class="btn btn-aprobar btn-pequeno" style="margin-top:10px;" onclick="marcarEntregado('${p.id}')">✓ Marcar como entregado</button>` : ''}
       </div>
