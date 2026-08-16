@@ -45,12 +45,18 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .portada-like:hover{background:rgba(17,30,53,0.75);}
 .portada-like.activo{background:rgba(184,150,78,0.92);}
 .portada-like .corazon{font-size:15px;}
+.portada-comentar{position:absolute;bottom:14px;left:16px;z-index:3;display:flex;align-items:center;gap:6px;background:rgba(17,30,53,0.55);color:var(--blanco);border:none;border-radius:20px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s;}
+.portada-comentar:hover{background:rgba(17,30,53,0.75);}
 .perfil-wrap{padding:0 20px;margin-top:-70px;position:relative;z-index:2;text-align:center;}
 .perfil-foto-contenedor{position:relative;display:inline-block;}
 .perfil-foto-ring{width:140px;height:140px;border-radius:50%;border:4px solid var(--blanco);box-shadow:0 4px 16px rgba(43,39,35,0.2);overflow:hidden;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:46px;}
 .perfil-foto-ring img{width:100%;height:100%;object-fit:cover;}
 .perfil-like{position:absolute;bottom:-2px;right:-2px;display:flex;align-items:center;gap:3px;background:var(--blanco);border:2px solid var(--blanco);box-shadow:0 2px 6px rgba(43,39,35,0.2);border-radius:20px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--marino-osc);cursor:pointer;font-family:'Inter',sans-serif;}
 .perfil-like.activo{color:var(--rojo);}
+.perfil-comentar{display:inline-flex;align-items:center;gap:4px;margin-top:9px;background:none;border:none;font-size:12.5px;font-weight:600;color:var(--marino-osc);cursor:pointer;font-family:'Inter',sans-serif;}
+.perfil-comentar:hover{text-decoration:underline;}
+.comentarios-foto-wrap{max-width:520px;margin:0 auto;padding:0 20px;}
+.comentarios-foto-wrap .comentarios-wrap{border-top:none;padding-top:0;text-align:left;}
 .perfil-info{padding:10px 20px 0;text-align:center;}
 .perfil-nombre{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,5.5vw,36px);color:var(--marino-osc);line-height:1.2;margin-bottom:5px;}
 .perfil-fechas{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--carbon-suave);margin-bottom:8px;}
@@ -62,17 +68,22 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .vela-deco-cuerpo{width:8px;height:18px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:2px;}
 .vela-deco-flama{width:6px;height:9px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-bottom:1px;margin-left:1px;animation:parpadeo 2.4s ease-in-out infinite;}
 @keyframes parpadeo{0%,100%{transform:scaleY(1) rotate(0deg);}25%{transform:scaleY(1.1) rotate(-2deg);}50%{transform:scaleY(0.92) rotate(1.5deg);}75%{transform:scaleY(1.06) rotate(-1deg);}}
-@media(prefers-reduced-motion:reduce){.vela-deco-flama,.veladora-mini-flama,.vela-premium-flama{animation:none;}}
+@keyframes veladoraSway{0%,100%{transform:translateX(-50%) rotate(-3deg);}50%{transform:translateX(-50%) rotate(3deg);}}
+@media(prefers-reduced-motion:reduce){.vela-deco-flama,.vela-premium-flama,.veladora-grande-nucleo,.veladora-grande-halo,.veladora-grande-flama-wrap{animation:none;}}
 
 /* ===== VELADORAS STRIP ===== */
-.veladoras-strip{display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
+.veladoras-strip{display:flex;align-items:center;gap:14px;padding:16px 20px;background:var(--blanco);border-top:1px solid var(--borde);border-bottom:1px solid var(--borde);overflow-x:auto;scrollbar-width:none;}
 .veladoras-strip::-webkit-scrollbar{display:none;}
-.btn-veladora{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 15px;background:var(--hueso);border:1.5px solid var(--borde);border-radius:28px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--carbon);transition:all 0.2s;}
+.btn-veladora{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:10px 18px 10px 12px;background:var(--hueso);border:1.5px solid var(--borde);border-radius:32px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;color:var(--carbon);transition:all 0.2s;}
 .btn-veladora.encendida{border-color:var(--dorado);background:#FDF8EC;color:var(--marino-osc);}
-.veladora-mini{position:relative;width:16px;height:24px;display:flex;align-items:flex-end;justify-content:center;}
-.veladora-mini-cuerpo{width:8px;height:16px;background:linear-gradient(180deg,#FFFDF6,#EFE6D2);border-radius:1px;}
-.veladora-mini-flama{width:6px;height:8px;background:radial-gradient(ellipse at 50% 80%,var(--dorado) 0%,#E8842E 55%,transparent 100%);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;position:absolute;top:-6px;left:1px;opacity:0;transition:opacity 0.4s;}
-.btn-veladora.encendida .veladora-mini-flama{opacity:1;animation:parpadeo 2.4s ease-in-out infinite;}
+/* Veladora grande y realista: cuerpo con relieve de cera + flama de dos capas con parpadeo y balanceo */
+.veladora-grande{position:relative;width:28px;height:48px;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;}
+.veladora-grande-cuerpo{width:14px;height:32px;background:linear-gradient(180deg,#FFFDF6 0%,#F2E7CE 55%,#E2CFA4 100%);border-radius:3px 3px 5px 5px;box-shadow:inset -3px 0 5px rgba(0,0,0,0.08),inset 2px 0 4px rgba(255,255,255,0.65);position:relative;}
+.veladora-grande-mecha{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:2px;height:6px;background:#3A2F22;border-radius:1px;z-index:1;}
+.veladora-grande-flama-wrap{position:absolute;top:-23px;left:50%;transform:translateX(-50%);width:20px;height:24px;opacity:0;transition:opacity 0.5s;transform-origin:bottom center;}
+.btn-veladora.encendida .veladora-grande-flama-wrap{opacity:1;animation:veladoraSway 3.1s ease-in-out infinite;}
+.veladora-grande-halo{position:absolute;inset:-6px;background:radial-gradient(ellipse at 50% 88%,rgba(255,190,70,0.55) 0%,transparent 72%);border-radius:50%;animation:parpadeo 2.7s ease-in-out infinite reverse;}
+.veladora-grande-nucleo{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:13px;height:21px;background:radial-gradient(ellipse at 50% 85%,#FFF7DA 0%,#FFD24A 38%,#FF8C1E 68%,transparent 100%);border-radius:50% 50% 50% 50%/65% 65% 35% 35%;animation:parpadeo 2s ease-in-out infinite;filter:drop-shadow(0 0 7px rgba(255,170,40,0.9));}
 .veladoras-info{flex-shrink:0;font-size:12px;color:var(--carbon-suave);white-space:nowrap;}
 
 /* ===== TABS ===== */
@@ -122,6 +133,23 @@ body{background:var(--hueso);color:var(--carbon);font-family:'Inter',sans-serif;
 .btn-reaccion.like.activo{border-color:var(--sauce);background:#EEF3EC;color:var(--sauce-osc);}
 .btn-reaccion.dislike.activo{border-color:var(--rojo);background:#F7E9E6;color:var(--rojo);}
 .burbuja-hora{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--carbon-suave);margin-top:6px;text-align:right;}
+
+/* ===== COMENTARIOS ===== */
+.comentarios-wrap{margin-top:9px;border-top:1px solid var(--borde);padding-top:9px;display:none;}
+.comentarios-wrap.abierto{display:block;}
+.comentario-item{display:flex;gap:7px;margin-bottom:8px;align-items:flex-start;}
+.comentario-item:last-child{margin-bottom:0;}
+.comentario-avatar{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--hueso-osc);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--marino-osc);}
+.comentario-cuerpo{background:var(--hueso);border-radius:10px 10px 10px 2px;padding:6px 10px;flex:1;min-width:0;}
+.comentario-nombre{font-size:11.5px;font-weight:700;color:var(--marino-osc);}
+.comentario-texto{font-size:12.5px;color:var(--carbon);line-height:1.4;margin-top:1px;word-break:break-word;}
+.comentario-hora{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--carbon-suave);margin-top:2px;}
+.comentarios-vacio{font-size:12px;color:var(--carbon-suave);font-style:italic;margin:2px 0 8px;}
+.comentario-form{display:flex;gap:6px;margin-top:6px;}
+.comentario-input{flex:1;min-width:0;padding:7px 11px;border:1.5px solid var(--borde);border-radius:16px;font-size:12.5px;font-family:'Inter',sans-serif;outline:none;background:var(--blanco);}
+.comentario-input:focus{border-color:var(--dorado);}
+.comentario-btn-enviar{flex-shrink:0;padding:7px 14px;border:none;border-radius:16px;background:var(--marino);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;}
+.comentario-btn-enviar:disabled{opacity:0.5;cursor:default;}
 
 /* Gestos en feed */
 .burbuja-gesto{background:var(--blanco);border:1px solid var(--borde);border-radius:13px 13px 13px 3px;padding:10px 13px;max-width:260px;margin-bottom:11px;}
@@ -445,6 +473,9 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 <div class="portada" id="portadaWrap" style="cursor:pointer;" onclick="abrirFotoFinado('portada')">
   <img id="portadaImg" style="display:none;" alt="">
   <div class="portada-overlay"></div>
+  <button class="portada-comentar comentarios-toggle" id="btnComentarPortada" onclick="event.stopPropagation();accionRegistrada(()=>toggleComentariosFoto_('portada'))">
+    💬 Comentar
+  </button>
   <button class="portada-like" id="btnLikePortada" onclick="event.stopPropagation();accionRegistrada(()=>toggleLikeFoto_('portada'))">
     <span class="corazon">🤍</span><span id="likePortadaTexto">Me gusta</span>
   </button>
@@ -456,6 +487,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
       <span class="corazon">🤍</span><span id="likePerfilTexto">0</span>
     </button>
   </div>
+  <button class="perfil-comentar comentarios-toggle" id="btnComentarPerfil" onclick="accionRegistrada(()=>toggleComentariosFoto_('perfil'))">💬 Comentar</button>
 </div>
 <div class="perfil-info">
   <div class="perfil-nombre" id="heroNombre">
@@ -469,12 +501,24 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
   <p class="perfil-bio" id="heroBio" style="display:none;"></p>
 </div>
 
+<!-- Comentarios de las fotos de portada y perfil (van después de todo el bloque
+     de la cabecera para no interferir con el margen negativo que superpone el
+     círculo de perfil sobre la portada) -->
+<div class="comentarios-foto-wrap">
+  <div class="comentarios-wrap" id="comentariosPortadaWrap"></div>
+  <div class="comentarios-wrap" id="comentariosPerfilWrap"></div>
+</div>
+
 <!-- STRIP VELADORAS -->
 <div class="veladoras-strip">
   <button class="btn-veladora" id="btnVeladora" onclick="accionRegistrada(toggleVeladora)">
-    <div class="veladora-mini">
-      <div class="veladora-mini-flama"></div>
-      <div class="veladora-mini-cuerpo"></div>
+    <div class="veladora-grande">
+      <div class="veladora-grande-flama-wrap">
+        <div class="veladora-grande-halo"></div>
+        <div class="veladora-grande-nucleo"></div>
+      </div>
+      <div class="veladora-grande-mecha"></div>
+      <div class="veladora-grande-cuerpo"></div>
     </div>
     <span id="textoVeladora">Encender veladora</span>
   </button>
@@ -889,6 +933,91 @@ async function toggleLikeFoto_(cual) {
   }
 }
 
+// ===== COMENTARIOS (recuerdos y fotos de portada/perfil) =====
+function iniciales_(nombre) {
+  return (nombre || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+}
+
+function renderComentarioItem_(c) {
+  return `
+    <div class="comentario-item">
+      <div class="comentario-avatar">${esc(iniciales_(c.nombre))}</div>
+      <div class="comentario-cuerpo">
+        <div class="comentario-nombre">${esc(c.nombre)}</div>
+        <div class="comentario-texto">${esc(c.texto)}</div>
+        <div class="comentario-hora">${horaCorta(c.creadoEn)}</div>
+      </div>
+    </div>`;
+}
+
+function renderListaComentarios_(comentarios) {
+  if (!comentarios || comentarios.length === 0) return '<div class="comentarios-vacio">Sé el primero en comentar.</div>';
+  return comentarios.map(renderComentarioItem_).join('');
+}
+
+function actualizarTextoBtnComentarios_(btnEl, n) {
+  if (!btnEl) return;
+  btnEl.textContent = '💬 Comentar' + (n > 0 ? ' · ' + n : '');
+}
+
+// Toggle genérico: abre/cierra el panel y carga los comentarios la primera vez
+async function toggleComentarios_(recuerdoId, wrapEl, toggleBtnEl) {
+  const abierto = wrapEl.classList.toggle('abierto');
+  if (!abierto) return;
+  wrapEl.innerHTML = '<div class="comentarios-vacio">Cargando comentarios...</div>';
+  const resp = await api('obtenerComentarios', { recuerdoId });
+  const comentarios = (resp.ok && resp.comentarios) ? resp.comentarios : [];
+  pintarComentarios_(wrapEl, recuerdoId, comentarios, toggleBtnEl);
+}
+
+function pintarComentarios_(wrapEl, recuerdoId, comentarios, toggleBtnEl) {
+  wrapEl.innerHTML = `<div class="comentarios-lista">${renderListaComentarios_(comentarios)}</div>
+    <div class="comentario-form">
+      <input type="text" class="comentario-input" placeholder="Escribe un comentario..." maxlength="500">
+      <button class="comentario-btn-enviar">Enviar</button>
+    </div>`;
+  const input = wrapEl.querySelector('.comentario-input');
+  const btn = wrapEl.querySelector('.comentario-btn-enviar');
+  btn.onclick = function(){ enviarComentario_(recuerdoId, input, wrapEl, toggleBtnEl); };
+  input.addEventListener('keydown', function(ev){ if (ev.key === 'Enter') { ev.preventDefault(); btn.click(); } });
+  if (toggleBtnEl && toggleBtnEl.classList.contains('comentarios-toggle')) {
+    actualizarTextoBtnComentarios_(toggleBtnEl, comentarios.length);
+  }
+}
+
+async function enviarComentario_(recuerdoId, inputEl, wrapEl, toggleBtnEl) {
+  const texto = inputEl.value.trim();
+  if (!texto) return;
+  if (!usuario) { document.getElementById('overlayRegistro').classList.remove('oculto'); return; }
+  const btn = wrapEl.querySelector('.comentario-btn-enviar');
+  btn.disabled = true;
+  try {
+    const resp = await api('comentarRecuerdo', { recuerdoId, servicioId: servicio.id, nombre: usuario.nombre, texto }, 'POST');
+    if (!resp.ok) { alert(resp.error || 'No se pudo enviar tu comentario.'); btn.disabled = false; return; }
+    inputEl.value = '';
+    const listaEl = wrapEl.querySelector('.comentarios-lista');
+    const vacio = listaEl.querySelector('.comentarios-vacio');
+    if (vacio) vacio.remove();
+    listaEl.insertAdjacentHTML('beforeend', renderComentarioItem_({
+      nombre: usuario.nombre, texto, creadoEn: resp.creadoEn || new Date().toISOString()
+    }));
+    if (toggleBtnEl && toggleBtnEl.classList.contains('comentarios-toggle')) {
+      actualizarTextoBtnComentarios_(toggleBtnEl, listaEl.querySelectorAll('.comentario-item').length);
+    }
+  } catch (e) {
+    alert('Sin conexión. Intenta de nuevo.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function toggleComentariosFoto_(cual) {
+  const wrapEl = document.getElementById(cual === 'portada' ? 'comentariosPortadaWrap' : 'comentariosPerfilWrap');
+  const btnEl = document.getElementById(cual === 'portada' ? 'btnComentarPortada' : 'btnComentarPerfil');
+  const recuerdoId = 'foto_' + cual + ':' + servicio.id;
+  toggleComentarios_(recuerdoId, wrapEl, btnEl);
+}
+
 // Los paneles laterales usan position:fixed; su altura de portada/nombre/bio
 // varía por finado, así que se recalcula dónde empiezan para no taparlos
 // (deben quedar justo debajo de la barra de pestañas, que es sticky con z-index propio).
@@ -1185,7 +1314,18 @@ function crearBurbuja(r) {
 
   reacs.appendChild(btnLike);
   reacs.appendChild(btnDislike);
+
+  // Comentarios
+  const comWrap = document.createElement('div');
+  comWrap.className = 'comentarios-wrap';
+  const btnComentar = document.createElement('button');
+  btnComentar.className = 'btn-reaccion comentarios-toggle';
+  btnComentar.textContent = '💬 Comentar' + ((r.comentarios || 0) > 0 ? ' · ' + r.comentarios : '');
+  btnComentar.onclick = function() { accionRegistrada(function(){ toggleComentarios_(r.id, comWrap, btnComentar); }); };
+  reacs.appendChild(btnComentar);
+
   inner.appendChild(reacs);
+  inner.appendChild(comWrap);
 
   // Hora
   const hora = document.createElement('div');
