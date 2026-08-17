@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Funeral360 · Página conmemorativa</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Z99WKGL3NR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Z99WKGL3NR');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -773,7 +781,7 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 <footer><img src="../icons/funeral360-logo.png" alt="Funeral360" style="height:22px;opacity:0.5;display:block;margin:0 auto 8px;"><span>Página conmemorativa · Funeral360</span></footer>
 
 <!-- Soporte técnico: publicaciones que no se reflejan, pagos de Stripe que no abonan créditos, etc. -->
-<a id="btnSoporteWA" class="soporte-wa" href="https://wa.me/522281845114?text=Hola%2C%20necesito%20soporte%20t%C3%A9cnico%20con%20Funeral360." target="_blank" rel="noopener noreferrer" aria-label="Soporte técnico por WhatsApp" title="¿Problemas con un pago o una publicación? Escríbenos por WhatsApp">
+<a id="btnSoporteWA" class="soporte-wa" href="https://wa.me/522281845114?text=Hola%2C%20necesito%20soporte%20t%C3%A9cnico%20con%20Funeral360." target="_blank" rel="noopener noreferrer" aria-label="Soporte técnico por WhatsApp" title="¿Problemas con un pago o una publicación? Escríbenos por WhatsApp" onclick="trackEvento_('soporte_whatsapp_click')">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.004 3.2c-7.06 0-12.8 5.74-12.8 12.8 0 2.258.594 4.45 1.72 6.383L3.2 28.8l6.59-1.688a12.74 12.74 0 0 0 6.214 1.588h.005c7.06 0 12.8-5.74 12.8-12.8s-5.74-12.7-12.805-12.7Zm7.49 18.14c-.318.894-1.58 1.634-2.58 1.85-.688.148-1.586.266-4.606-.99-3.865-1.602-6.35-5.523-6.545-5.78-.19-.257-1.565-2.085-1.565-3.977 0-1.892.99-2.82 1.343-3.207.318-.35.694-.44.926-.44.232 0 .464.002.667.012.214.01.5-.082.782.596.293.7.994 2.42 1.08 2.6.088.18.147.39.03.63-.117.24-.176.39-.348.6-.176.212-.37.474-.528.635-.176.176-.36.367-.155.72.206.352.914 1.51 1.964 2.446 1.35 1.203 2.487 1.575 2.84 1.75.352.176.558.147.762-.088.206-.234.876-1.02 1.11-1.37.234-.35.47-.293.79-.176.32.117 2.023.954 2.37 1.128.348.176.58.264.665.41.088.147.088.85-.23 1.744Z"/></svg>
 </a>
 
@@ -800,6 +808,12 @@ const VIDEOLLAMADA_DISPONIBLE = false; // Función en construcción — pendient
 
 // ===== UTILIDADES =====
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// Envía un evento a Google Analytics sin romper la página si gtag no cargó
+// (bloqueador de anuncios, sin conexión, etc.)
+function trackEvento_(nombre, params) {
+  try { if (typeof gtag === 'function') gtag('event', nombre, params || {}); } catch(e) {}
+}
 
 // Detecta un ID interno (UUID) devuelto por error en vez de un texto legible
 function pareceIdInterno(s){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s).trim());}
@@ -863,6 +877,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('activo'));
     btn.classList.add('activo');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('activo');
+    trackEvento_('cambio_tab', { tab: btn.dataset.tab });
   });
 });
 
@@ -889,6 +904,7 @@ document.getElementById('btnRegistro').addEventListener('click', async () => {
   localStorage.setItem('usuario_pc', JSON.stringify(usuario));
   document.getElementById('overlayRegistro').classList.add('oculto');
   setTimeout(intentarMostrarBienvenida_, 3000);
+  trackEvento_('registro_completado', {});
 
   // Dar FuneralCredits gratis si es primera vez en esta página
   if (servicio && !localStorage.getItem('cg_'+servicio.id+'_'+email)) {
@@ -996,6 +1012,7 @@ async function toggleLikeFoto_(cual) {
   if (resp.ok) {
     localStorage.setItem(clave, '1');
     pintarLikeFoto_(cual, true, contadorFotoLikes[cual] + (resp.yaExistia ? 0 : 1));
+    trackEvento_('like_foto', { foto: cual });
   }
 }
 
@@ -1070,6 +1087,7 @@ async function enviarComentario_(recuerdoId, inputEl, wrapEl, toggleBtnEl) {
     if (toggleBtnEl && toggleBtnEl.classList.contains('comentarios-toggle')) {
       actualizarTextoBtnComentarios_(toggleBtnEl, listaEl.querySelectorAll('.comentario-item').length);
     }
+    trackEvento_('comentario_enviado', {});
   } catch (e) {
     alert('Sin conexión. Intenta de nuevo.');
   } finally {
@@ -1163,8 +1181,8 @@ function configurarCompartir_(s) {
   const mensaje = 'Te comparto la página conmemorativa de ' + s.nombreFinado + ': ' + url;
   const btnWA = document.getElementById('btnCompartirWA');
   const btnFB = document.getElementById('btnCompartirFB');
-  if (btnWA) btnWA.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje);
-  if (btnFB) btnFB.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+  if (btnWA) { btnWA.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje); btnWA.onclick = () => trackEvento_('compartir_pagina', { canal: 'whatsapp' }); }
+  if (btnFB) { btnFB.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url); btnFB.onclick = () => trackEvento_('compartir_pagina', { canal: 'facebook' }); }
   configurarPrevision_(s);
 }
 
@@ -1181,6 +1199,7 @@ function configurarPrevision_(s) {
 function copiarLinkPagina() {
   navigator.clipboard.writeText(window.location.href).then(() => {
     mostrarToast('🔗 Link copiado');
+    trackEvento_('compartir_pagina', { canal: 'copiar_link' });
   }).catch(() => {
     mostrarToast('No se pudo copiar el link');
   });
@@ -1225,6 +1244,7 @@ async function toggleVeladora() {
     document.getElementById('btnVeladora').classList.add('encendida');
     document.getElementById('textoVeladora').textContent='Veladora encendida';
     pintarVeladoras_(resp);
+    trackEvento_('veladora_encendida', {});
   }
 }
 
@@ -1305,6 +1325,7 @@ async function enviarRecuerdo() {
   if(!mensaje&&!fotoBase64){aviso.className='aviso error';aviso.textContent='Escribe un mensaje o agrega una foto.';return;}
   btn.disabled=true; btn.textContent=fotoBase64?'Subiendo...':'Publicando...';
   try{
+    const tuvoFoto = !!fotoBase64;
     const resp=await api('publicarRecuerdo',{servicioId:servicio.id,nombre:usuario.nombre,mensaje,pieFoto,imagenBase64:fotoBase64||null,tipoMime:'image/jpeg'},'POST');
     if(resp.ok){
       aviso.className='aviso exito';
@@ -1313,6 +1334,7 @@ async function enviarRecuerdo() {
       document.getElementById('recPieFoto').value='';
       quitarFoto();
       cargarRecuerdos();
+      trackEvento_('recuerdo_publicado', { con_foto: tuvoFoto });
     } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al enviar.'; }
   } catch(e){ aviso.className='aviso error'; aviso.textContent='Sin conexión.'; }
   btn.disabled=false; btn.textContent='Publicar recuerdo';
@@ -1485,6 +1507,7 @@ async function reaccionar(recuerdoId, tipo, btn, btnOpuesto) {
     const contadorActual = parseInt((textoOriginal.split('·')[1]||'0').trim(), 10) || 0;
     btn.innerHTML = base + ' · ' + (contadorActual + 1);
     if (btnOpuesto) btnOpuesto.disabled = true;
+    trackEvento_('reaccion_recuerdo', { tipo });
   } catch (e) {
     alert('Sin conexión. Intenta de nuevo.');
     btn.disabled = false;
@@ -1630,6 +1653,7 @@ async function selPaquete(el) {
   }, 'POST');
 
   if (resp.ok && resp.urlPago) {
+    trackEvento_('begin_checkout', { creditos: +el.dataset.creditos, precio: +el.dataset.precio });
     window.location.href = resp.urlPago;
   } else {
     el.classList.remove('sel');
@@ -1649,6 +1673,7 @@ if(params.get('creditosOk')==='1'){
     const acreditado = await esperarSaldoTrasCompra(saldoAntes);
     if (acreditado) {
       mostrarToast('🎉 ¡FuneralCredits agregados! Ya puedes enviar gestos de cariño.', 5000);
+      trackEvento_('compra_creditos_completada', {});
     } else {
       mostrarToast('Tu pago se está procesando. Si en unos minutos no ves tus créditos, recarga la página.', 7000);
     }
@@ -1695,6 +1720,7 @@ async function confirmarGesto() {
     saldoUsuario=resp.nuevoSaldo;
     document.getElementById('saldoNum').textContent=saldoUsuario;
     setTimeout(()=>{cerrarModal();cargarRecuerdos();},1000);
+    trackEvento_('gesto_enviado', { tipo: gestoActual.tipo, articulo: gestoActual.artId });
   } else { aviso.className='aviso error'; aviso.textContent=resp.error||'Error al enviar.'; }
   btn.disabled=false; btn.textContent='Confirmar envío';
 }
@@ -1822,6 +1848,7 @@ async function solicitarVideollamada() {
   }, 'POST');
 
   if (resp.ok && resp.urlPago) {
+    trackEvento_('begin_checkout_videollamada', {});
     window.location.href = resp.urlPago;
   } else {
     if (btn) { btn.disabled = false; btn.textContent = 'Solicitar videollamada → '; }
