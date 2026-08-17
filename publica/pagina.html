@@ -413,6 +413,29 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
 .soporte-wa svg{width:29px;height:29px;fill:#fff;}
 @media(max-width:480px){.soporte-wa{bottom:16px;right:14px;width:52px;height:52px;}.soporte-wa svg{width:26px;height:26px;}}
 
+/* Banner flotante de bienvenida: invita a compartir fotos y explorar la página */
+.bienvenida-flotante{
+  position:fixed;top:14px;left:50%;
+  width:calc(100% - 32px);max-width:380px;
+  background:linear-gradient(135deg,#FFFDF6 0%,#FDF3DC 100%);
+  border:1.5px solid var(--dorado);
+  border-radius:14px;
+  padding:14px 38px 14px 16px;
+  box-shadow:0 8px 28px rgba(43,39,35,0.28);
+  z-index:160;
+  opacity:0;
+  transform:translateX(-50%) translateY(-140%);
+  transition:transform 0.5s cubic-bezier(.34,1.56,.64,1),opacity 0.4s;
+}
+.bienvenida-flotante.oculto{display:none;}
+.bienvenida-flotante.mostrando{opacity:1;transform:translateX(-50%) translateY(0);animation:bienvenidaPulso 2.4s ease-in-out 0.6s 2;}
+@keyframes bienvenidaPulso{0%,100%{box-shadow:0 8px 28px rgba(43,39,35,0.28);}50%{box-shadow:0 8px 32px rgba(184,150,78,0.6);}}
+.bienvenida-flotante-icono{font-size:19px;margin-bottom:3px;}
+.bienvenida-flotante-txt{font-size:13px;color:var(--carbon);line-height:1.5;}
+.bienvenida-flotante-txt strong{color:var(--marino-osc);}
+.bienvenida-flotante-cerrar{position:absolute;top:6px;right:8px;background:none;border:none;font-size:18px;line-height:1;color:var(--carbon-suave);cursor:pointer;padding:6px;}
+@media(prefers-reduced-motion:reduce){.bienvenida-flotante{transition:opacity 0.3s;}.bienvenida-flotante.mostrando{animation:none;}}
+
 /* Aviso al subir contenido */
 .banner-pro{
   background:linear-gradient(135deg,var(--marino-osc) 0%,var(--marino-med) 100%);
@@ -754,6 +777,15 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.004 3.2c-7.06 0-12.8 5.74-12.8 12.8 0 2.258.594 4.45 1.72 6.383L3.2 28.8l6.59-1.688a12.74 12.74 0 0 0 6.214 1.588h.005c7.06 0 12.8-5.74 12.8-12.8s-5.74-12.7-12.805-12.7Zm7.49 18.14c-.318.894-1.58 1.634-2.58 1.85-.688.148-1.586.266-4.606-.99-3.865-1.602-6.35-5.523-6.545-5.78-.19-.257-1.565-2.085-1.565-3.977 0-1.892.99-2.82 1.343-3.207.318-.35.694-.44.926-.44.232 0 .464.002.667.012.214.01.5-.082.782.596.293.7.994 2.42 1.08 2.6.088.18.147.39.03.63-.117.24-.176.39-.348.6-.176.212-.37.474-.528.635-.176.176-.36.367-.155.72.206.352.914 1.51 1.964 2.446 1.35 1.203 2.487 1.575 2.84 1.75.352.176.558.147.762-.088.206-.234.876-1.02 1.11-1.37.234-.35.47-.293.79-.176.32.117 2.023.954 2.37 1.128.348.176.58.264.665.41.088.147.088.85-.23 1.744Z"/></svg>
 </a>
 
+<!-- Banner flotante de bienvenida: invita a compartir fotos y a explorar la página -->
+<div class="bienvenida-flotante oculto" id="bienvenidaFlotante">
+  <button class="bienvenida-flotante-cerrar" id="btnCerrarBienvenida" aria-label="Cerrar">✕</button>
+  <div class="bienvenida-flotante-icono">📸 💛</div>
+  <div class="bienvenida-flotante-txt">
+    <strong>¡Bienvenido!</strong> Puedes compartir fotos directo desde tu galería. Esta página es un recuerdo para acompañar a la familia — tómate un momento para explorarla.
+  </div>
+</div>
+
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
 const params = new URLSearchParams(window.location.search);
@@ -856,6 +888,7 @@ document.getElementById('btnRegistro').addEventListener('click', async () => {
   usuario = { nombre, email };
   localStorage.setItem('usuario_pc', JSON.stringify(usuario));
   document.getElementById('overlayRegistro').classList.add('oculto');
+  setTimeout(intentarMostrarBienvenida_, 3000);
 
   // Dar FuneralCredits gratis si es primera vez en esta página
   if (servicio && !localStorage.getItem('cg_'+servicio.id+'_'+email)) {
@@ -1874,11 +1907,38 @@ function iniciarLegal() {
           document.getElementById('cookieBanner').classList.remove('oculto');
         }, 2500);
       }
+      setTimeout(intentarMostrarBienvenida_, 3000);
     }
   } catch(e) {
     // Si localStorage no está disponible (modo privado extremo), ocultar todo
     document.getElementById('legalOverlay').classList.add('oculto');
   }
+}
+
+// ===== BANNER FLOTANTE DE BIENVENIDA =====
+// Se muestra una sola vez por visitante, y solo cuando ya no hay ningún
+// overlay bloqueante encima (aviso de privacidad / registro de nombre-correo).
+function intentarMostrarBienvenida_() {
+  try { if (localStorage.getItem('bienvenida_vista_v1')) return; } catch(e) {}
+  const legal = document.getElementById('legalOverlay');
+  const registro = document.getElementById('overlayRegistro');
+  if (legal && !legal.classList.contains('oculto')) return;
+  if (registro && !registro.classList.contains('oculto')) return;
+  mostrarBienvenidaFlotante_();
+}
+
+function mostrarBienvenidaFlotante_() {
+  const el = document.getElementById('bienvenidaFlotante');
+  if (!el) return;
+  try { localStorage.setItem('bienvenida_vista_v1', '1'); } catch(e) {}
+  el.classList.remove('oculto');
+  requestAnimationFrame(() => el.classList.add('mostrando'));
+  const cerrar = () => {
+    el.classList.remove('mostrando');
+    setTimeout(() => el.classList.add('oculto'), 400);
+  };
+  document.getElementById('btnCerrarBienvenida').onclick = cerrar;
+  setTimeout(cerrar, 8000);
 }
 
 function mostrarLegalTab(tab, btn) {
@@ -1906,6 +1966,7 @@ function aceptarTerminos() {
       }
     } catch(e) {}
   }, 2000);
+  setTimeout(intentarMostrarBienvenida_, 3000);
 }
 
 function abrirTerminos() {
