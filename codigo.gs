@@ -160,6 +160,7 @@ function verificarPuedeEscribir_(servicioId) {
   for (let i = 1; i < filas.length; i++) {
     if (filas[i][idIdx] === servicioId) {
       const estado = filas[i][estadoIdx];
+      if (estado === "inactivo" || estado === "pendiente_pago") return false;
       const fechaDefuncion = limpiarValor_(filas[i][fechaDefIdx]);
       return calcularFaseVisibilidad_(fechaDefuncion, estado) === "activo";
     }
@@ -571,6 +572,9 @@ function obtenerServicioPublico_(slug) {
       encabezados.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
       if (obj.estado === "pendiente_pago") {
         return { ok: false, error: "Esta página todavía no ha sido activada." };
+      }
+      if (obj.estado === "inactivo") {
+        return { ok: false, error: "Esta página no está disponible en este momento." };
       }
       obj.faseVisibilidad = calcularFaseVisibilidad_(obj.fechaDefuncion, obj.estado);
       const likes = contarLikesFotos_(obj.id);
