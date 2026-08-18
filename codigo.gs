@@ -106,6 +106,69 @@ function limpiarValor_(val) {
   return String(val);
 }
 
+// ============================================================
+// CICLO DE VIDA DE LA PÁGINA TRANSFERIDA
+// ============================================================
+// Una página transferida a la familia está "activa" (se puede comentar,
+// subir fotos, encender veladoras, enviar gestos) durante los 9 días
+// siguientes a la fecha de defunción (el novenario/rosario acostumbrado),
+// y vuelve a activarse por una ventana de 9 días alrededor de cada
+// aniversario luctuoso. El resto del tiempo queda en "solo_lectura": el
+// contenido publicado se sigue mostrando, pero no se puede agregar nada
+// nuevo. Los botones de contacto de la funeraria (WhatsApp, "planes a
+// futuro") nunca dependen de esta fase — siempre están activos.
+const VENTANA_ACTIVA_DIAS = 9;
+
+function calcularFaseVisibilidad_(fechaDefuncionStr, estado) {
+  // Solo las páginas ya entregadas a la familia siguen este ciclo. Mientras
+  // la funeraria la sigue gestionando (en_curso / pendiente_pago) se
+  // considera siempre activa, igual que hasta ahora.
+  if (estado !== "transferido" || !fechaDefuncionStr) return "activo";
+
+  const partes = String(fechaDefuncionStr).split("-").map(Number);
+  if (partes.length !== 3 || partes.some(isNaN)) return "activo";
+  const defuncion = new Date(partes[0], partes[1] - 1, partes[2]);
+
+  const ahora = new Date();
+  const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  if (hoy < defuncion) return "activo";
+
+  // Buscar el aniversario (año 0 = la fecha de defunción misma) más
+  // reciente que ya pasó, y ver si "hoy" cae dentro de su ventana activa.
+  let aniversario = new Date(defuncion.getFullYear(), defuncion.getMonth(), defuncion.getDate());
+  while (true) {
+    const siguiente = new Date(aniversario.getFullYear() + 1, aniversario.getMonth(), aniversario.getDate());
+    if (siguiente > hoy) break;
+    aniversario = siguiente;
+  }
+  const MS_POR_DIA = 24 * 60 * 60 * 1000;
+  const diasTranscurridos = Math.round((hoy - aniversario) / MS_POR_DIA);
+  return (diasTranscurridos >= 0 && diasTranscurridos <= VENTANA_ACTIVA_DIAS) ? "activo" : "solo_lectura";
+}
+
+// Usado por las acciones que reciben visitantes (condolencias, fotos,
+// recuerdos, comentarios, reacciones, veladoras, gestos) para bloquear
+// la escritura cuando la página transferida está en modo solo lectura.
+function verificarPuedeEscribir_(servicioId) {
+  if (!servicioId) return true;
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const estadoIdx = enc.indexOf("estado");
+  const fechaDefIdx = enc.indexOf("fechaDefuncion");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) {
+      const estado = filas[i][estadoIdx];
+      const fechaDefuncion = limpiarValor_(filas[i][fechaDefIdx]);
+      return calcularFaseVisibilidad_(fechaDefuncion, estado) === "activo";
+    }
+  }
+  return true; // servicio no encontrado: no es este el lugar para rechazar
+}
+
+const MENSAJE_SOLO_LECTURA_ = "Esta página está en modo de solo lectura por ahora. Los recuerdos, fotos y mensajes publicados se siguen mostrando; vuelve a activarse automáticamente cada aniversario.";
+
 function generarSlug_(nombreFinado) {
   const base = nombreFinado
     .toLowerCase()
@@ -509,6 +572,7 @@ function obtenerServicioPublico_(slug) {
       if (obj.estado === "pendiente_pago") {
         return { ok: false, error: "Esta página todavía no ha sido activada." };
       }
+      obj.faseVisibilidad = calcularFaseVisibilidad_(obj.fechaDefuncion, obj.estado);
       const likes = contarLikesFotos_(obj.id);
       obj.likesPortada = likes.portada;
       obj.likesPerfil = likes.perfil;
@@ -570,6 +634,9 @@ function publicarCondolencia_(datos) {
   if (!datos.nombre || !datos.mensaje || !datos.servicioId) {
     return { error: "Faltan datos requeridos." };
   }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
+  }
   const sheet = getSheet_("Condolencias");
   const id = generarId_();
   // Toda condolencia entra en estado "pendiente" -> requiere aprobación de la funeraria
@@ -621,6 +688,9 @@ function obtenerCondolencias_(servicioId, soloAprobadas) {
 function subirFoto_(datos) {
   if (!datos.servicioId || !datos.imagenBase64) {
     return { error: "Faltan datos requeridos." };
+  }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
   }
   try {
     const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
@@ -871,12 +941,134 @@ function manejarWebhookStripe_(e) {
           break;
         }
       }
+
+      // Respaldo inmutable en Drive apenas se entrega la página — para que
+      // si algo se rompe en la hoja compartida, la familia no pierda lo
+      // que ya pagó por conservar.
+      try { respaldarServicioADrive_(servicioId); } catch (errRespaldo) { /* no bloquear la transferencia por un fallo de respaldo */ }
     }
 
     return responderJSON_({ ok: true });
   } catch (err) {
     return responderJSON_({ error: err.message });
   }
+}
+
+// ============================================================
+// RESPALDO DE PÁGINAS TRANSFERIDAS (aislar del resto del sistema)
+// ============================================================
+// Todo el sistema vive en una sola hoja de cálculo compartida entre todas
+// las funerarias. Para que un problema general (cuota agotada, una fila
+// borrada por error, un bug que escribe donde no debía) no le haga perder
+// a una familia lo que ya pagó por conservar, cada página se respalda en
+// un archivo JSON independiente dentro de Drive apenas se transfiere, y
+// periódicamente después (ver respaldarTodasTransferidasDiario_). El
+// respaldo es de solo lectura — no se usa para servir la página pública,
+// solo para poder restaurarla a mano si algún día hace falta.
+
+function carpetaRespaldos_() {
+  const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
+  const folderRaiz = DriveApp.getFolderById(folderRaizId);
+  const existentes = folderRaiz.getFoldersByName("Respaldos");
+  return existentes.hasNext() ? existentes.next() : folderRaiz.createFolder("Respaldos");
+}
+
+function carpetaRespaldoServicio_(servicioId, slug) {
+  const raizRespaldos = carpetaRespaldos_();
+  const nombreCarpeta = slug ? (slug + "_" + servicioId) : servicioId;
+  const existentes = raizRespaldos.getFoldersByName(nombreCarpeta);
+  return existentes.hasNext() ? existentes.next() : raizRespaldos.createFolder(nombreCarpeta);
+}
+
+function filasPorServicio_(nombreHoja, servicioId) {
+  const sheet = getSheet_(nombreHoja);
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idx = enc.indexOf("servicioId");
+  if (idx < 0) return [];
+  const resultado = [];
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idx] === servicioId) {
+      const obj = {};
+      enc.forEach((h, j) => obj[h] = limpiarValor_(filas[i][j]));
+      resultado.push(obj);
+    }
+  }
+  return resultado;
+}
+
+// Genera y guarda en Drive una copia completa (JSON) de un servicio y todo
+// su contenido asociado. Devuelve el ID del archivo creado.
+function respaldarServicioADrive_(servicioId) {
+  const sheetServicios = getSheet_("Servicios");
+  const filas = sheetServicios.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  let servicio = null;
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) {
+      servicio = {};
+      enc.forEach((h, j) => servicio[h] = limpiarValor_(filas[i][j]));
+      break;
+    }
+  }
+  if (!servicio) return null;
+
+  const respaldo = {
+    generadoEn: new Date().toISOString(),
+    servicio: servicio,
+    condolencias: filasPorServicio_("Condolencias", servicioId),
+    fotos: filasPorServicio_("Fotos", servicioId),
+    recuerdos: filasPorServicio_("Recuerdos", servicioId),
+    veladoras: filasPorServicio_("Veladoras", servicioId),
+    comentarios: (() => {
+      // Los comentarios se ligan por recuerdoId, no por servicioId; se filtran
+      // a partir de los recuerdos de este servicio.
+      const sheet = getSheet_("Comentarios");
+      const filasC = sheet.getDataRange().getValues();
+      const encC = filasC[0];
+      const recIdIdx = encC.indexOf("recuerdoId");
+      const idsRecuerdos = new Set(filasPorServicio_("Recuerdos", servicioId).map(r => r.id));
+      const resultado = [];
+      for (let i = 1; i < filasC.length; i++) {
+        if (idsRecuerdos.has(filasC[i][recIdIdx])) {
+          const obj = {};
+          encC.forEach((h, j) => obj[h] = limpiarValor_(filasC[i][j]));
+          resultado.push(obj);
+        }
+      }
+      return resultado;
+    })()
+  };
+
+  const carpeta = carpetaRespaldoServicio_(servicioId, servicio.slug);
+  const nombreArchivo = "respaldo_" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+  const archivo = carpeta.createFile(nombreArchivo, JSON.stringify(respaldo, null, 2), MimeType.PLAIN_TEXT);
+  return archivo.getId();
+}
+
+// Repite el respaldo de todas las páginas ya transferidas. Pensada para
+// correr sola vía un trigger de tiempo (ver instalarTriggerRespaldoDiario_).
+function respaldarTodasTransferidasDiario_() {
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const estadoIdx = enc.indexOf("estado");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][estadoIdx] === "transferido") {
+      try { respaldarServicioADrive_(filas[i][idIdx]); } catch (err) { /* seguir con las demás */ }
+    }
+  }
+}
+
+// Ejecutar UNA VEZ manualmente desde el editor de Apps Script (no se llama
+// desde doGet/doPost) para instalar el respaldo diario automático.
+function instalarTriggerRespaldoDiario_() {
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === "respaldarTodasTransferidasDiario_") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("respaldarTodasTransferidasDiario_").timeBased().everyDays(1).atHour(3).create();
 }
 
 // Marca como "completado" la fila de Pagos que corresponda a esta sesión de Stripe
@@ -993,6 +1185,9 @@ function verificarEstadoPago_(servicioId) {
 function publicarRecuerdo_(datos) {
   if (!datos.nombre || (!datos.mensaje && !datos.imagenBase64)) {
     return { error: "Faltan datos requeridos." };
+  }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
   }
 
   let urlFoto = "";
@@ -1161,6 +1356,9 @@ function comentarRecuerdo_(datos) {
   if (!datos.recuerdoId || !datos.nombre || !datos.texto) {
     return { error: "Faltan datos." };
   }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
+  }
   const texto = String(datos.texto).trim().slice(0, 500);
   if (!texto) return { error: "El comentario no puede estar vacío." };
   const sheet = getSheet_("Comentarios");
@@ -1230,6 +1428,9 @@ function obtenerRecuerdosReportados_(servicioId) {
 function encenderVeladora_(datos) {
   if (!datos.servicioId || !datos.nombre) {
     return { error: "Faltan datos." };
+  }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
   }
   const sheet = getSheet_("Veladoras");
   const id = generarId_();
@@ -1423,6 +1624,9 @@ function enviarGesto_(datos) {
   if (!datos.email || !datos.nombre || !datos.tipoGesto) {
     return { error: "Faltan datos requeridos." };
   }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
+  }
   const articulo = buscarArticuloGesto_(datos.tipoGesto);
   if (!articulo || !articulo.creditos) {
     return { error: "Artículo no válido." };
@@ -1601,7 +1805,11 @@ function obtenerConfigMaestro_(masterKey) {
   if (masterKey === "__public__") {
     return {
       ok: true,
-      precioVideollamada: getConfigMaestro_("precioVideollamada") || "150"
+      precioVideollamada: getConfigMaestro_("precioVideollamada") || "150",
+      publicidadActiva: getConfigMaestro_("publicidadActiva") === "true",
+      publicidadImagenUrl: getConfigMaestro_("publicidadImagenUrl") || "",
+      publicidadEnlace: getConfigMaestro_("publicidadEnlace") || "",
+      publicidadTexto: getConfigMaestro_("publicidadTexto") || ""
     };
   }
   return {
@@ -1610,7 +1818,11 @@ function obtenerConfigMaestro_(masterKey) {
     email: getConfigMaestro_("email") || "",
     precioTransferencia: getConfigMaestro_("precioTransferencia") || "499",
     creditosGratis: getConfigMaestro_("creditosGratis") || "10",
-    precioVideollamada: getConfigMaestro_("precioVideollamada") || "150"
+    precioVideollamada: getConfigMaestro_("precioVideollamada") || "150",
+    publicidadActiva: getConfigMaestro_("publicidadActiva") === "true",
+    publicidadImagenUrl: getConfigMaestro_("publicidadImagenUrl") || "",
+    publicidadEnlace: getConfigMaestro_("publicidadEnlace") || "",
+    publicidadTexto: getConfigMaestro_("publicidadTexto") || ""
   };
 }
 
@@ -1621,6 +1833,10 @@ function guardarConfigMaestro_(datos) {
   if (datos.precioTransferencia !== undefined) setConfigMaestro_("precioTransferencia", datos.precioTransferencia);
   if (datos.creditosGratis !== undefined) setConfigMaestro_("creditosGratis", datos.creditosGratis);
   if (datos.precioVideollamada !== undefined) setConfigMaestro_("precioVideollamada", datos.precioVideollamada);
+  if (datos.publicidadActiva !== undefined) setConfigMaestro_("publicidadActiva", datos.publicidadActiva ? "true" : "false");
+  if (datos.publicidadImagenUrl !== undefined) setConfigMaestro_("publicidadImagenUrl", datos.publicidadImagenUrl);
+  if (datos.publicidadEnlace !== undefined) setConfigMaestro_("publicidadEnlace", datos.publicidadEnlace);
+  if (datos.publicidadTexto !== undefined) setConfigMaestro_("publicidadTexto", datos.publicidadTexto);
   return { ok: true };
 }
 
@@ -1826,6 +2042,9 @@ const EMAIL_ALERTA_RESPALDO = "Ventas@omnia-technology.com";
 function reaccionarRecuerdo_(datos) {
   if (!datos.recuerdoId || !datos.tipo || !datos.nombre) {
     return { error: "Faltan datos." };
+  }
+  if (!verificarPuedeEscribir_(datos.servicioId)) {
+    return { error: MENSAJE_SOLO_LECTURA_ };
   }
   // Verificar si ya reaccionó (por nombre + recuerdoId) para evitar duplicados
   const sheet = getSheet_("Reacciones");
