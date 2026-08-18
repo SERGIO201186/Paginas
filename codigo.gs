@@ -937,11 +937,53 @@ function manejarWebhookStripe_(e) {
       // si algo se rompe en la hoja compartida, la familia no pierda lo
       // que ya pagó por conservar.
       try { respaldarServicioADrive_(servicioId); } catch (errRespaldo) { /* no bloquear la transferencia por un fallo de respaldo */ }
+
+      // Avisar a la familia por correo que la página ya es suya, con el
+      // link directo — hasta ahora no les llegaba nada más que el recibo
+      // genérico de Stripe.
+      try { notificarTransferenciaFamilia_(servicioId); } catch (errCorreo) { /* no bloquear la transferencia por un fallo de correo */ }
     }
 
     return responderJSON_({ ok: true });
   } catch (err) {
     return responderJSON_({ error: err.message });
+  }
+}
+
+// URL base de la página pública (debe coincidir con URL_PAGINA_PUBLICA en
+// admin/panel.html). Se usa solo para armar el link dentro de correos.
+const URL_PAGINA_PUBLICA_ = "https://sergio201186.github.io/Paginas/publica/pagina.html";
+
+// Correo a la familia apenas se confirma la transferencia, con el link
+// directo a la página que ahora es suya de forma permanente.
+function notificarTransferenciaFamilia_(servicioId) {
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const emailIdx = enc.indexOf("emailFamilia");
+  const nombreIdx = enc.indexOf("nombreFinado");
+  const slugIdx = enc.indexOf("slug");
+
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) {
+      const email = filas[i][emailIdx];
+      if (!email) return; // no se capturó correo de familia, no hay a quién avisar
+      const nombreFinado = filas[i][nombreIdx];
+      const link = URL_PAGINA_PUBLICA_ + "?p=" + filas[i][slugIdx];
+      MailApp.sendEmail({
+        to: email,
+        subject: "Funeral360 · La página de " + nombreFinado + " ya es de tu familia",
+        body: "Hola,\n\n" +
+          "Tu pago se confirmó y la página conmemorativa de " + nombreFinado + " ahora pertenece de forma permanente a tu familia:\n\n" +
+          link + "\n\n" +
+          "Puedes compartir este enlace con quien quieras; va a seguir disponible siempre. " +
+          "Durante los primeros días y en cada aniversario, la página acepta nuevas condolencias, fotos y veladoras; " +
+          "el resto del año queda en modo de solo lectura, pero todo lo publicado se sigue viendo sin problema.\n\n" +
+          "Con cariño,\nFuneral360"
+      });
+      return;
+    }
   }
 }
 
