@@ -199,6 +199,8 @@
   .estado-en_curso{ background:#EBF4FF; color:#1B2A4A; }
   .estado-transferido{ background:#EEF3EC; color:#1A4D38; }
   .estado-pendiente_pago{ background:#FEF7E8; color:#8A6414; }
+  .estado-inactivo{ background:#F7E9E6; color:#8A2E1F; }
+  .estado-vendido{ background:#EEF3EC; color:#1A4D38; }
 
   .servicio-meta{
     font-family:'JetBrains Mono',monospace;
@@ -685,12 +687,12 @@
       return;
     }
 
-    const etiquetasEstado = { transferido: 'Transferida', pendiente_pago: 'Pago pendiente', en_curso: 'En curso' };
+    const etiquetasEstado = { transferido: 'Transferida', pendiente_pago: 'Pago pendiente', en_curso: 'En curso', inactivo: 'Inactiva', vendido: 'Vendida' };
     lista.innerHTML = resp.servicios.map(s => `
       <div class="servicio-card" onclick="abrirServicio('${s.id}')">
         <div class="servicio-card-top">
           <span class="servicio-nombre">${esc(s.nombreFinado)}</span>
-          <span class="estado-pill estado-${s.estado}">${etiquetasEstado[s.estado] || 'En curso'}</span>
+          <span class="estado-pill estado-${s.estado}">${etiquetasEstado[s.estado] || s.estado}</span>
         </div>
         <div class="servicio-meta">Creada el ${new Date(s.creadoEn).toLocaleDateString('es-MX')}</div>
       </div>
