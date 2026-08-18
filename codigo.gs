@@ -93,8 +93,8 @@ function limpiarValor_(val) {
   if (val instanceof Date) {
     // Detectar si es solo hora (año 1899 = hora sin fecha en Sheets)
     if (val.getFullYear() === 1899 || val.getFullYear() === 1900) {
-      const hh = String(val.getUTCHours()).padStart(2, '0');
-      const mm = String(val.getUTCMinutes()).padStart(2, '0');
+      const hh = String(val.getHours()).padStart(2, '0');
+      const mm = String(val.getMinutes()).padStart(2, '0');
       return hh + ':' + mm;
     }
     // Es una fecha real
@@ -424,7 +424,7 @@ function listarServiciosFuneraria_(funerariaId, codigoAcceso) {
   for (let i = 1; i < filas.length; i++) {
     if (filas[i][1] === funerariaId) {
       const obj = {};
-      encabezados.forEach((h, idx) => obj[h] = filas[i][idx]);
+      encabezados.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
       servicios.push(obj);
     }
   }
