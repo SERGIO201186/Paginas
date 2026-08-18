@@ -693,17 +693,8 @@ function subirFoto_(datos) {
     return { error: MENSAJE_SOLO_LECTURA_ };
   }
   try {
-    const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
-    const folderRaiz = DriveApp.getFolderById(folderRaizId);
-
-    // Una subcarpeta por servicio para mantener orden
-    let folderServicio;
-    const carpetas = folderRaiz.getFoldersByName(datos.servicioId);
-    if (carpetas.hasNext()) {
-      folderServicio = carpetas.next();
-    } else {
-      folderServicio = folderRaiz.createFolder(datos.servicioId);
-    }
+    const slug = obtenerSlugServicio_(datos.servicioId);
+    const folderServicio = carpetaServicioEnDrive_(slug, "Fotos");
 
     const partesBase64 = datos.imagenBase64.split(",");
     const contenido = partesBase64.length > 1 ? partesBase64[1] : partesBase64[0];
@@ -966,18 +957,41 @@ function manejarWebhookStripe_(e) {
 // respaldo es de solo lectura — no se usa para servir la página pública,
 // solo para poder restaurarla a mano si algún día hace falta.
 
-function carpetaRespaldos_() {
-  const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
-  const folderRaiz = DriveApp.getFolderById(folderRaizId);
-  const existentes = folderRaiz.getFoldersByName("Respaldos");
-  return existentes.hasNext() ? existentes.next() : folderRaiz.createFolder("Respaldos");
+// Estructura de Drive: DRIVE_FOLDER_ID / Páginas / <slug> / {Fotos,Recuerdos,Respaldo}
+// El slug ya es el nombre del finado (generarSlug_) más un sufijo corto para
+// que sea único, así que la carpeta de cada página es reconocible a simple
+// vista en Drive, en vez del id interno (un UUID sin sentido para una
+// persona). El id interno se sigue usando como llave primaria en las hojas
+// de cálculo — ahí sí necesita ser estable y opaco — pero ya no aparece en
+// nombres de carpeta.
+function obtenerOCrearSubcarpeta_(carpetaPadre, nombre) {
+  const existentes = carpetaPadre.getFoldersByName(nombre);
+  return existentes.hasNext() ? existentes.next() : carpetaPadre.createFolder(nombre);
 }
 
-function carpetaRespaldoServicio_(servicioId, slug) {
-  const raizRespaldos = carpetaRespaldos_();
-  const nombreCarpeta = slug ? (slug + "_" + servicioId) : servicioId;
-  const existentes = raizRespaldos.getFoldersByName(nombreCarpeta);
-  return existentes.hasNext() ? existentes.next() : raizRespaldos.createFolder(nombreCarpeta);
+function carpetaPaginasRaiz_() {
+  const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
+  const folderRaiz = DriveApp.getFolderById(folderRaizId);
+  return obtenerOCrearSubcarpeta_(folderRaiz, "Páginas");
+}
+
+// slugOId: idealmente el slug (nombre-sufijo); si no se tiene a la mano se
+// acepta el id como respaldo para no fallar la operación.
+function carpetaServicioEnDrive_(slugOId, subcarpeta) {
+  const carpetaPagina = obtenerOCrearSubcarpeta_(carpetaPaginasRaiz_(), slugOId);
+  return subcarpeta ? obtenerOCrearSubcarpeta_(carpetaPagina, subcarpeta) : carpetaPagina;
+}
+
+function obtenerSlugServicio_(servicioId) {
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const slugIdx = enc.indexOf("slug");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) return filas[i][slugIdx] || servicioId;
+  }
+  return servicioId;
 }
 
 function filasPorServicio_(nombreHoja, servicioId) {
@@ -1041,10 +1055,29 @@ function respaldarServicioADrive_(servicioId) {
     })()
   };
 
-  const carpeta = carpetaRespaldoServicio_(servicioId, servicio.slug);
-  const nombreArchivo = "respaldo_" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
-  const archivo = carpeta.createFile(nombreArchivo, JSON.stringify(respaldo, null, 2), MimeType.PLAIN_TEXT);
+  // El respaldo nunca lo lee la página pública — solo sirve para restaurar a
+  // mano si algún día hace falta — así que se guarda comprimido (gzip) para
+  // ocupar el mínimo de espacio posible sin afectar en nada lo que ven los
+  // visitantes.
+  const carpeta = carpetaServicioEnDrive_(servicio.slug || servicioId, "Respaldo");
+  const nombreArchivo = "respaldo_" + new Date().toISOString().replace(/[:.]/g, "-") + ".json.gz";
+  const blobJson = Utilities.newBlob(JSON.stringify(respaldo), "application/json", "respaldo.json");
+  const archivo = carpeta.createFile(Utilities.gzip(blobJson, nombreArchivo));
+
+  limpiarRespaldosViejos_(carpeta);
   return archivo.getId();
+}
+
+// Conserva solo los respaldos más recientes de cada página para que el
+// respaldo diario no crezca sin límite. RETENCION_RESPALDOS controla cuántos.
+const RETENCION_RESPALDOS = 5;
+function limpiarRespaldosViejos_(carpeta) {
+  const archivos = [];
+  const it = carpeta.getFiles();
+  while (it.hasNext()) archivos.push(it.next());
+  if (archivos.length <= RETENCION_RESPALDOS) return;
+  archivos.sort((a, b) => b.getDateCreated() - a.getDateCreated());
+  archivos.slice(RETENCION_RESPALDOS).forEach(a => a.setTrashed(true));
 }
 
 // Repite el respaldo de todas las páginas ya transferidas. Pensada para
@@ -1196,15 +1229,8 @@ function publicarRecuerdo_(datos) {
   // Si viene foto, subirla a Drive
   if (datos.imagenBase64) {
     try {
-      const folderRaizId = getConfig_("DRIVE_FOLDER_ID");
-      const folderRaiz = DriveApp.getFolderById(folderRaizId);
-      let folderServicio;
-      const carpetas = folderRaiz.getFoldersByName(datos.servicioId);
-      if (carpetas.hasNext()) {
-        folderServicio = carpetas.next();
-      } else {
-        folderServicio = folderRaiz.createFolder(datos.servicioId);
-      }
+      const slug = obtenerSlugServicio_(datos.servicioId);
+      const folderServicio = carpetaServicioEnDrive_(slug, "Recuerdos");
       const partesBase64 = datos.imagenBase64.split(",");
       const contenido = partesBase64.length > 1 ? partesBase64[1] : partesBase64[0];
       const tipoMime = datos.tipoMime || "image/jpeg";
