@@ -458,6 +458,13 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
   border:none;border-radius:20px;font-size:13.5px;font-weight:700;
   text-decoration:none;cursor:pointer;
 }
+.banner-publicidad{padding:10px 20px;text-align:center;border-bottom:1px solid var(--borde);}
+.banner-publicidad img{max-width:100%;max-height:90px;border-radius:8px;display:inline-block;}
+.banner-publicidad-etq{font-size:10px;color:var(--carbon-suave);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.banner-solo-lectura{
+  background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;
+  padding:14px;font-size:13px;color:var(--carbon-suave);line-height:1.5;text-align:center;
+}
 .aviso-contenido{
   background:var(--gris-claro);
   border:1px solid var(--gris-borde);
@@ -582,6 +589,12 @@ footer{text-align:center;padding:20px 14px;font-size:11.5px;color:var(--carbon-s
     <a href="#" id="btnPrevision" target="_blank" rel="noopener noreferrer" class="banner-prevision-btn">Más info →</a>
   </div>
 </div>
+
+<!-- PUBLICIDAD -->
+<a class="banner-publicidad" id="bannerPublicidad" style="display:none;" target="_blank" rel="noopener noreferrer sponsored">
+  <div class="banner-publicidad-etq">Publicidad</div>
+  <img id="bannerPublicidadImg" src="" alt="">
+</a>
 
 <!-- TABS -->
 <nav class="tabs-nav" role="tablist">
@@ -951,10 +964,13 @@ async function cargarServicio() {
     codigoAcceso: '__publico__'
   });
   window.planServicio = (respPlan && respPlan.plan) ? respPlan.plan : 'gratis';
+  window.faseVisibilidad = servicio.faseVisibilidad || 'activo';
   pintarHero(servicio);
   pintarInfo(servicio);
   pintarSidebarEventos_(servicio);
   configurarCompartir_(servicio);
+  aplicarFaseVisibilidad_();
+  cargarPublicidad_();
   cargarRecuerdos();
   window.dispatchEvent(new Event('servicioListo'));
   cargarVeladoras();
@@ -1148,6 +1164,47 @@ function pintarInfo(s) {
     }
   });
   if(s.reglasPublicacion){const av=document.getElementById('reglasAviso');av.textContent=s.reglasPublicacion;av.style.display='block';}
+}
+
+// ===== CICLO DE VIDA: activa / solo lectura =====
+// Una página transferida a la familia queda en modo "solo_lectura" fuera de
+// los 9 días del novenario y de la ventana anual del aniversario (lo decide
+// el backend en faseVisibilidad). En ese modo el contenido ya publicado se
+// sigue mostrando tal cual; solo se reemplazan las formas para agregar cosas
+// nuevas por un aviso. Los botones de contacto de la funeraria (WhatsApp,
+// planes a futuro) nunca se tocan aquí: siguen activos siempre.
+function aplicarFaseVisibilidad_() {
+  if (window.faseVisibilidad !== 'solo_lectura') return;
+
+  const formRec = document.querySelector('#panel-recuerdos .form-rec');
+  if (formRec) {
+    formRec.innerHTML = `<div class="banner-solo-lectura">📖 Esta página está en modo de solo lectura por ahora. Los recuerdos, fotos y mensajes de abajo se siguen mostrando; vuelve a activarse automáticamente cada aniversario luctuoso.</div>`;
+  }
+
+  const btnVela = document.getElementById('btnVeladora');
+  if (btnVela) {
+    btnVela.disabled = true;
+    btnVela.style.opacity = '0.55';
+    btnVela.style.cursor = 'not-allowed';
+    const txt = document.getElementById('textoVeladora');
+    if (txt) txt.textContent = 'Página en modo de solo lectura';
+  }
+
+  // La tienda (#panel-tienda) se bloquea desde cargarTienda(), después de
+  // que termina de pintar sus elementos — igual que el bloqueo por plan
+  // gratis — para no dejar sin destino a los ids que esa función rellena.
+}
+
+// ===== PUBLICIDAD =====
+async function cargarPublicidad_() {
+  const resp = await api('obtenerConfigMaestro', { masterKey: '__public__' });
+  if (!resp || !resp.ok || !resp.publicidadActiva || !resp.publicidadImagenUrl) return;
+  const banner = document.getElementById('bannerPublicidad');
+  const img = document.getElementById('bannerPublicidadImg');
+  img.src = resp.publicidadImagenUrl;
+  img.alt = resp.publicidadTexto || 'Publicidad';
+  banner.href = resp.publicidadEnlace || '#';
+  banner.style.display = 'block';
 }
 
 // ===== PANEL LATERAL: eventos =====
@@ -1596,6 +1653,18 @@ async function cargarTienda() {
         '<div class="banner-pro-titulo">🔒 Función exclusiva Plan Pro</div>' +
         '<div class="banner-pro-desc">La tienda de FuneralCredits, gestos y flores está disponible en el Plan Pro de Funeral360.</div>' +
         '<a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" rel="noopener noreferrer" class="banner-pro-btn">Ver Plan Pro →</a>';
+      wrap.innerHTML = '';
+      wrap.appendChild(banner);
+    }
+  } else if (window.faseVisibilidad === 'solo_lectura') {
+    // Página transferida fuera de su ventana activa: no acepta nuevas compras.
+    const wrap = document.getElementById('panel-tienda').querySelector('.tienda-wrap');
+    if (wrap) {
+      const banner = document.createElement('div');
+      banner.className = 'banner-pro';
+      banner.innerHTML =
+        '<div class="banner-pro-titulo">📖 Solo lectura por ahora</div>' +
+        '<div class="banner-pro-desc">Esta página no acepta nuevos gestos ni compras hasta el próximo aniversario. Si necesitas algo de la funeraria, usa el botón de contacto.</div>';
       wrap.innerHTML = '';
       wrap.appendChild(banner);
     }

@@ -385,6 +385,17 @@ body{background:var(--gris-claro);color:var(--carbon);font-family:'Inter',sans-s
 
       <div class="seccion-titulo">Solicitudes de videollamada pendientes</div>
       <div id="listaSolicitudesVL"><div class="vacio">Cargando...</div></div>
+
+      <div class="seccion-titulo">Publicidad en las páginas conmemorativas</div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:14px;">Se muestra como un banner en todas las páginas públicas (activas o en modo de solo lectura). Déjalo vacío para no mostrar nada.</p>
+      <div class="campo"><label for="cfgPubImagen">URL de la imagen</label><input type="text" id="cfgPubImagen" placeholder="https://..."></div>
+      <div class="campo"><label for="cfgPubEnlace">Enlace al hacer clic</label><input type="text" id="cfgPubEnlace" placeholder="https://..."></div>
+      <div class="campo"><label for="cfgPubTexto">Texto alternativo</label><input type="text" id="cfgPubTexto" placeholder="Ej. Seguros funerarios XYZ"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:14px;">
+        <input type="checkbox" id="cfgPubActiva" style="width:auto;"> Mostrar publicidad en las páginas públicas
+      </label>
+      <button class="btn btn-primario btn-full" onclick="guardarPublicidad()">Guardar publicidad</button>
+      <div class="aviso" id="avisoPublicidad"></div>
     </div>
   </div>
 </div>
@@ -778,8 +789,25 @@ async function cargarConfig() {
   if (resp.email) document.getElementById('cfgEmail').value = resp.email;
   if (resp.precioTransferencia) document.getElementById('cfgPrecioTransf').value = resp.precioTransferencia;
   if (resp.creditosGratis) document.getElementById('creditosGratis').value = resp.creditosGratis;
+  document.getElementById('cfgPubImagen').value = resp.publicidadImagenUrl || '';
+  document.getElementById('cfgPubEnlace').value = resp.publicidadEnlace || '';
+  document.getElementById('cfgPubTexto').value = resp.publicidadTexto || '';
+  document.getElementById('cfgPubActiva').checked = !!resp.publicidadActiva;
   // precio VL fijo $299
   cargarSolicitudesVL();
+}
+
+async function guardarPublicidad() {
+  const aviso = document.getElementById('avisoPublicidad');
+  const resp = await api('guardarConfigMaestro', {
+    masterKey,
+    publicidadImagenUrl: document.getElementById('cfgPubImagen').value.trim(),
+    publicidadEnlace: document.getElementById('cfgPubEnlace').value.trim(),
+    publicidadTexto: document.getElementById('cfgPubTexto').value.trim(),
+    publicidadActiva: document.getElementById('cfgPubActiva').checked
+  }, 'POST');
+  aviso.className = resp.ok ? 'aviso exito' : 'aviso error';
+  aviso.textContent = resp.ok ? '✓ Publicidad guardada.' : (resp.error||'Error.');
 }
 
 async function guardarConfigAlerta() {
