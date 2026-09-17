@@ -239,6 +239,9 @@ function doGet(e) {
       case "obtenerComisionesFuneraria":
         resultado = obtenerComisionesFuneraria_(e.parameter.funerariaId, e.parameter.masterKey);
         break;
+      case "obtenerMisComisiones":
+        resultado = obtenerMisComisiones_(e.parameter.funerariaId, e.parameter.codigoAcceso);
+        break;
       case "obtenerSuscripcionesFuneraria":
         resultado = obtenerSuscripcionesFuneraria_(e.parameter.masterKey);
         break;
@@ -576,6 +579,15 @@ function obtenerServicioPublico_(slug) {
       if (obj.estado === "inactivo") {
         return { ok: false, error: "Esta página no está disponible en este momento." };
       }
+      // Páginas del plan Demo: si el master desactivó a la funeraria desde su
+      // panel, se bloquean al público de inmediato — incluidas las que de
+      // alguna forma llegaron a transferirse, porque en Demo esa
+      // transferencia nunca se cobró y no le da a la familia la propiedad
+      // permanente que sí tiene una transferencia real del plan Pro.
+      const funerariaEstado = obtenerPlanActivoFuneraria_(obj.funerariaId);
+      if (funerariaEstado.plan === "gratis" && !funerariaEstado.activo) {
+        return { ok: false, error: "Esta página no está disponible en este momento." };
+      }
       obj.faseVisibilidad = calcularFaseVisibilidad_(obj.fechaDefuncion, obj.estado);
       const likes = contarLikesFotos_(obj.id);
       obj.likesPortada = likes.portada;
@@ -805,6 +817,14 @@ function obtenerVideoLlamadas_(servicioId) {
 function crearSesionPagoStripe_(datos) {
   if (!datos.servicioId || !datos.emailFamilia) {
     return { error: "Faltan datos requeridos." };
+  }
+
+  // Las páginas de cuentas en plan Demo no se pueden transferir a una
+  // familia: evita que alguien llame esta acción directo (saltándose el
+  // panel) para transferir una página que nunca se cobró.
+  const funerariaIdServicio = obtenerFunerariaIdDeServicio_(datos.servicioId);
+  if (funerariaIdServicio && obtenerPlanActivoFuneraria_(funerariaIdServicio).plan === "gratis") {
+    return { error: "La transferencia de páginas a familias no está disponible en el plan Demo." };
   }
 
   const stripeKey = getConfig_("STRIPE_SECRET_KEY");
@@ -2602,6 +2622,46 @@ function obtenerPlanFuneraria_(funerariaId, codigoAcceso) {
   return { ok: true, plan: "gratis" };
 }
 
+// Lectura interna (sin validar codigoAcceso) de plan+activo de una funeraria.
+// El plan "gratis" es el plan Demo: desbloquea funciones Pro sin costo
+// (excepto transferir páginas a familias, que sigue siendo exclusivo de
+// Pro) y sus páginas quedan bloqueadas al público en cuanto el master la
+// desactiva desde su panel (toggleFuneraria). Usado por
+// crearSesionActivacionPagina_ (para no cobrar la activación),
+// crearSesionPagoStripe_ (para bloquear la transferencia) y por
+// obtenerServicioPublico_ (para bloquear el acceso público cuando
+// corresponda).
+function obtenerPlanActivoFuneraria_(funerariaId) {
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const planIdx = enc.indexOf("plan");
+  const activoIdx = enc.indexOf("activo");
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][idIdx]) === String(funerariaId)) {
+      const plan = planIdx >= 0 ? String(filas[i][planIdx] || "gratis") : "gratis";
+      const activoVal = activoIdx >= 0 ? filas[i][activoIdx] : true;
+      const activo = activoVal === true || String(activoVal).toUpperCase() === "TRUE";
+      return { plan, activo };
+    }
+  }
+  return { plan: "gratis", activo: true };
+}
+
+// Devuelve el funerariaId dueño de un servicio, o null si no existe.
+function obtenerFunerariaIdDeServicio_(servicioId) {
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const funIdx = enc.indexOf("funerariaId");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) return filas[i][funIdx];
+  }
+  return null;
+}
+
 // ============================================================
 // MODELO C - SUSCRIPCIONES Y COBROS
 // ============================================================
@@ -2614,6 +2674,11 @@ var PRECIOS = {
   videollamada: 299,
   comisionFuneraria: 0.25  // 25% para la funeraria
 };
+
+// Tasa de impuesto (IVA) que se descuenta de la comisión de la funeraria
+// al mostrarle su historial. El monto guardado en ComisionesFuneraria
+// (comision25) siempre es el bruto; el neto se calcula al leerlo.
+var TASA_IMPUESTO_COMISION = 0.16;
 
 // Artículos predeterminados del catálogo (se cargan si ArticulosTienda está vacío)
 var CATALOGO_DEFAULT = [
@@ -2748,14 +2813,24 @@ function crearSesionActivacionPagina_(datos) {
   const slug = generarSlug_(datos.nombreFinado);
   const ahora = new Date().toISOString();
 
+  // Plan Demo (gratis): la funeraria prueba todas las funciones sin costo.
+  // La página se publica de inmediato ("en_curso"), sin pasar por Stripe.
+  // El master la deja pública mientras la funeraria demo esté activa; si la
+  // desactiva desde su panel, obtenerServicioPublico_ la bloquea al público.
+  const esDemo = obtenerPlanActivoFuneraria_(datos.funerariaId).plan === "gratis";
+
   sheet.appendRow([
     id, datos.funerariaId, datos.nombreFinado, datos.fechaNacimiento || "", datos.fechaDefuncion || "",
     datos.fotoUrl || "", datos.biografia || "",
     datos.fechaCepelio || "", datos.horaCepelio || "", datos.ubicacionCepelio || "",
     datos.fechaMisa || "", datos.horaMisa || "", datos.ubicacionMisa || "",
     datos.fechaSalida || "", datos.horaSalida || "", datos.ubicacionSalida || "",
-    datos.reglasPublicacion || "", "pendiente_pago", slug, ahora, "", ""
+    datos.reglasPublicacion || "", esDemo ? "en_curso" : "pendiente_pago", slug, ahora, "", ""
   ]);
+
+  if (esDemo) {
+    return { ok: true, id: id, slug: slug, gratis: true };
+  }
 
   const r = crearSesionStripe_(
     "Activación de página conmemorativa - " + datos.nombreFinado,
@@ -2891,6 +2966,45 @@ function obtenerComisionesFuneraria_(funerariaId, masterKey) {
     }
   }
   return { ok: true, comisiones: resultado, totalPendiente: Math.round(totalPendiente * 100) / 100 };
+}
+
+// Historial de comisiones de la PROPIA funeraria (solo lectura), para mostrar
+// en su panel. A diferencia de obtenerComisionesFuneraria_ (uso del master),
+// aquí se valida con funerariaId+codigoAcceso, igual que el resto de las
+// funciones del panel de la funeraria.
+function obtenerMisComisiones_(funerariaId, codigoAcceso) {
+  if (!validarFuneraria_(funerariaId, codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  const sheet = getSheet_("ComisionesFuneraria");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const funIdx = enc.indexOf("funerariaId");
+  const resultado = [];
+  let totalBruto = 0, totalNeto = 0;
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][funIdx]) === String(funerariaId)) {
+      const obj = {};
+      enc.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
+      const bruto = parseFloat(obj.comision25 || 0);
+      const neto = Math.round(bruto * (1 - TASA_IMPUESTO_COMISION) * 100) / 100;
+      obj.comisionBruta = Math.round(bruto * 100) / 100;
+      obj.comisionNeta = neto;
+      obj.tasaImpuesto = TASA_IMPUESTO_COMISION;
+      delete obj.comision25; // no exponer el nombre interno del campo bruto
+      resultado.push(obj);
+      totalBruto += bruto;
+      totalNeto += neto;
+    }
+  }
+  resultado.sort((a, b) => new Date(b.creadoEn) - new Date(a.creadoEn));
+  return {
+    ok: true,
+    comisiones: resultado,
+    totalBruto: Math.round(totalBruto * 100) / 100,
+    totalNeto: Math.round(totalNeto * 100) / 100,
+    tasaImpuesto: TASA_IMPUESTO_COMISION
+  };
 }
 
 function obtenerSuscripcionesFuneraria_(masterKey) {

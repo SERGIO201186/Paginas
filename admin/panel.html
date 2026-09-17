@@ -242,6 +242,11 @@
     color:var(--carbon-suave);
     margin-top:8px;
   }
+  .campo input[type="color"]{
+    padding:4px;
+    height:44px;
+    cursor:pointer;
+  }
 
   .tabs-mod{
     display:flex;
@@ -381,6 +386,14 @@
     <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
   </div>
   <div class="contenedor">
+    <div class="seccion-titulo" style="margin-top:0;">Mis comisiones</div>
+    <div class="servicio-card" style="cursor:default;">
+      <div id="resumenComisiones" style="font-size:13.5px;color:var(--carbon-suave);">Cargando historial de comisiones…</div>
+      <div id="listaComisiones" style="margin-top:10px;display:none;"></div>
+      <button class="btn btn-secundario btn-full" id="btnToggleComisiones" style="margin-top:12px;display:none;">Ver detalle</button>
+    </div>
+
+    <div class="seccion-titulo">Páginas</div>
     <div id="listaServicios"></div>
   </div>
   <button class="fab" id="btnNuevoServicio" title="Nueva página">+</button>
@@ -469,6 +482,13 @@
 
       <div class="seccion-titulo">Código QR para imprimir</div>
       <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">Genera el QR y descarga un cartel tamaño carta, a color, listo para imprimir y colocar en el velorio.</p>
+
+      <div class="campo"><label for="qrNombreFuneraria">Nombre de la funeraria (aparece en el cartel)</label><input type="text" id="qrNombreFuneraria" placeholder="Ej. Funeraria San José"></div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="qrColorPrincipal">Color principal</label><input type="color" id="qrColorPrincipal" value="#5E3A2D"></div>
+        <div class="campo"><label for="qrColorAcento">Color de acento</label><input type="color" id="qrColorAcento" value="#C9A24B"></div>
+      </div>
+
       <button class="btn btn-sauce btn-full" id="btnGenerarQR" onclick="generarQR()">Generar código QR</button>
       <div class="qr-wrap" id="qrWrap" style="display:none;">
         <div id="qrCanvas"></div>
@@ -548,6 +568,7 @@
     mostrarVista('vistaLista');
     cargarListaServicios();
     cargarPlan();
+    cargarComisiones();
   }
 
   // ===== REGRESO DESDE STRIPE (activación de página) =====
@@ -590,10 +611,61 @@
     // Mostrar badge del plan en el topbar
     const badge = document.getElementById('badgePlan');
     if (badge) {
-      badge.textContent = esPro ? '⭐ Pro' : 'Gratis';
+      badge.textContent = esPro ? '⭐ Pro' : 'Demo';
       badge.style.background = esPro ? '#C9A24B' : '#E3D9C8';
       badge.style.color = esPro ? '#2B2723' : '#56504A';
     }
+  }
+
+  // ===== HISTORIAL DE COMISIONES (solo lectura) =====
+  // Muestra lo que la funeraria ha ganado por gestos/créditos comprados en
+  // sus páginas (25% ya calculado por el servidor), descontando el 16% de
+  // impuesto. Es informativo únicamente: no hay forma de editarlo desde aquí.
+  const etiquetasEstadoComision = { pendiente: 'Pendiente de pago', pagada: 'Pagada' };
+  const etiquetasConceptoComision = { creditos: 'Compra de créditos', gesto: 'Gesto virtual' };
+
+  async function cargarComisiones() {
+    if (!sesion) return;
+    const resumen = document.getElementById('resumenComisiones');
+    const resp = await llamarAPI('obtenerMisComisiones', {
+      funerariaId: sesion.funerariaId,
+      codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+
+    if (!resp.ok) {
+      resumen.textContent = 'No se pudo cargar el historial de comisiones.';
+      return;
+    }
+
+    const tasaPct = Math.round((resp.tasaImpuesto || 0) * 100);
+    if (!resp.comisiones || resp.comisiones.length === 0) {
+      resumen.textContent = 'Aún no tienes comisiones generadas. Aparecerán aquí cuando los visitantes compren créditos o gestos en tus páginas.';
+      return;
+    }
+
+    resumen.innerHTML = `Neto acumulado (después de ${tasaPct}% de impuesto): <strong style="color:var(--carbon);font-size:16px;">$${resp.totalNeto.toFixed(2)} MXN</strong>` +
+      `<br><span style="font-size:12px;">Bruto: $${resp.totalBruto.toFixed(2)} MXN</span>`;
+
+    const lista = document.getElementById('listaComisiones');
+    lista.innerHTML = resp.comisiones.map(c => `
+      <div class="moderar-item">
+        <div class="moderar-nombre">${esc(etiquetasConceptoComision[c.concepto] || c.concepto)}</div>
+        <div class="moderar-texto">
+          ${new Date(c.creadoEn).toLocaleDateString('es-MX')} ·
+          Bruto: $${c.comisionBruta.toFixed(2)} · Impuesto (${tasaPct}%): -$${(c.comisionBruta - c.comisionNeta).toFixed(2)} ·
+          <strong>Neto: $${c.comisionNeta.toFixed(2)} MXN</strong>
+        </div>
+        <span class="estado-pill estado-pendiente" style="${c.estado !== 'pendiente' ? 'background:#EEF3EC;color:#1A4D38;' : ''}">${esc(etiquetasEstadoComision[c.estado] || c.estado)}</span>
+      </div>
+    `).join('');
+
+    const btnToggle = document.getElementById('btnToggleComisiones');
+    btnToggle.style.display = 'block';
+    btnToggle.onclick = () => {
+      const visible = lista.style.display !== 'none';
+      lista.style.display = visible ? 'none' : 'block';
+      btnToggle.textContent = visible ? 'Ver detalle' : 'Ocultar detalle';
+    };
   }
 
   function mostrarSeccionTransferencia(servicioId, estado) {
@@ -603,6 +675,9 @@
       cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:#1A4D38;">✓ Esta página ya fue transferida a la familia.</div>';
       return;
     }
+    // El plan Demo (gratis) desbloquea todas las funciones de Pro, EXCEPTO
+    // la transferencia de páginas a familias: eso sigue siendo exclusivo
+    // de Pro (también se valida en el servidor, en crearSesionPagoStripe_).
     if (planFuneraria !== 'pro') {
       cont.innerHTML = `<div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:14px;font-size:13.5px;color:var(--carbon-suave);">
         <strong style="color:var(--terracota-osc);">Función exclusiva del Plan Pro</strong><br>
@@ -661,6 +736,7 @@
       mostrarVista('vistaLista');
       cargarListaServicios();
       cargarPlan();
+      cargarComisiones();
     } else {
       aviso.className = 'aviso-estado error';
       aviso.textContent = resp.error || 'Código inválido.';
@@ -807,13 +883,15 @@
       return;
     }
 
-    // Página nueva: se cobra la activación ($149 MXN) antes de publicarla.
-    // Los datos capturados se guardan de inmediato (estado pendiente_pago) y
-    // el visitante se redirige a Stripe para completar el pago.
+    // Página nueva: se cobra la activación ($149 MXN) antes de publicarla,
+    // excepto en el plan Demo (gratis), donde el servidor la publica de
+    // inmediato sin pasar por Stripe.
     const btn = document.getElementById('btnGuardarServicio');
     btn.disabled = true;
     aviso.className = 'aviso-estado exito';
-    aviso.textContent = 'Redirigiendo al pago seguro de activación...';
+    aviso.textContent = planFuneraria === 'gratis'
+      ? 'Publicando tu página de demostración...'
+      : 'Redirigiendo al pago seguro de activación...';
 
     const urlBase = window.location.origin + window.location.pathname;
     const resp = await llamarAPI('crearSesionActivacionPagina', {
@@ -822,7 +900,12 @@
       urlCancelado: urlBase + '?pagoPaginaOk=0'
     }, 'POST');
 
-    if (resp.ok && resp.urlPago) {
+    if (resp.ok && resp.gratis) {
+      await abrirServicio(resp.id);
+      btn.disabled = false;
+      aviso.className = 'aviso-estado exito';
+      aviso.textContent = '✓ Página de demostración publicada, sin costo.';
+    } else if (resp.ok && resp.urlPago) {
       window.location.href = resp.urlPago;
     } else {
       btn.disabled = false;
@@ -1029,6 +1112,12 @@ if ('serviceWorker' in navigator) {
     const link = document.getElementById('linkPublico').textContent.trim();
     if (!link || link === '') { alert('Primero guarda la página para obtener el link.'); return; }
 
+    // Prellenar el nombre de la funeraria (editable) con el de la sesión, sin sobrescribir si el usuario ya lo cambió
+    const campoNombreFuneraria = document.getElementById('qrNombreFuneraria');
+    if (!campoNombreFuneraria.value) {
+      campoNombreFuneraria.value = (sesion && sesion.nombre) || '';
+    }
+
     cargarLibreriaQR(() => {
       const wrap = document.getElementById('qrCanvas');
       wrap.innerHTML = '';
@@ -1036,7 +1125,7 @@ if ('serviceWorker' in navigator) {
         text: link,
         width: 200,
         height: 200,
-        colorDark: '#2B2723',
+        colorDark: document.getElementById('qrColorPrincipal').value || '#2B2723',
         colorLight: '#FAF6F0',
         correctLevel: QRCode.CorrectLevel.H
       });
@@ -1045,6 +1134,15 @@ if ('serviceWorker' in navigator) {
       const nombre = document.getElementById('fNombre').value || 'Página conmemorativa';
       document.getElementById('qrLabel').textContent = nombre;
     });
+  }
+
+  // Aclara un color hex mezclándolo con blanco (porcentaje 0-1)
+  function aclararColor_(hex, porcentaje) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.round(((num >> 16) & 255) + (255 - ((num >> 16) & 255)) * porcentaje);
+    const g = Math.round(((num >> 8) & 255) + (255 - ((num >> 8) & 255)) * porcentaje);
+    const b = Math.round((num & 255) + (255 - (num & 255)) * porcentaje);
+    return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
   }
 
   // Parte un texto en líneas que quepan en maxWidth (usa la fuente ya asignada a ctx)
@@ -1088,7 +1186,10 @@ if ('serviceWorker' in navigator) {
     const link = document.getElementById('linkPublico').textContent.trim();
     if (!link) { alert('Primero guarda la página para obtener el link.'); return; }
     const nombreFinado = document.getElementById('fNombre').value || 'Página conmemorativa';
-    const nombreFuneraria = (sesion && sesion.nombre) || 'Funeral360';
+    const nombreFuneraria = document.getElementById('qrNombreFuneraria').value || (sesion && sesion.nombre) || 'Funeral360';
+    const colorPrincipal = document.getElementById('qrColorPrincipal').value || '#5E3A2D';
+    const colorAcento = document.getElementById('qrColorAcento').value || '#C9A24B';
+    const colorPrincipalClaro = aclararColor_(colorPrincipal, 0.2);
 
     // QR de alta resolución específico para impresión (independiente del preview en pantalla)
     const qrTemp = document.createElement('div');
@@ -1097,7 +1198,7 @@ if ('serviceWorker' in navigator) {
     document.body.appendChild(qrTemp);
     new QRCode(qrTemp, {
       text: link, width: 560, height: 560,
-      colorDark: '#2B2723', colorLight: '#FFFFFF',
+      colorDark: colorPrincipal, colorLight: '#FFFFFF',
       correctLevel: QRCode.CorrectLevel.H
     });
     const qrGrande = qrTemp.querySelector('canvas');
@@ -1114,12 +1215,12 @@ if ('serviceWorker' in navigator) {
     // ---- Encabezado: identidad de la funeraria ----
     const headerH = 460;
     const gradHeader = ctx.createLinearGradient(0, 0, W, headerH);
-    gradHeader.addColorStop(0, '#5E3A2D');
-    gradHeader.addColorStop(1, '#7A4A3A');
+    gradHeader.addColorStop(0, colorPrincipal);
+    gradHeader.addColorStop(1, colorPrincipalClaro);
     ctx.fillStyle = gradHeader;
     ctx.fillRect(0, 0, W, headerH);
 
-    ctx.fillStyle = '#C9A24B';
+    ctx.fillStyle = colorAcento;
     ctx.font = 'bold 28px Arial';
     dibujarLineas_(ctx, ['PÁGINA CONMEMORATIVA DIGITAL'], W / 2, 100, 0, 'center');
 
@@ -1146,7 +1247,7 @@ if ('serviceWorker' in navigator) {
     ctx.font = '30px Arial';
     dibujarLineas_(ctx, ['Escanea este código con la cámara de tu celular'], W / 2, cardY + 65, 0, 'center');
 
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.font = 'bold 44px Georgia';
     dibujarLineas_(ctx, envolverTexto_(ctx, 'En memoria de ' + nombreFinado, cardW - 100).slice(0, 2), W / 2, cardY + 135, 50, 'center');
 
@@ -1165,7 +1266,7 @@ if ('serviceWorker' in navigator) {
     document.body.removeChild(qrTemp);
 
     // ---- Qué pueden hacer los visitantes en la página ----
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.font = 'bold 38px Georgia';
     dibujarLineas_(ctx, ['¿Qué puedes hacer en esta página?'], W / 2, 1470, 0, 'center');
 
@@ -1200,12 +1301,12 @@ if ('serviceWorker' in navigator) {
 
     // ---- Pie ----
     const footerY = H - 130;
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.fillRect(0, footerY, W, 130);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 26px Arial';
     dibujarLineas_(ctx, ['Funeral360 · Software para funerarias inteligentes'], W / 2, footerY + 58, 0, 'center');
-    ctx.fillStyle = '#C9A24B';
+    ctx.fillStyle = colorAcento;
     ctx.font = '20px Arial';
     dibujarLineas_(ctx, ['Página conmemorativa digital'], W / 2, footerY + 92, 0, 'center');
 
