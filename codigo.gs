@@ -334,6 +334,9 @@ function doPost(e) {
       case "crearFuneraria":
         resultado = crearFuneraria_(datos);
         break;
+      case "solicitarDemo":
+        resultado = solicitarDemo_(datos);
+        break;
       case "publicarRecuerdo":
         resultado = publicarRecuerdo_(datos);
         break;
@@ -977,6 +980,84 @@ function manejarWebhookStripe_(e) {
 // URL base de la página pública (debe coincidir con URL_PAGINA_PUBLICA en
 // admin/panel.html). Se usa solo para armar el link dentro de correos.
 const URL_PAGINA_PUBLICA_ = "https://sergio201186.github.io/Paginas/publica/pagina.html";
+
+// URL del login de funerarias, para el correo de bienvenida de la demo.
+const URL_LOGIN_FUNERARIA_ = "https://sergio201186.github.io/Paginas/login.html";
+
+// ============================================================
+// SOLICITUD DE DEMO (público, botón "Solicitar demo" de index.html)
+// ============================================================
+// Da de alta la funeraria de una vez en plan Demo (gratis) — antes esto solo
+// abría un WhatsApp para que alguien la diera de alta a mano en master.html,
+// y si nadie lo hacía la solicitud se perdía. Ahora: se crea la funeraria,
+// se le manda su URL de acceso y código por correo, y se notifica al correo
+// del master (ConfigMaestro "email") para que le dé seguimiento.
+function solicitarDemo_(datos) {
+  const nombre = (datos.nombre || "").trim();
+  const email = (datos.email || "").trim();
+  const whatsapp = (datos.whatsapp || "").trim();
+  const contacto = (datos.contacto || "").trim();
+
+  if (!nombre || !email) {
+    return { error: "Faltan datos requeridos." };
+  }
+
+  const sheet = getSheet_("Funerarias");
+  const id = generarId_();
+  const codigoAcceso = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const enc = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const fila = new Array(enc.length).fill("");
+  const setCampo = (nombreCol, valor) => {
+    const idx = enc.indexOf(nombreCol);
+    if (idx >= 0) fila[idx] = valor;
+  };
+  setCampo("id", id);
+  setCampo("nombre", nombre);
+  setCampo("codigoAcceso", codigoAcceso);
+  setCampo("activo", true);
+  setCampo("creadoEn", new Date().toISOString());
+  setCampo("plan", "gratis");
+  setCampo("whatsapp", whatsapp);
+  setCampo("email", email);
+  sheet.appendRow(fila);
+  if (contacto) {
+    const contactoIdx = obtenerOCrearColumna_(sheet, "contacto");
+    sheet.getRange(sheet.getLastRow(), contactoIdx + 1).setValue(contacto);
+  }
+
+  // Correo a quien pidió la demo, con su acceso
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Funeral360 · Tu acceso a la demo gratuita",
+      body: "Hola" + (contacto ? " " + contacto : "") + ",\n\n" +
+        "Ya activamos la demo gratuita de Funeral360 para " + nombre + ". Incluye todas las funciones, sin costo:\n\n" +
+        "Ingresa aquí: " + URL_LOGIN_FUNERARIA_ + "\n" +
+        "Código de acceso: " + codigoAcceso + "\n\n" +
+        "Cualquier duda, responde este correo.\n\nEquipo Funeral360"
+    });
+  } catch (e) {}
+
+  // Notificación al master para que le dé seguimiento
+  const emailAdmin = getConfigMaestro_("email");
+  if (emailAdmin) {
+    try {
+      MailApp.sendEmail({
+        to: emailAdmin,
+        subject: "Funeral360 · Nueva solicitud de demo: " + nombre,
+        body: "Se registró automáticamente una nueva funeraria en plan Demo:\n\n" +
+          "Funeraria: " + nombre + "\n" +
+          (contacto ? "Contacto: " + contacto + "\n" : "") +
+          "WhatsApp: " + (whatsapp || "sin dato") + "\n" +
+          "Email: " + email + "\n" +
+          "Código de acceso: " + codigoAcceso + "\n\n" +
+          "Ya puede iniciar sesión; revísala y dale seguimiento desde el panel maestro."
+      });
+    } catch (e) {}
+  }
+
+  return { ok: true, id, codigoAcceso };
+}
 
 // Correo a la familia apenas se confirma la transferencia, con el link
 // directo a la página que ahora es suya de forma permanente.

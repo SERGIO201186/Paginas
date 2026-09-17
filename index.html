@@ -293,6 +293,7 @@ footer a{color:rgba(255,255,255,0.6);text-decoration:none;}
 
 <script>
 const TU_WA = "522281845114";
+const API_URL = "https://script.google.com/macros/s/AKfycbwgdRjqbuIJSYaBhjRNRpi8FdOEcQr7OgLg-jRsgSf9Sorutm37R2IqDO6pA6XX0kqE7Q/exec";
 
 function abrirModalDemo(){document.getElementById('modalDemo').classList.add('abierto');document.body.style.overflow='hidden';}
 function abrirModalContratar(){document.getElementById('modalContratar').classList.add('abierto');document.body.style.overflow='hidden';}
@@ -310,9 +311,35 @@ function enviarDemo(){
   const email=document.getElementById('demoEmail').value.trim();
   const aviso=document.getElementById('avisoDemo');
   if(!nombre||!wa){aviso.className='aviso-modal aviso-error';aviso.textContent='Ingresa el nombre de la funeraria y tu WhatsApp.';return;}
-  const msg='🆕 SOLICITUD DE DEMO FUNERAL360\n\n📋 Funeraria: '+nombre+'\n👤 Contacto: '+contacto+'\n📱 WhatsApp: '+wa+'\n📧 Email: '+email;
-  aviso.className='aviso-modal aviso-exito';aviso.textContent='✓ Solicitud enviada. Te contactaremos en menos de 24 horas.';
-  setTimeout(()=>window.open('https://wa.me/'+TU_WA+'?text='+encodeURIComponent(msg),'_blank'),800);
+  if(!email){aviso.className='aviso-modal aviso-error';aviso.textContent='Ingresa tu correo electrónico para enviarte el acceso a la demo.';return;}
+
+  const btn = document.querySelector('#modalDemo .btn-modal-pri');
+  if (btn) btn.disabled = true;
+  aviso.className='aviso-modal aviso-exito';aviso.textContent='Creando tu demo...';
+
+  fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ accion: 'solicitarDemo', nombre, contacto, whatsapp: wa, email })
+  })
+    .then(r => r.json())
+    .then(resp => {
+      if (resp.ok) {
+        aviso.className='aviso-modal aviso-exito';
+        aviso.textContent='✓ Tu demo ya está lista. Revisa tu correo ('+email+') para tu acceso.';
+        const msg='🆕 SOLICITUD DE DEMO FUNERAL360\n\n📋 Funeraria: '+nombre+'\n👤 Contacto: '+contacto+'\n📱 WhatsApp: '+wa+'\n📧 Email: '+email+'\n🔑 Código: '+resp.codigoAcceso;
+        setTimeout(()=>window.open('https://wa.me/'+TU_WA+'?text='+encodeURIComponent(msg),'_blank'),800);
+        if (btn) btn.disabled = false;
+      } else {
+        aviso.className='aviso-modal aviso-error';
+        aviso.textContent = resp.error || 'No se pudo crear la demo. Intenta de nuevo.';
+        if (btn) btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      aviso.className='aviso-modal aviso-error';
+      aviso.textContent='Sin conexión. Intenta de nuevo.';
+      if (btn) btn.disabled = false;
+    });
 }
 
 function enviarContrato(){
