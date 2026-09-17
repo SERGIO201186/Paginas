@@ -242,6 +242,11 @@
     color:var(--carbon-suave);
     margin-top:8px;
   }
+  .campo input[type="color"]{
+    padding:4px;
+    height:44px;
+    cursor:pointer;
+  }
 
   .tabs-mod{
     display:flex;
@@ -469,6 +474,13 @@
 
       <div class="seccion-titulo">Código QR para imprimir</div>
       <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">Genera el QR y descarga un cartel tamaño carta, a color, listo para imprimir y colocar en el velorio.</p>
+
+      <div class="campo"><label for="qrNombreFuneraria">Nombre de la funeraria (aparece en el cartel)</label><input type="text" id="qrNombreFuneraria" placeholder="Ej. Funeraria San José"></div>
+      <div class="campo-grupo">
+        <div class="campo"><label for="qrColorPrincipal">Color principal</label><input type="color" id="qrColorPrincipal" value="#5E3A2D"></div>
+        <div class="campo"><label for="qrColorAcento">Color de acento</label><input type="color" id="qrColorAcento" value="#C9A24B"></div>
+      </div>
+
       <button class="btn btn-sauce btn-full" id="btnGenerarQR" onclick="generarQR()">Generar código QR</button>
       <div class="qr-wrap" id="qrWrap" style="display:none;">
         <div id="qrCanvas"></div>
@@ -1029,6 +1041,12 @@ if ('serviceWorker' in navigator) {
     const link = document.getElementById('linkPublico').textContent.trim();
     if (!link || link === '') { alert('Primero guarda la página para obtener el link.'); return; }
 
+    // Prellenar el nombre de la funeraria (editable) con el de la sesión, sin sobrescribir si el usuario ya lo cambió
+    const campoNombreFuneraria = document.getElementById('qrNombreFuneraria');
+    if (!campoNombreFuneraria.value) {
+      campoNombreFuneraria.value = (sesion && sesion.nombre) || '';
+    }
+
     cargarLibreriaQR(() => {
       const wrap = document.getElementById('qrCanvas');
       wrap.innerHTML = '';
@@ -1036,7 +1054,7 @@ if ('serviceWorker' in navigator) {
         text: link,
         width: 200,
         height: 200,
-        colorDark: '#2B2723',
+        colorDark: document.getElementById('qrColorPrincipal').value || '#2B2723',
         colorLight: '#FAF6F0',
         correctLevel: QRCode.CorrectLevel.H
       });
@@ -1045,6 +1063,15 @@ if ('serviceWorker' in navigator) {
       const nombre = document.getElementById('fNombre').value || 'Página conmemorativa';
       document.getElementById('qrLabel').textContent = nombre;
     });
+  }
+
+  // Aclara un color hex mezclándolo con blanco (porcentaje 0-1)
+  function aclararColor_(hex, porcentaje) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.round(((num >> 16) & 255) + (255 - ((num >> 16) & 255)) * porcentaje);
+    const g = Math.round(((num >> 8) & 255) + (255 - ((num >> 8) & 255)) * porcentaje);
+    const b = Math.round((num & 255) + (255 - (num & 255)) * porcentaje);
+    return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
   }
 
   // Parte un texto en líneas que quepan en maxWidth (usa la fuente ya asignada a ctx)
@@ -1088,7 +1115,10 @@ if ('serviceWorker' in navigator) {
     const link = document.getElementById('linkPublico').textContent.trim();
     if (!link) { alert('Primero guarda la página para obtener el link.'); return; }
     const nombreFinado = document.getElementById('fNombre').value || 'Página conmemorativa';
-    const nombreFuneraria = (sesion && sesion.nombre) || 'Funeral360';
+    const nombreFuneraria = document.getElementById('qrNombreFuneraria').value || (sesion && sesion.nombre) || 'Funeral360';
+    const colorPrincipal = document.getElementById('qrColorPrincipal').value || '#5E3A2D';
+    const colorAcento = document.getElementById('qrColorAcento').value || '#C9A24B';
+    const colorPrincipalClaro = aclararColor_(colorPrincipal, 0.2);
 
     // QR de alta resolución específico para impresión (independiente del preview en pantalla)
     const qrTemp = document.createElement('div');
@@ -1097,7 +1127,7 @@ if ('serviceWorker' in navigator) {
     document.body.appendChild(qrTemp);
     new QRCode(qrTemp, {
       text: link, width: 560, height: 560,
-      colorDark: '#2B2723', colorLight: '#FFFFFF',
+      colorDark: colorPrincipal, colorLight: '#FFFFFF',
       correctLevel: QRCode.CorrectLevel.H
     });
     const qrGrande = qrTemp.querySelector('canvas');
@@ -1114,12 +1144,12 @@ if ('serviceWorker' in navigator) {
     // ---- Encabezado: identidad de la funeraria ----
     const headerH = 460;
     const gradHeader = ctx.createLinearGradient(0, 0, W, headerH);
-    gradHeader.addColorStop(0, '#5E3A2D');
-    gradHeader.addColorStop(1, '#7A4A3A');
+    gradHeader.addColorStop(0, colorPrincipal);
+    gradHeader.addColorStop(1, colorPrincipalClaro);
     ctx.fillStyle = gradHeader;
     ctx.fillRect(0, 0, W, headerH);
 
-    ctx.fillStyle = '#C9A24B';
+    ctx.fillStyle = colorAcento;
     ctx.font = 'bold 28px Arial';
     dibujarLineas_(ctx, ['PÁGINA CONMEMORATIVA DIGITAL'], W / 2, 100, 0, 'center');
 
@@ -1146,7 +1176,7 @@ if ('serviceWorker' in navigator) {
     ctx.font = '30px Arial';
     dibujarLineas_(ctx, ['Escanea este código con la cámara de tu celular'], W / 2, cardY + 65, 0, 'center');
 
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.font = 'bold 44px Georgia';
     dibujarLineas_(ctx, envolverTexto_(ctx, 'En memoria de ' + nombreFinado, cardW - 100).slice(0, 2), W / 2, cardY + 135, 50, 'center');
 
@@ -1165,7 +1195,7 @@ if ('serviceWorker' in navigator) {
     document.body.removeChild(qrTemp);
 
     // ---- Qué pueden hacer los visitantes en la página ----
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.font = 'bold 38px Georgia';
     dibujarLineas_(ctx, ['¿Qué puedes hacer en esta página?'], W / 2, 1470, 0, 'center');
 
@@ -1200,12 +1230,12 @@ if ('serviceWorker' in navigator) {
 
     // ---- Pie ----
     const footerY = H - 130;
-    ctx.fillStyle = '#5E3A2D';
+    ctx.fillStyle = colorPrincipal;
     ctx.fillRect(0, footerY, W, 130);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 26px Arial';
     dibujarLineas_(ctx, ['Funeral360 · Software para funerarias inteligentes'], W / 2, footerY + 58, 0, 'center');
-    ctx.fillStyle = '#C9A24B';
+    ctx.fillStyle = colorAcento;
     ctx.font = '20px Arial';
     dibujarLineas_(ctx, ['Página conmemorativa digital'], W / 2, footerY + 92, 0, 'center');
 
