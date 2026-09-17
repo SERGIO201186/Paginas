@@ -386,6 +386,14 @@
     <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
   </div>
   <div class="contenedor">
+    <div class="seccion-titulo" style="margin-top:0;">Mis comisiones</div>
+    <div class="servicio-card" style="cursor:default;">
+      <div id="resumenComisiones" style="font-size:13.5px;color:var(--carbon-suave);">Cargando historial de comisiones…</div>
+      <div id="listaComisiones" style="margin-top:10px;display:none;"></div>
+      <button class="btn btn-secundario btn-full" id="btnToggleComisiones" style="margin-top:12px;display:none;">Ver detalle</button>
+    </div>
+
+    <div class="seccion-titulo">Páginas</div>
     <div id="listaServicios"></div>
   </div>
   <button class="fab" id="btnNuevoServicio" title="Nueva página">+</button>
@@ -560,6 +568,7 @@
     mostrarVista('vistaLista');
     cargarListaServicios();
     cargarPlan();
+    cargarComisiones();
   }
 
   // ===== REGRESO DESDE STRIPE (activación de página) =====
@@ -606,6 +615,57 @@
       badge.style.background = esPro ? '#C9A24B' : '#E3D9C8';
       badge.style.color = esPro ? '#2B2723' : '#56504A';
     }
+  }
+
+  // ===== HISTORIAL DE COMISIONES (solo lectura) =====
+  // Muestra lo que la funeraria ha ganado por gestos/créditos comprados en
+  // sus páginas (25% ya calculado por el servidor), descontando el 16% de
+  // impuesto. Es informativo únicamente: no hay forma de editarlo desde aquí.
+  const etiquetasEstadoComision = { pendiente: 'Pendiente de pago', pagada: 'Pagada' };
+  const etiquetasConceptoComision = { creditos: 'Compra de créditos', gesto: 'Gesto virtual' };
+
+  async function cargarComisiones() {
+    if (!sesion) return;
+    const resumen = document.getElementById('resumenComisiones');
+    const resp = await llamarAPI('obtenerMisComisiones', {
+      funerariaId: sesion.funerariaId,
+      codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+
+    if (!resp.ok) {
+      resumen.textContent = 'No se pudo cargar el historial de comisiones.';
+      return;
+    }
+
+    const tasaPct = Math.round((resp.tasaImpuesto || 0) * 100);
+    if (!resp.comisiones || resp.comisiones.length === 0) {
+      resumen.textContent = 'Aún no tienes comisiones generadas. Aparecerán aquí cuando los visitantes compren créditos o gestos en tus páginas.';
+      return;
+    }
+
+    resumen.innerHTML = `Neto acumulado (después de ${tasaPct}% de impuesto): <strong style="color:var(--carbon);font-size:16px;">$${resp.totalNeto.toFixed(2)} MXN</strong>` +
+      `<br><span style="font-size:12px;">Bruto: $${resp.totalBruto.toFixed(2)} MXN</span>`;
+
+    const lista = document.getElementById('listaComisiones');
+    lista.innerHTML = resp.comisiones.map(c => `
+      <div class="moderar-item">
+        <div class="moderar-nombre">${esc(etiquetasConceptoComision[c.concepto] || c.concepto)}</div>
+        <div class="moderar-texto">
+          ${new Date(c.creadoEn).toLocaleDateString('es-MX')} ·
+          Bruto: $${c.comisionBruta.toFixed(2)} · Impuesto (${tasaPct}%): -$${(c.comisionBruta - c.comisionNeta).toFixed(2)} ·
+          <strong>Neto: $${c.comisionNeta.toFixed(2)} MXN</strong>
+        </div>
+        <span class="estado-pill estado-pendiente" style="${c.estado !== 'pendiente' ? 'background:#EEF3EC;color:#1A4D38;' : ''}">${esc(etiquetasEstadoComision[c.estado] || c.estado)}</span>
+      </div>
+    `).join('');
+
+    const btnToggle = document.getElementById('btnToggleComisiones');
+    btnToggle.style.display = 'block';
+    btnToggle.onclick = () => {
+      const visible = lista.style.display !== 'none';
+      lista.style.display = visible ? 'none' : 'block';
+      btnToggle.textContent = visible ? 'Ver detalle' : 'Ocultar detalle';
+    };
   }
 
   function mostrarSeccionTransferencia(servicioId, estado) {
@@ -673,6 +733,7 @@
       mostrarVista('vistaLista');
       cargarListaServicios();
       cargarPlan();
+      cargarComisiones();
     } else {
       aviso.className = 'aviso-estado error';
       aviso.textContent = resp.error || 'Código inválido.';

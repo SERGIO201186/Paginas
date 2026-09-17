@@ -239,6 +239,9 @@ function doGet(e) {
       case "obtenerComisionesFuneraria":
         resultado = obtenerComisionesFuneraria_(e.parameter.funerariaId, e.parameter.masterKey);
         break;
+      case "obtenerMisComisiones":
+        resultado = obtenerMisComisiones_(e.parameter.funerariaId, e.parameter.codigoAcceso);
+        break;
       case "obtenerSuscripcionesFuneraria":
         resultado = obtenerSuscripcionesFuneraria_(e.parameter.masterKey);
         break;
@@ -2615,6 +2618,11 @@ var PRECIOS = {
   comisionFuneraria: 0.25  // 25% para la funeraria
 };
 
+// Tasa de impuesto (IVA) que se descuenta de la comisión de la funeraria
+// al mostrarle su historial. El monto guardado en ComisionesFuneraria
+// (comision25) siempre es el bruto; el neto se calcula al leerlo.
+var TASA_IMPUESTO_COMISION = 0.16;
+
 // Artículos predeterminados del catálogo (se cargan si ArticulosTienda está vacío)
 var CATALOGO_DEFAULT = [
   {emoji:"🌹", nombre:"Rosa virtual", descripcion:"Una rosa en su memoria", creditos:10, tipo:"virtual"},
@@ -2891,6 +2899,45 @@ function obtenerComisionesFuneraria_(funerariaId, masterKey) {
     }
   }
   return { ok: true, comisiones: resultado, totalPendiente: Math.round(totalPendiente * 100) / 100 };
+}
+
+// Historial de comisiones de la PROPIA funeraria (solo lectura), para mostrar
+// en su panel. A diferencia de obtenerComisionesFuneraria_ (uso del master),
+// aquí se valida con funerariaId+codigoAcceso, igual que el resto de las
+// funciones del panel de la funeraria.
+function obtenerMisComisiones_(funerariaId, codigoAcceso) {
+  if (!validarFuneraria_(funerariaId, codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  const sheet = getSheet_("ComisionesFuneraria");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const funIdx = enc.indexOf("funerariaId");
+  const resultado = [];
+  let totalBruto = 0, totalNeto = 0;
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][funIdx]) === String(funerariaId)) {
+      const obj = {};
+      enc.forEach((h, idx) => obj[h] = limpiarValor_(filas[i][idx]));
+      const bruto = parseFloat(obj.comision25 || 0);
+      const neto = Math.round(bruto * (1 - TASA_IMPUESTO_COMISION) * 100) / 100;
+      obj.comisionBruta = Math.round(bruto * 100) / 100;
+      obj.comisionNeta = neto;
+      obj.tasaImpuesto = TASA_IMPUESTO_COMISION;
+      delete obj.comision25; // no exponer el nombre interno del campo bruto
+      resultado.push(obj);
+      totalBruto += bruto;
+      totalNeto += neto;
+    }
+  }
+  resultado.sort((a, b) => new Date(b.creadoEn) - new Date(a.creadoEn));
+  return {
+    ok: true,
+    comisiones: resultado,
+    totalBruto: Math.round(totalBruto * 100) / 100,
+    totalNeto: Math.round(totalNeto * 100) / 100,
+    tasaImpuesto: TASA_IMPUESTO_COMISION
+  };
 }
 
 function obtenerSuscripcionesFuneraria_(masterKey) {
