@@ -579,6 +579,16 @@ function obtenerServicioPublico_(slug) {
       if (obj.estado === "inactivo") {
         return { ok: false, error: "Esta página no está disponible en este momento." };
       }
+      // Páginas del plan Demo: si el master desactivó a la funeraria desde su
+      // panel, se bloquean al público de inmediato. Una vez transferida a la
+      // familia (estado "transferido") ya le pertenece a ella de forma
+      // permanente y no se bloquea aunque la funeraria demo se desactive.
+      if (obj.estado !== "transferido") {
+        const funerariaEstado = obtenerPlanActivoFuneraria_(obj.funerariaId);
+        if (funerariaEstado.plan === "gratis" && !funerariaEstado.activo) {
+          return { ok: false, error: "Esta página no está disponible en este momento." };
+        }
+      }
       obj.faseVisibilidad = calcularFaseVisibilidad_(obj.fechaDefuncion, obj.estado);
       const likes = contarLikesFotos_(obj.id);
       obj.likesPortada = likes.portada;
@@ -2605,6 +2615,30 @@ function obtenerPlanFuneraria_(funerariaId, codigoAcceso) {
   return { ok: true, plan: "gratis" };
 }
 
+// Lectura interna (sin validar codigoAcceso) de plan+activo de una funeraria.
+// El plan "gratis" es el plan Demo: desbloquea funciones Pro sin costo y sus
+// páginas quedan bloqueadas al público en cuanto el master la desactiva
+// desde su panel (toggleFuneraria). Usado por crearSesionActivacionPagina_
+// (para no cobrar la activación) y por obtenerServicioPublico_ (para
+// bloquear el acceso público cuando corresponda).
+function obtenerPlanActivoFuneraria_(funerariaId) {
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const planIdx = enc.indexOf("plan");
+  const activoIdx = enc.indexOf("activo");
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][idIdx]) === String(funerariaId)) {
+      const plan = planIdx >= 0 ? String(filas[i][planIdx] || "gratis") : "gratis";
+      const activoVal = activoIdx >= 0 ? filas[i][activoIdx] : true;
+      const activo = activoVal === true || String(activoVal).toUpperCase() === "TRUE";
+      return { plan, activo };
+    }
+  }
+  return { plan: "gratis", activo: true };
+}
+
 // ============================================================
 // MODELO C - SUSCRIPCIONES Y COBROS
 // ============================================================
@@ -2756,14 +2790,24 @@ function crearSesionActivacionPagina_(datos) {
   const slug = generarSlug_(datos.nombreFinado);
   const ahora = new Date().toISOString();
 
+  // Plan Demo (gratis): la funeraria prueba todas las funciones sin costo.
+  // La página se publica de inmediato ("en_curso"), sin pasar por Stripe.
+  // El master la deja pública mientras la funeraria demo esté activa; si la
+  // desactiva desde su panel, obtenerServicioPublico_ la bloquea al público.
+  const esDemo = obtenerPlanActivoFuneraria_(datos.funerariaId).plan === "gratis";
+
   sheet.appendRow([
     id, datos.funerariaId, datos.nombreFinado, datos.fechaNacimiento || "", datos.fechaDefuncion || "",
     datos.fotoUrl || "", datos.biografia || "",
     datos.fechaCepelio || "", datos.horaCepelio || "", datos.ubicacionCepelio || "",
     datos.fechaMisa || "", datos.horaMisa || "", datos.ubicacionMisa || "",
     datos.fechaSalida || "", datos.horaSalida || "", datos.ubicacionSalida || "",
-    datos.reglasPublicacion || "", "pendiente_pago", slug, ahora, "", ""
+    datos.reglasPublicacion || "", esDemo ? "en_curso" : "pendiente_pago", slug, ahora, "", ""
   ]);
+
+  if (esDemo) {
+    return { ok: true, id: id, slug: slug, gratis: true };
+  }
 
   const r = crearSesionStripe_(
     "Activación de página conmemorativa - " + datos.nombreFinado,

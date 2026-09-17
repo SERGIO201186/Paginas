@@ -611,7 +611,7 @@
     // Mostrar badge del plan en el topbar
     const badge = document.getElementById('badgePlan');
     if (badge) {
-      badge.textContent = esPro ? '⭐ Pro' : 'Gratis';
+      badge.textContent = esPro ? '⭐ Pro' : 'Demo';
       badge.style.background = esPro ? '#C9A24B' : '#E3D9C8';
       badge.style.color = esPro ? '#2B2723' : '#56504A';
     }
@@ -675,17 +675,8 @@
       cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:#1A4D38;">✓ Esta página ya fue transferida a la familia.</div>';
       return;
     }
-    if (planFuneraria !== 'pro') {
-      cont.innerHTML = `<div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:14px;font-size:13.5px;color:var(--carbon-suave);">
-        <strong style="color:var(--terracota-osc);">Función exclusiva del Plan Pro</strong><br>
-        Para transferir páginas a las familias necesitas el Plan Pro.<br><br>
-        <a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" rel="noopener noreferrer"
-           style="display:inline-block;padding:9px 18px;background:var(--terracota);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">
-          Ver Plan Pro →
-        </a>
-      </div>`;
-      return;
-    }
+    // El plan Demo (gratis) incluye todas las funciones del Plan Pro,
+    // incluida la transferencia de páginas a las familias.
     cont.innerHTML = `
       <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:12px;">
         Genera el cobro para que la familia pague y reciba acceso permanente a su página.
@@ -880,13 +871,15 @@
       return;
     }
 
-    // Página nueva: se cobra la activación ($149 MXN) antes de publicarla.
-    // Los datos capturados se guardan de inmediato (estado pendiente_pago) y
-    // el visitante se redirige a Stripe para completar el pago.
+    // Página nueva: se cobra la activación ($149 MXN) antes de publicarla,
+    // excepto en el plan Demo (gratis), donde el servidor la publica de
+    // inmediato sin pasar por Stripe.
     const btn = document.getElementById('btnGuardarServicio');
     btn.disabled = true;
     aviso.className = 'aviso-estado exito';
-    aviso.textContent = 'Redirigiendo al pago seguro de activación...';
+    aviso.textContent = planFuneraria === 'gratis'
+      ? 'Publicando tu página de demostración...'
+      : 'Redirigiendo al pago seguro de activación...';
 
     const urlBase = window.location.origin + window.location.pathname;
     const resp = await llamarAPI('crearSesionActivacionPagina', {
@@ -895,7 +888,12 @@
       urlCancelado: urlBase + '?pagoPaginaOk=0'
     }, 'POST');
 
-    if (resp.ok && resp.urlPago) {
+    if (resp.ok && resp.gratis) {
+      await abrirServicio(resp.id);
+      btn.disabled = false;
+      aviso.className = 'aviso-estado exito';
+      aviso.textContent = '✓ Página de demostración publicada, sin costo.';
+    } else if (resp.ok && resp.urlPago) {
       window.location.href = resp.urlPago;
     } else {
       btn.disabled = false;
