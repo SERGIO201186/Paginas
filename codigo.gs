@@ -236,6 +236,9 @@ function doGet(e) {
       case "obtenerPlanFuneraria":
         resultado = obtenerPlanFuneraria_(e.parameter.funerariaId, e.parameter.codigoAcceso);
         break;
+      case "obtenerEstadoSuscripcionFuneraria":
+        resultado = obtenerEstadoSuscripcionFuneraria_(e.parameter.funerariaId, e.parameter.codigoAcceso);
+        break;
       case "obtenerComisionesFuneraria":
         resultado = obtenerComisionesFuneraria_(e.parameter.funerariaId, e.parameter.masterKey);
         break;
@@ -381,6 +384,9 @@ function doPost(e) {
         break;
       case "crearSesionMensualidad":
         resultado = crearSesionMensualidad_(datos);
+        break;
+      case "crearSesionMensualidadPropia":
+        resultado = crearSesionMensualidadPropia_(datos);
         break;
       case "crearSesionPagina":
         resultado = crearSesionPagina_(datos);
@@ -1312,17 +1318,107 @@ function marcarSuscripcionCompletada_(session) {
   const idIdxF = encF.indexOf("id");
   const suscActIdx = obtenerOCrearColumna_(sheetF, "suscripcionActiva");
   const venceIdx = obtenerOCrearColumna_(sheetF, "venceSuscripcion");
+  const avisoIdx = obtenerOCrearColumna_(sheetF, "avisoMensualidadEnviado");
   for (let i = 1; i < filasF.length; i++) {
     if (String(filasF[i][idIdxF]) === String(funerariaId)) {
       sheetF.getRange(i + 1, suscActIdx + 1).setValue(true);
       if (tipo === "mensualidad") {
-        const vence = new Date();
+        // Si paga antes de que venza (dentro del aviso o la gracia), la
+        // vigencia se extiende desde su fecha de corte actual en vez de
+        // desde hoy, para no regalarle días perdidos por pagar antes.
+        const venceActualStr = filasF[i][venceIdx];
+        const ahora = new Date();
+        let base = ahora;
+        if (venceActualStr) {
+          const venceActual = new Date(venceActualStr);
+          if (venceActual > ahora) base = venceActual;
+        }
+        const vence = new Date(base);
         vence.setMonth(vence.getMonth() + 1);
         sheetF.getRange(i + 1, venceIdx + 1).setValue(vence.toISOString());
+        sheetF.getRange(i + 1, avisoIdx + 1).setValue(false);
+        notificarMensualidadPagada_(funerariaId, vence);
       }
       break;
     }
   }
+}
+
+// Correo a la funeraria confirmando que su mensualidad ($99 MXN) se pagó y
+// hasta cuándo queda vigente.
+function notificarMensualidadPagada_(funerariaId, vence) {
+  const email = emailFuneraria_(funerariaId);
+  if (!email) return;
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Funeral360 · Mensualidad pagada",
+      body: "Hola,\n\n" +
+        "Tu pago de $" + PRECIOS.mensualidad + " MXN de la mensualidad se confirmó. Tu suscripción queda vigente hasta el " + vence.toLocaleDateString('es-MX') + ".\n\n" +
+        "Gracias por seguir confiando en Funeral360."
+    });
+  } catch (e) {}
+}
+
+// Revisa a diario las funerarias plan Pro con mensualidad próxima a vencer y
+// les manda UN aviso por correo (no se repite cada día: se marca
+// avisoMensualidadEnviado para no volver a avisar hasta el siguiente pago).
+// Las que ya están vencidas más allá de los días de gracia se bloquean solo
+// del lado del panel (obtenerEstadoSuscripcionFuneraria_ / admin/panel.html)
+// — aquí no se desactiva la cuenta ni se tocan sus páginas.
+function revisarSuscripcionesFuneraria_() {
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const planIdx = enc.indexOf("plan");
+  const nombreIdx = enc.indexOf("nombre");
+  const venceIdx = enc.indexOf("venceSuscripcion");
+  const avisoIdx = obtenerOCrearColumna_(sheet, "avisoMensualidadEnviado");
+
+  for (let i = 1; i < filas.length; i++) {
+    const plan = planIdx >= 0 ? String(filas[i][planIdx] || "gratis") : "gratis";
+    const venceStr = filas[i][venceIdx];
+    if (plan !== "pro" || !venceStr) continue;
+
+    const yaAvisado = filas[i][avisoIdx] === true || String(filas[i][avisoIdx]).toUpperCase() === "TRUE";
+    if (yaAvisado) continue;
+
+    const estado = calcularEstadoSuscripcion_(venceStr);
+    if (!estado.avisar || estado.diasParaVencer < 0) continue; // el aviso es antes de vencer, no ya vencida
+
+    const funerariaId = filas[i][idIdx];
+    const nombre = filas[i][nombreIdx] || "";
+    try {
+      notificarRecordatorioMensualidad_(funerariaId, nombre, estado.diasParaVencer);
+      sheet.getRange(i + 1, avisoIdx + 1).setValue(true);
+    } catch (e) {}
+  }
+}
+
+function notificarRecordatorioMensualidad_(funerariaId, nombre, diasParaVencer) {
+  const email = emailFuneraria_(funerariaId);
+  if (!email) return;
+  const texto = diasParaVencer <= 0
+    ? "hoy vence tu mensualidad"
+    : "tu mensualidad vence en " + diasParaVencer + (diasParaVencer === 1 ? " día" : " días");
+  MailApp.sendEmail({
+    to: email,
+    subject: "Funeral360 · Recordatorio: " + texto,
+    body: "Hola" + (nombre ? " (" + nombre + ")" : "") + ",\n\n" +
+      "Te recordamos que " + texto + ". Para evitar que se bloquee tu panel, entra y paga tu mensualidad de $" + PRECIOS.mensualidad + " MXN desde el botón que aparece arriba de tu lista de páginas.\n\n" +
+      "Después de la fecha de vencimiento tienes " + DIAS_GRACIA_MENSUALIDAD + " días de tolerancia antes de que se bloquee el acceso.\n\n" +
+      "Equipo Funeral360"
+  });
+}
+
+// Ejecutar UNA VEZ manualmente desde el editor de Apps Script (no se llama
+// desde doGet/doPost) para instalar la revisión diaria de mensualidades.
+function instalarTriggerRevisionSuscripciones_() {
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === "revisarSuscripcionesFuneraria_") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("revisarSuscripcionesFuneraria_").timeBased().everyDays(1).atHour(8).create();
 }
 
 // Activa la página que estaba "pendiente_pago" (creada desde el panel de la
@@ -2829,6 +2925,53 @@ function obtenerFunerariaIdDeServicio_(servicioId) {
   return null;
 }
 
+// A partir de una fecha de vencimiento, calcula cuántos días faltan (negativo
+// si ya pasó), si toca avisar (dentro de DIAS_AVISO_MENSUALIDAD) y si ya se
+// pasó del período de gracia (DIAS_GRACIA_MENSUALIDAD) y toca bloquear.
+function calcularEstadoSuscripcion_(venceSuscripcionStr) {
+  const vence = new Date(venceSuscripcionStr);
+  const ahora = new Date();
+  const MS_POR_DIA = 24 * 60 * 60 * 1000;
+  const diasParaVencer = Math.ceil((vence - ahora) / MS_POR_DIA);
+  return {
+    vence: vence.toISOString(),
+    diasParaVencer: diasParaVencer,
+    avisar: diasParaVencer <= DIAS_AVISO_MENSUALIDAD,
+    bloqueada: diasParaVencer < -DIAS_GRACIA_MENSUALIDAD
+  };
+}
+
+// Estado de la mensualidad para mostrarlo en el panel de la propia
+// funeraria. Solo aplica al plan Pro; el plan Demo no paga mensualidad. Si
+// nunca se le ha cobrado una mensualidad (venceSuscripcion vacío — p. ej.
+// una funeraria que el master pasó a Pro a mano sin pasar por Stripe), no
+// se bloquea: solo se restringe a partir de la primera fecha de
+// vencimiento real que quede registrada.
+function obtenerEstadoSuscripcionFuneraria_(funerariaId, codigoAcceso) {
+  if (!validarFuneraria_(funerariaId, codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  if (obtenerPlanActivoFuneraria_(funerariaId).plan !== "pro") {
+    return { ok: true, aplica: false };
+  }
+  const sheet = getSheet_("Funerarias");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const venceIdx = enc.indexOf("venceSuscripcion");
+  for (let i = 1; i < filas.length; i++) {
+    if (String(filas[i][idIdx]) === String(funerariaId)) {
+      const venceStr = venceIdx >= 0 ? filas[i][venceIdx] : "";
+      if (!venceStr) return { ok: true, aplica: false };
+      const estado = calcularEstadoSuscripcion_(venceStr);
+      estado.ok = true;
+      estado.aplica = true;
+      return estado;
+    }
+  }
+  return { ok: true, aplica: false };
+}
+
 // ============================================================
 // MODELO C - SUSCRIPCIONES Y COBROS
 // ============================================================
@@ -2846,6 +2989,14 @@ var PRECIOS = {
 // al mostrarle su historial. El monto guardado en ComisionesFuneraria
 // (comision25) siempre es el bruto; el neto se calcula al leerlo.
 var TASA_IMPUESTO_COMISION = 0.16;
+
+// Mensualidad del Plan Pro ($99 MXN): días antes del vencimiento en que se
+// avisa a la funeraria, y días de tolerancia después de vencer antes de
+// bloquearle el panel. Solo aplica a funerarias plan "pro" que ya tengan
+// una fecha de vencimiento registrada (si nunca se les ha cobrado
+// mensualidad, no se bloquean: ver obtenerEstadoSuscripcionFuneraria_).
+var DIAS_AVISO_MENSUALIDAD = 5;
+var DIAS_GRACIA_MENSUALIDAD = 3;
 
 // Artículos predeterminados del catálogo (se cargan si ArticulosTienda está vacío)
 var CATALOGO_DEFAULT = [
@@ -2926,21 +3077,38 @@ function crearSesionSetup_(datos) {
 }
 
 function crearSesionMensualidad_(datos) {
+  // Cobro manual generado por el master (link para enviar aparte) — se
+  // mantiene por compatibilidad; ahora la propia funeraria también puede
+  // pagar su mensualidad desde su panel con crearSesionMensualidadPropia_.
   if (!validarMaster_(datos.masterKey)) return { error: "No autorizado." };
+  return crearSesionMensualidadInterna_(datos.funerariaId, datos.nombreFuneraria, datos.email, datos.urlExito, datos.urlCancelado);
+}
+
+// La propia funeraria paga su mensualidad desde su panel (botón que aparece
+// cuando se acerca o ya pasó su vencimiento), sin depender de que el master
+// le genere y mande el link a mano.
+function crearSesionMensualidadPropia_(datos) {
+  if (!validarFuneraria_(datos.funerariaId, datos.codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  return crearSesionMensualidadInterna_(datos.funerariaId, "", emailFuneraria_(datos.funerariaId), datos.urlExito, datos.urlCancelado);
+}
+
+function crearSesionMensualidadInterna_(funerariaId, nombreFuneraria, email, urlExito, urlCancelado) {
   const r = crearSesionStripe_(
-    "Mensualidad Páginas Conmemorativas - " + (datos.nombreFuneraria || ""),
+    "Mensualidad Páginas Conmemorativas" + (nombreFuneraria ? " - " + nombreFuneraria : ""),
     PRECIOS.mensualidad,
-    datos.email || "",
-    datos.urlExito || "",
-    datos.urlCancelado || "",
-    { tipo: "mensualidad", funerariaId: datos.funerariaId }
+    email || "",
+    urlExito || "",
+    urlCancelado || "",
+    { tipo: "mensualidad", funerariaId: funerariaId }
   );
   if (r.error) return { error: "Stripe: " + r.error.message };
 
   const sheet = getSheet_("SuscripcionesFuneraria");
   const vence = new Date();
   vence.setMonth(vence.getMonth() + 1);
-  sheet.appendRow([generarId_(), datos.funerariaId, "mensualidad", PRECIOS.mensualidad, r.id, "pendiente", new Date().toISOString(), vence.toISOString()]);
+  sheet.appendRow([generarId_(), funerariaId, "mensualidad", PRECIOS.mensualidad, r.id, "pendiente", new Date().toISOString(), vence.toISOString()]);
   return { ok: true, urlPago: r.url };
 }
 
