@@ -1336,10 +1336,14 @@ function activarPaginaPagada_(session) {
     const encS = filasS[0];
     const idIdxS = encS.indexOf("id");
     const estadoIdxS = encS.indexOf("estado");
+    const funIdxS = encS.indexOf("funerariaId");
+    const nombreIdxS = encS.indexOf("nombreFinado");
+    const slugIdxS = encS.indexOf("slug");
     for (let i = 1; i < filasS.length; i++) {
       if (filasS[i][idIdxS] === servicioId) {
         if (filasS[i][estadoIdxS] === "pendiente_pago") {
           sheetS.getRange(i + 1, estadoIdxS + 1).setValue("en_curso");
+          notificarActivacionPaginaPagada_(filasS[i][funIdxS], filasS[i][nombreIdxS], filasS[i][slugIdxS]);
         }
         break;
       }
@@ -1357,6 +1361,25 @@ function activarPaginaPagada_(session) {
       break;
     }
   }
+}
+
+// Correo a la funeraria confirmando que su pago de activación ($149 MXN) se
+// confirmó y su página ya está publicada — antes esto solo se reflejaba en
+// el panel (el aviso al volver de Stripe), sin ningún respaldo por correo.
+function notificarActivacionPaginaPagada_(funerariaId, nombreFinado, slug) {
+  const email = emailFuneraria_(funerariaId);
+  if (!email) return;
+  const link = URL_PAGINA_PUBLICA_ + "?p=" + slug;
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Funeral360 · Pago confirmado: la página de " + nombreFinado + " ya está activa",
+      body: "Hola,\n\n" +
+        "Tu pago de $" + PRECIOS.pagina + " MXN por la activación de la página conmemorativa de " + nombreFinado + " se confirmó. La página ya está publicada:\n\n" +
+        link + "\n\n" +
+        "Ya puedes compartir el link o generar el código QR para imprimir desde tu panel.\n\nEquipo Funeral360"
+    });
+  } catch (e) {}
 }
 
 function verificarEstadoPago_(servicioId) {
