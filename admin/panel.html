@@ -433,8 +433,13 @@
       </div>
     </div>
     <div class="campo">
-      <label for="fFotoUrl">URL de foto (opcional)</label>
-      <input type="text" id="fFotoUrl" placeholder="Link directo a una foto">
+      <label for="fFotoArchivo">Foto de perfil (opcional)</label>
+      <input type="file" accept="image/*" id="fFotoArchivo" onchange="procesarFotoCampo(this,'perfil')">
+      <div id="fFotoPreviewWrap" style="margin-top:8px;display:none;">
+        <img id="fFotoPreview" alt="" style="max-width:110px;max-height:110px;border-radius:8px;display:block;object-fit:cover;">
+      </div>
+      <div class="aviso-estado" id="avisoFotoPerfil" style="margin-top:6px;"></div>
+      <input type="text" id="fFotoUrl" placeholder="o pega el link de una imagen" style="margin-top:8px;">
     </div>
     <div class="campo">
       <label for="fBio">Biografía breve (opcional)</label>
@@ -516,8 +521,16 @@
       <div id="listaPedidosFlores"><div class="vacio">Sin pedidos por ahora.</div></div>
 
       <div class="seccion-titulo">Foto de portada (banner)</div>
-      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">URL de la foto grande que aparece como banner en la parte superior de la página.</p>
-      <div class="campo"><label for="fFotoPortada">URL foto de portada</label><input type="text" id="fFotoPortada" placeholder="Link de Drive o imagen directa"></div>
+      <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:10px;">Foto grande que aparece como banner en la parte superior de la página.</p>
+      <div class="campo">
+        <label for="fFotoPortadaArchivo">Elegir de la galería</label>
+        <input type="file" accept="image/*" id="fFotoPortadaArchivo" onchange="procesarFotoCampo(this,'portada')">
+        <div id="fFotoPortadaPreviewWrap" style="margin-top:8px;display:none;">
+          <img id="fFotoPortadaPreview" alt="" style="max-width:100%;max-height:140px;border-radius:8px;display:block;object-fit:cover;">
+        </div>
+        <div class="aviso-estado" id="avisoFotoPortadaSubida" style="margin-top:6px;"></div>
+        <input type="text" id="fFotoPortada" placeholder="o pega el link de una imagen" style="margin-top:8px;">
+      </div>
       <button class="btn btn-sauce btn-pequeno" id="btnGuardarPortada" style="margin-bottom:16px;" onclick="guardarPortada()">Guardar portada</button>
       <div class="aviso-estado" id="avisoPortada"></div>
 
@@ -539,6 +552,7 @@
   let sesion = JSON.parse(localStorage.getItem('sesionFuneraria') || 'null');
   let planFuneraria = 'gratis'; // se actualiza al cargar
   let servicioActualId = null;
+  let fotoPerfilBase64 = null; // foto de perfil elegida de la galería para una página aún no creada
   let tabModeracionActiva = 'condolencias';
 
   // Escapa texto antes de insertarlo con innerHTML — el contenido de recuerdos,
@@ -789,10 +803,24 @@
   });
 
   function limpiarFormulario() {
-    ['fNombre','fNacimiento','fDefuncion','fFotoUrl','fBio',
+    ['fNombre','fNacimiento','fDefuncion','fFotoUrl','fFotoPortada','fBio',
      'fFechaCepelio','fHoraCepelio','fUbicCepelio',
      'fFechaMisa','fHoraMisa','fUbicMisa',
      'fFechaSalida','fHoraSalida','fUbicSalida','fReglas'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fFotoArchivo').value = '';
+    document.getElementById('fFotoPortadaArchivo').value = '';
+    document.getElementById('avisoFotoPerfil').textContent = '';
+    document.getElementById('avisoFotoPortadaSubida').textContent = '';
+    fotoPerfilBase64 = null;
+    mostrarPreviewFoto_('perfil', '');
+    mostrarPreviewFoto_('portada', '');
+  }
+
+  function mostrarPreviewFoto_(tipo, url) {
+    const preview = document.getElementById(tipo === 'portada' ? 'fFotoPortadaPreview' : 'fFotoPreview');
+    const wrap = document.getElementById(tipo === 'portada' ? 'fFotoPortadaPreviewWrap' : 'fFotoPreviewWrap');
+    if (url) { preview.src = url; wrap.style.display = 'block'; }
+    else { preview.src = ''; wrap.style.display = 'none'; }
   }
 
   // ===== ABRIR SERVICIO EXISTENTE =====
@@ -808,6 +836,10 @@
     document.getElementById('fNacimiento').value = s.fechaNacimiento || '';
     document.getElementById('fDefuncion').value = s.fechaDefuncion || '';
     document.getElementById('fFotoUrl').value = s.fotoUrl || '';
+    document.getElementById('fFotoArchivo').value = '';
+    document.getElementById('avisoFotoPerfil').textContent = '';
+    fotoPerfilBase64 = null;
+    mostrarPreviewFoto_('perfil', s.fotoUrl);
     document.getElementById('fBio').value = s.biografia || '';
     document.getElementById('fFechaCepelio').value = s.fechaCepelio || '';
     document.getElementById('fHoraCepelio').value = s.horaCepelio || '';
@@ -837,7 +869,10 @@
       cargarPedidosFlores();
     }
     mostrarSeccionTransferencia(id, s.estado);
-    if (s.fotoPortadaUrl) document.getElementById("fFotoPortada").value = s.fotoPortadaUrl;
+    document.getElementById('fFotoPortada').value = s.fotoPortadaUrl || '';
+    document.getElementById('fFotoPortadaArchivo').value = '';
+    document.getElementById('avisoFotoPortadaSubida').textContent = '';
+    mostrarPreviewFoto_('portada', s.fotoPortadaUrl);
 
     mostrarVista('vistaFormulario');
   };
@@ -896,11 +931,14 @@
     const urlBase = window.location.origin + window.location.pathname;
     const resp = await llamarAPI('crearSesionActivacionPagina', {
       ...datos,
+      fotoBase64: fotoPerfilBase64 || undefined,
+      tipoMime: fotoPerfilBase64 ? 'image/jpeg' : undefined,
       urlExito: urlBase + '?pagoPaginaOk=1',
       urlCancelado: urlBase + '?pagoPaginaOk=0'
     }, 'POST');
 
     if (resp.ok && resp.gratis) {
+      fotoPerfilBase64 = null;
       await abrirServicio(resp.id);
       btn.disabled = false;
       aviso.className = 'aviso-estado exito';
@@ -1068,6 +1106,65 @@
     }, 'POST');
     cargarPedidosFlores();
   };
+
+  // ===== SUBIR FOTO DESDE LA GALERÍA (perfil o portada) =====
+  // Redimensiona/comprime en el navegador antes de mandarla (igual que ya
+  // hace publica/pagina.html al subir recuerdos), para no mandar fotos de
+  // varios MB a través de Apps Script.
+  function procesarFotoCampo(inputEl, tipo) {
+    const archivo = inputEl.files[0];
+    if (!archivo) return;
+    const aviso = document.getElementById(tipo === 'portada' ? 'avisoFotoPortadaSubida' : 'avisoFotoPerfil');
+
+    const r = new FileReader();
+    r.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = tipo === 'portada' ? 1600 : 1000;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+        mostrarPreviewFoto_(tipo, dataUrl);
+
+        if (tipo === 'perfil' && !servicioActualId) {
+          // Página nueva: todavía no existe en el servidor, así que la foto
+          // se manda junto con los demás datos al presionar "Guardar página".
+          fotoPerfilBase64 = dataUrl;
+          aviso.className = 'aviso-estado exito';
+          aviso.textContent = 'Foto lista, se subirá al guardar la página.';
+          return;
+        }
+        subirFotoAlServidor_(dataUrl, tipo, aviso);
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(archivo);
+  }
+
+  async function subirFotoAlServidor_(dataUrl, tipo, aviso) {
+    aviso.className = 'aviso-estado exito';
+    aviso.textContent = 'Subiendo foto...';
+    const resp = await llamarAPI('subirFotoServicio', {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso,
+      servicioId: servicioActualId, tipo, imagenBase64: dataUrl, tipoMime: 'image/jpeg'
+    }, 'POST');
+    if (resp.ok) {
+      document.getElementById(tipo === 'portada' ? 'fFotoPortada' : 'fFotoUrl').value = resp.url;
+      aviso.className = 'aviso-estado exito';
+      aviso.textContent = '✓ Foto subida.';
+      if (tipo === 'portada') guardarPortada();
+    } else {
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'No se pudo subir la foto.';
+    }
+  }
 
   // ===== FOTO DE PORTADA =====
   window.guardarPortada = async function() {

@@ -361,6 +361,9 @@ function doPost(e) {
       case "actualizarPortada":
         resultado = actualizarPortada_(datos);
         break;
+      case "subirFotoServicio":
+        resultado = subirFotoServicio_(datos);
+        break;
       case "toggleFuneraria":
         resultado = toggleFuneraria_(datos);
         break;
@@ -1129,6 +1132,19 @@ function carpetaServicioEnDrive_(slugOId, subcarpeta) {
   return subcarpeta ? obtenerOCrearSubcarpeta_(carpetaPagina, subcarpeta) : carpetaPagina;
 }
 
+// Decodifica una imagen en base64 (dataURL o no) y la sube a la carpeta de
+// Drive indicada, dejándola pública solo por link. Devuelve la URL directa.
+function subirImagenADrive_(carpeta, imagenBase64, tipoMime, nombreArchivo) {
+  const partes = String(imagenBase64).split(",");
+  const contenido = partes.length > 1 ? partes[1] : partes[0];
+  const mime = tipoMime || "image/jpeg";
+  const bytes = Utilities.base64Decode(contenido);
+  const blob = Utilities.newBlob(bytes, mime, nombreArchivo);
+  const archivo = carpeta.createFile(blob);
+  archivo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return "https://drive.google.com/uc?export=view&id=" + archivo.getId();
+}
+
 function obtenerSlugServicio_(servicioId) {
   const sheet = getSheet_("Servicios");
   const filas = sheet.getDataRange().getValues();
@@ -1320,10 +1336,14 @@ function activarPaginaPagada_(session) {
     const encS = filasS[0];
     const idIdxS = encS.indexOf("id");
     const estadoIdxS = encS.indexOf("estado");
+    const funIdxS = encS.indexOf("funerariaId");
+    const nombreIdxS = encS.indexOf("nombreFinado");
+    const slugIdxS = encS.indexOf("slug");
     for (let i = 1; i < filasS.length; i++) {
       if (filasS[i][idIdxS] === servicioId) {
         if (filasS[i][estadoIdxS] === "pendiente_pago") {
           sheetS.getRange(i + 1, estadoIdxS + 1).setValue("en_curso");
+          notificarActivacionPaginaPagada_(filasS[i][funIdxS], filasS[i][nombreIdxS], filasS[i][slugIdxS]);
         }
         break;
       }
@@ -1341,6 +1361,25 @@ function activarPaginaPagada_(session) {
       break;
     }
   }
+}
+
+// Correo a la funeraria confirmando que su pago de activación ($149 MXN) se
+// confirmó y su página ya está publicada — antes esto solo se reflejaba en
+// el panel (el aviso al volver de Stripe), sin ningún respaldo por correo.
+function notificarActivacionPaginaPagada_(funerariaId, nombreFinado, slug) {
+  const email = emailFuneraria_(funerariaId);
+  if (!email) return;
+  const link = URL_PAGINA_PUBLICA_ + "?p=" + slug;
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Funeral360 · Pago confirmado: la página de " + nombreFinado + " ya está activa",
+      body: "Hola,\n\n" +
+        "Tu pago de $" + PRECIOS.pagina + " MXN por la activación de la página conmemorativa de " + nombreFinado + " se confirmó. La página ya está publicada:\n\n" +
+        link + "\n\n" +
+        "Ya puedes compartir el link o generar el código QR para imprimir desde tu panel.\n\nEquipo Funeral360"
+    });
+  } catch (e) {}
 }
 
 function verificarEstadoPago_(servicioId) {
@@ -1937,6 +1976,53 @@ function actualizarPortada_(datos) {
     }
   }
   return { error: "Servicio no encontrado." };
+}
+
+// Sube desde el panel la foto de perfil o de portada de una página que ya
+// existe (a diferencia de subirFoto_, que es para fotos que suben los
+// visitantes al muro de recuerdos y pasan por moderación: aquí sube
+// directo la propia funeraria, sin moderación, y se guarda en el campo
+// correspondiente de Servicios en vez de en la hoja Fotos).
+function subirFotoServicio_(datos) {
+  if (!validarFuneraria_(datos.funerariaId, datos.codigoAcceso)) {
+    return { error: "No autorizado." };
+  }
+  if (!datos.servicioId || !datos.imagenBase64) {
+    return { error: "Faltan datos requeridos." };
+  }
+  const tipo = datos.tipo === "portada" ? "portada" : "perfil";
+  const campoDestino = tipo === "portada" ? "fotoPortadaUrl" : "fotoUrl";
+
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const funIdx = enc.indexOf("funerariaId");
+  const slugIdx = enc.indexOf("slug");
+
+  let fila = -1;
+  let slug = datos.servicioId;
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === datos.servicioId) {
+      if (String(filas[i][funIdx]) !== String(datos.funerariaId)) {
+        return { error: "No autorizado." };
+      }
+      fila = i;
+      slug = filas[i][slugIdx] || datos.servicioId;
+      break;
+    }
+  }
+  if (fila < 0) return { error: "Servicio no encontrado." };
+
+  try {
+    const carpeta = carpetaServicioEnDrive_(slug, tipo === "portada" ? "Portada" : "Perfil");
+    const url = subirImagenADrive_(carpeta, datos.imagenBase64, datos.tipoMime, tipo + "_" + Date.now() + ".jpg");
+    const campoIdx = obtenerOCrearColumna_(sheet, campoDestino);
+    sheet.getRange(fila + 1, campoIdx + 1).setValue(url);
+    return { ok: true, url: url };
+  } catch (err) {
+    return { error: "Error al subir la imagen: " + err.message };
+  }
 }
 
 // ============================================================
@@ -2900,9 +2986,21 @@ function crearSesionActivacionPagina_(datos) {
   // desactiva desde su panel, obtenerServicioPublico_ la bloquea al público.
   const esDemo = obtenerPlanActivoFuneraria_(datos.funerariaId).plan === "gratis";
 
+  // Si se eligió una foto desde la galería (en vez de pegar una URL), se
+  // sube a Drive hasta este punto porque recién aquí se genera el slug con
+  // el que se nombra su carpeta. Si falla la subida, la página se crea
+  // igual, solo que sin foto (no se bloquea la creación por esto).
+  let fotoUrl = datos.fotoUrl || "";
+  if (datos.fotoBase64) {
+    try {
+      const carpeta = carpetaServicioEnDrive_(slug, "Perfil");
+      fotoUrl = subirImagenADrive_(carpeta, datos.fotoBase64, datos.tipoMime, "perfil_" + Date.now() + ".jpg");
+    } catch (e) {}
+  }
+
   sheet.appendRow([
     id, datos.funerariaId, datos.nombreFinado, datos.fechaNacimiento || "", datos.fechaDefuncion || "",
-    datos.fotoUrl || "", datos.biografia || "",
+    fotoUrl, datos.biografia || "",
     datos.fechaCepelio || "", datos.horaCepelio || "", datos.ubicacionCepelio || "",
     datos.fechaMisa || "", datos.horaMisa || "", datos.ubicacionMisa || "",
     datos.fechaSalida || "", datos.horaSalida || "", datos.ubicacionSalida || "",
