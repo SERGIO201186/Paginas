@@ -675,8 +675,20 @@
       cont.innerHTML = '<div style="background:#EEF3EC;border-radius:8px;padding:12px 14px;font-size:13px;color:#1A4D38;">✓ Esta página ya fue transferida a la familia.</div>';
       return;
     }
-    // El plan Demo (gratis) incluye todas las funciones del Plan Pro,
-    // incluida la transferencia de páginas a las familias.
+    // El plan Demo (gratis) desbloquea todas las funciones de Pro, EXCEPTO
+    // la transferencia de páginas a familias: eso sigue siendo exclusivo
+    // de Pro (también se valida en el servidor, en crearSesionPagoStripe_).
+    if (planFuneraria !== 'pro') {
+      cont.innerHTML = `<div style="background:var(--hueso-osc);border-left:3px solid var(--dorado);border-radius:8px;padding:14px;font-size:13.5px;color:var(--carbon-suave);">
+        <strong style="color:var(--terracota-osc);">Función exclusiva del Plan Pro</strong><br>
+        Para transferir páginas a las familias necesitas el Plan Pro.<br><br>
+        <a href="https://sergio201186.github.io/Paginas/index.html#precios" target="_blank" rel="noopener noreferrer"
+           style="display:inline-block;padding:9px 18px;background:var(--terracota);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">
+          Ver Plan Pro →
+        </a>
+      </div>`;
+      return;
+    }
     cont.innerHTML = `
       <p style="font-size:13px;color:var(--carbon-suave);margin-bottom:12px;">
         Genera el cobro para que la familia pague y reciba acceso permanente a su página.

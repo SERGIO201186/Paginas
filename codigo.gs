@@ -580,14 +580,13 @@ function obtenerServicioPublico_(slug) {
         return { ok: false, error: "Esta página no está disponible en este momento." };
       }
       // Páginas del plan Demo: si el master desactivó a la funeraria desde su
-      // panel, se bloquean al público de inmediato. Una vez transferida a la
-      // familia (estado "transferido") ya le pertenece a ella de forma
-      // permanente y no se bloquea aunque la funeraria demo se desactive.
-      if (obj.estado !== "transferido") {
-        const funerariaEstado = obtenerPlanActivoFuneraria_(obj.funerariaId);
-        if (funerariaEstado.plan === "gratis" && !funerariaEstado.activo) {
-          return { ok: false, error: "Esta página no está disponible en este momento." };
-        }
+      // panel, se bloquean al público de inmediato — incluidas las que de
+      // alguna forma llegaron a transferirse, porque en Demo esa
+      // transferencia nunca se cobró y no le da a la familia la propiedad
+      // permanente que sí tiene una transferencia real del plan Pro.
+      const funerariaEstado = obtenerPlanActivoFuneraria_(obj.funerariaId);
+      if (funerariaEstado.plan === "gratis" && !funerariaEstado.activo) {
+        return { ok: false, error: "Esta página no está disponible en este momento." };
       }
       obj.faseVisibilidad = calcularFaseVisibilidad_(obj.fechaDefuncion, obj.estado);
       const likes = contarLikesFotos_(obj.id);
@@ -818,6 +817,14 @@ function obtenerVideoLlamadas_(servicioId) {
 function crearSesionPagoStripe_(datos) {
   if (!datos.servicioId || !datos.emailFamilia) {
     return { error: "Faltan datos requeridos." };
+  }
+
+  // Las páginas de cuentas en plan Demo no se pueden transferir a una
+  // familia: evita que alguien llame esta acción directo (saltándose el
+  // panel) para transferir una página que nunca se cobró.
+  const funerariaIdServicio = obtenerFunerariaIdDeServicio_(datos.servicioId);
+  if (funerariaIdServicio && obtenerPlanActivoFuneraria_(funerariaIdServicio).plan === "gratis") {
+    return { error: "La transferencia de páginas a familias no está disponible en el plan Demo." };
   }
 
   const stripeKey = getConfig_("STRIPE_SECRET_KEY");
@@ -2616,11 +2623,14 @@ function obtenerPlanFuneraria_(funerariaId, codigoAcceso) {
 }
 
 // Lectura interna (sin validar codigoAcceso) de plan+activo de una funeraria.
-// El plan "gratis" es el plan Demo: desbloquea funciones Pro sin costo y sus
-// páginas quedan bloqueadas al público en cuanto el master la desactiva
-// desde su panel (toggleFuneraria). Usado por crearSesionActivacionPagina_
-// (para no cobrar la activación) y por obtenerServicioPublico_ (para
-// bloquear el acceso público cuando corresponda).
+// El plan "gratis" es el plan Demo: desbloquea funciones Pro sin costo
+// (excepto transferir páginas a familias, que sigue siendo exclusivo de
+// Pro) y sus páginas quedan bloqueadas al público en cuanto el master la
+// desactiva desde su panel (toggleFuneraria). Usado por
+// crearSesionActivacionPagina_ (para no cobrar la activación),
+// crearSesionPagoStripe_ (para bloquear la transferencia) y por
+// obtenerServicioPublico_ (para bloquear el acceso público cuando
+// corresponda).
 function obtenerPlanActivoFuneraria_(funerariaId) {
   const sheet = getSheet_("Funerarias");
   const filas = sheet.getDataRange().getValues();
@@ -2637,6 +2647,19 @@ function obtenerPlanActivoFuneraria_(funerariaId) {
     }
   }
   return { plan: "gratis", activo: true };
+}
+
+// Devuelve el funerariaId dueño de un servicio, o null si no existe.
+function obtenerFunerariaIdDeServicio_(servicioId) {
+  const sheet = getSheet_("Servicios");
+  const filas = sheet.getDataRange().getValues();
+  const enc = filas[0];
+  const idIdx = enc.indexOf("id");
+  const funIdx = enc.indexOf("funerariaId");
+  for (let i = 1; i < filas.length; i++) {
+    if (filas[i][idIdx] === servicioId) return filas[i][funIdx];
+  }
+  return null;
 }
 
 // ============================================================
