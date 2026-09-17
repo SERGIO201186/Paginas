@@ -386,15 +386,23 @@
     <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
   </div>
   <div class="contenedor">
-    <div class="seccion-titulo" style="margin-top:0;">Mis comisiones</div>
-    <div class="servicio-card" style="cursor:default;">
-      <div id="resumenComisiones" style="font-size:13.5px;color:var(--carbon-suave);">Cargando historial de comisiones…</div>
-      <div id="listaComisiones" style="margin-top:10px;display:none;"></div>
-      <button class="btn btn-secundario btn-full" id="btnToggleComisiones" style="margin-top:12px;display:none;">Ver detalle</button>
+    <div id="bannerSuscripcion" style="display:none;border-radius:8px;padding:14px 16px;font-size:13.5px;margin-bottom:16px;">
+      <div id="bannerSuscripcionTexto"></div>
+      <button class="btn btn-primario btn-full" id="btnPagarMensualidad" style="margin-top:10px;" onclick="pagarMensualidad()">Pagar mensualidad ($99 MXN)</button>
+      <div class="aviso-estado" id="avisoMensualidad" style="margin-top:8px;"></div>
     </div>
 
-    <div class="seccion-titulo">Páginas</div>
-    <div id="listaServicios"></div>
+    <div id="contenidoPanelPrincipal">
+      <div class="seccion-titulo" style="margin-top:0;">Mis comisiones</div>
+      <div class="servicio-card" style="cursor:default;">
+        <div id="resumenComisiones" style="font-size:13.5px;color:var(--carbon-suave);">Cargando historial de comisiones…</div>
+        <div id="listaComisiones" style="margin-top:10px;display:none;"></div>
+        <button class="btn btn-secundario btn-full" id="btnToggleComisiones" style="margin-top:12px;display:none;">Ver detalle</button>
+      </div>
+
+      <div class="seccion-titulo">Páginas</div>
+      <div id="listaServicios"></div>
+    </div>
   </div>
   <button class="fab" id="btnNuevoServicio" title="Nueva página">+</button>
 </div>
@@ -583,6 +591,7 @@
     cargarListaServicios();
     cargarPlan();
     cargarComisiones();
+    verificarSuscripcion();
   }
 
   // ===== REGRESO DESDE STRIPE (activación de página) =====
@@ -605,6 +614,28 @@
       if (intentos >= 5) clearInterval(reintentar);
     }, 2000);
     setTimeout(() => alert('✓ Pago confirmado. Tu página se está activando (puede tardar unos segundos en aparecer como "En curso").'), 300);
+  })();
+
+  // ===== REGRESO DESDE STRIPE (pago de mensualidad) =====
+  (function manejarRegresoPagoMensualidad() {
+    const params = new URLSearchParams(window.location.search);
+    const resultado = params.get('pagoMensualidadOk');
+    if (!resultado) return;
+    window.history.replaceState({}, '', window.location.origin + window.location.pathname);
+    if (!sesion) return;
+    if (resultado === '0') {
+      setTimeout(() => alert('El pago fue cancelado. Puedes intentarlo de nuevo cuando quieras.'), 300);
+      return;
+    }
+    // El webhook de Stripe puede tardar unos segundos en actualizar la
+    // vigencia; se reintenta la verificación varias veces.
+    let intentos = 0;
+    const reintentar = setInterval(async () => {
+      intentos++;
+      await verificarSuscripcion();
+      if (intentos >= 5) clearInterval(reintentar);
+    }, 2000);
+    setTimeout(() => alert('✓ Pago confirmado. Tu mensualidad se está actualizando.'), 300);
   })();
 
   async function cargarPlan() {
@@ -630,6 +661,70 @@
       badge.style.color = esPro ? '#2B2723' : '#56504A';
     }
   }
+
+  // ===== MENSUALIDAD DEL PLAN PRO ($99 MXN) =====
+  // Solo aplica a funerarias Pro que ya tengan una fecha de vencimiento
+  // registrada (si nunca se les ha cobrado mensualidad, el servidor
+  // devuelve aplica:false y no se muestra nada). Al acercarse el
+  // vencimiento se muestra un aviso; pasados los días de gracia se bloquea
+  // el resto del panel y solo queda visible el botón para pagar.
+  const DIAS_GRACIA_MENSUALIDAD_CLIENTE = 3; // debe coincidir con DIAS_GRACIA_MENSUALIDAD en codigo.gs
+
+  async function verificarSuscripcion() {
+    if (!sesion) return;
+    const resp = await llamarAPI('obtenerEstadoSuscripcionFuneraria', {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso
+    }, 'GET');
+
+    const banner = document.getElementById('bannerSuscripcion');
+    const contenido = document.getElementById('contenidoPanelPrincipal');
+    const fab = document.getElementById('btnNuevoServicio');
+    const texto = document.getElementById('bannerSuscripcionTexto');
+
+    if (!resp.ok || !resp.aplica || !resp.bloqueada && !resp.avisar) {
+      banner.style.display = 'none';
+      contenido.style.display = 'block';
+      fab.style.display = 'block';
+      return;
+    }
+
+    banner.style.display = 'block';
+    if (resp.bloqueada) {
+      banner.style.background = '#FBEAE8';
+      texto.innerHTML = `<strong style="color:#9B2C2C;">Panel bloqueado por falta de pago.</strong><br>Tu mensualidad venció hace ${Math.abs(resp.diasParaVencer)} día(s) — ya pasó el período de tolerancia de ${DIAS_GRACIA_MENSUALIDAD_CLIENTE} días. Paga para recuperar el acceso.`;
+      contenido.style.display = 'none';
+      fab.style.display = 'none';
+    } else {
+      const dias = resp.diasParaVencer;
+      banner.style.background = '#FEF7E8';
+      texto.innerHTML = dias <= 0
+        ? `<strong style="color:#8A6414;">Tu mensualidad ya venció.</strong> Tienes ${DIAS_GRACIA_MENSUALIDAD_CLIENTE} días de tolerancia antes de que se bloquee tu panel.`
+        : `<strong style="color:#8A6414;">Tu mensualidad vence en ${dias} día${dias === 1 ? '' : 's'}.</strong> Paga para no perder el acceso a tu panel.`;
+      contenido.style.display = 'block';
+      fab.style.display = 'block';
+    }
+  }
+
+  window.pagarMensualidad = async function() {
+    const btn = document.getElementById('btnPagarMensualidad');
+    const aviso = document.getElementById('avisoMensualidad');
+    btn.disabled = true;
+    aviso.className = 'aviso-estado exito';
+    aviso.textContent = 'Redirigiendo al pago seguro...';
+    const urlBase = window.location.origin + window.location.pathname;
+    const resp = await llamarAPI('crearSesionMensualidadPropia', {
+      funerariaId: sesion.funerariaId, codigoAcceso: sesion.codigoAcceso,
+      urlExito: urlBase + '?pagoMensualidadOk=1',
+      urlCancelado: urlBase + '?pagoMensualidadOk=0'
+    }, 'POST');
+    if (resp.ok && resp.urlPago) {
+      window.location.href = resp.urlPago;
+    } else {
+      btn.disabled = false;
+      aviso.className = 'aviso-estado error';
+      aviso.textContent = resp.error || 'No se pudo generar el cobro.';
+    }
+  };
 
   // ===== HISTORIAL DE COMISIONES (solo lectura) =====
   // Muestra lo que la funeraria ha ganado por gestos/créditos comprados en
@@ -751,6 +846,7 @@
       cargarListaServicios();
       cargarPlan();
       cargarComisiones();
+      verificarSuscripcion();
     } else {
       aviso.className = 'aviso-estado error';
       aviso.textContent = resp.error || 'Código inválido.';
